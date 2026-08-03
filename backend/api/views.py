@@ -1,5 +1,6 @@
 import os
 import json
+import requests
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -41,8 +42,34 @@ def submit_vote_relayer(request):
         
         # 1. AI Threat Detection Hook (Scikit-Learn)
         # ---------------------------------------------------------
-        # Later, we will pass request.META['REMOTE_ADDR'] and request velocity 
-        # to our Isolation Forest ML model here. If anomaly == True, we drop the request.
+        client_ip = request.META.get('REMOTE_ADDR', '127.0.0.1')
+        payload_size = len(request.body)
+        
+        # In production, you would calculate real-time velocity using Redis. 
+        # We use a safe baseline here for development.
+        request_velocity = 2.5 
+
+        try:
+            ai_response = requests.post(
+                "http://127.0.0.1:8001/api/v1/analyze-threat/",
+                json={
+                    "ip_address": client_ip,
+                    "payload_size": payload_size,
+                    "request_velocity": request_velocity
+                },
+                timeout=2 # Strict 2-second timeout so voting isn't delayed
+            )
+            
+            if ai_response.status_code == 200:
+                threat_data = ai_response.json()
+                if threat_data.get("is_anomalous"):
+                    return Response({
+                        "error": "Security Threat Detected",
+                        "details": "Active Sentinel blocked this request due to anomalous network behavior.",
+                        "threat_score": threat_data.get("threat_score")
+                    }, status=status.HTTP_403_FORBIDDEN)
+        except requests.exceptions.RequestException:
+            print("WARNING: Active Sentinel ML Service is offline. Bypassing threat detection.")
         # ---------------------------------------------------------
 
         # 2. Extract ZK Proof Data sent by Flutter's SnarkJS WASM
