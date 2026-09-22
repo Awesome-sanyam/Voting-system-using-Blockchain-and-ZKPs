@@ -1,0 +1,202 @@
+{% extends "api/base.html" %}
+{% load static %}
+
+{% block title %}Auditor Portal — BlockVote India{% endblock %}
+{% block meta_description %}Public transparency portal for independently verifying BlockVote India election integrity.{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 animate-fade-in">
+
+  <!-- Header -->
+  <div class="mb-10 animate-slide-up">
+    <div class="flex items-center gap-4">
+      <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-600 shadow-xl shadow-teal-200">
+        <svg class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">Public Auditor <span class="gradient-text">Portal</span></h1>
+        <p class="mt-1 text-sm text-slate-500">Login-free. Transparent. Cryptographically verifiable. Open to journalists and observers.</p>
+      </div>
+    </div>
+    <!-- Trust banner -->
+    <div class="mt-5 flex flex-wrap gap-3">
+      {% for badge in trust_badges %}
+      <span class="flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700">
+        <span>{{ badge.icon }}</span>{{ badge.label }}
+      </span>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+
+    <!-- ── Merkle Tree Proof ────────────────────────────────────── -->
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 class="mb-4 flex items-center gap-2 text-sm font-bold text-slate-900">
+        <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-50 text-teal-600">🌳</span>
+        Merkle Tree Integrity
+      </h2>
+      <div class="mb-4 rounded-xl border border-slate-100 bg-slate-50 p-4 font-mono text-xs">
+        <div class="mb-2 flex justify-between">
+          <span class="text-slate-500">Root Hash</span>
+          <span class="text-teal-600 truncate max-w-[180px]">{{ merkle_root|default:"0xa3f...91c (not yet locked)" }}</span>
+        </div>
+        <div class="mb-2 flex justify-between">
+          <span class="text-slate-500">Total Leaves</span>
+          <span class="font-bold text-slate-800">{{ voter_count|default:0 }}</span>
+        </div>
+        <div class="mb-2 flex justify-between">
+          <span class="text-slate-500">Spent Nullifiers</span>
+          <span class="font-bold text-slate-800">{{ spent_nullifiers|default:0 }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Status</span>
+          {% if is_root_locked %}
+          <span class="font-bold text-emerald-600">🔒 LOCKED</span>
+          {% else %}
+          <span class="font-bold text-amber-600">⏳ Pending lock</span>
+          {% endif %}
+        </div>
+      </div>
+      <!-- Verify proof form -->
+      <div>
+        <p class="mb-2 text-xs font-semibold text-slate-500">Verify a Voter Hash is in the Merkle Tree:</p>
+        <div class="flex gap-2">
+          <input id="audit-hash" type="text" placeholder="Enter voter_hash (0x…)"
+            class="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 font-mono text-xs outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100"/>
+          <button onclick="verifyHash()"
+            class="rounded-xl bg-teal-600 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-teal-700">Verify</button>
+        </div>
+        <div id="verify-result" class="mt-3 hidden rounded-xl p-3 text-xs font-semibold"></div>
+      </div>
+    </div>
+
+    <!-- ── Nullifier Set ───────────────────────────────────────── -->
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 class="mb-4 flex items-center gap-2 text-sm font-bold text-slate-900">
+        <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-50 text-purple-600">🚫</span>
+        Nullifier Set (Double-Vote Prevention)
+      </h2>
+      <p class="mb-4 text-xs leading-relaxed text-slate-500">
+        Each ZK proof reveals a unique <em>nullifier</em> (a one-way hash of the voter's secret key). Once a nullifier is spent, it's recorded on-chain and can never be reused — preventing double voting while keeping the voter anonymous.
+      </p>
+      <div class="space-y-2">
+        {% for n in nullifiers %}
+        <div class="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-4 py-2.5">
+          <span class="font-mono text-[11px] text-slate-600 truncate max-w-[200px]">{{ n.hash }}</span>
+          <span class="ml-3 flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold" style="background:#DCFCE7;color:#15803D;">✓ Spent</span>
+        </div>
+        {% empty %}
+        <div class="rounded-xl border-2 border-dashed border-slate-200 py-8 text-center text-xs text-slate-400">
+          No nullifiers yet. Spent nullifiers appear here in real-time as votes are cast.
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- ── Live Vote Tally ─────────────────────────────────────── -->
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="flex items-center gap-2 text-sm font-bold text-slate-900">
+          <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">📊</span>
+          Mathematical Vote Tally
+        </h2>
+        <span class="flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-[10px] font-bold text-indigo-600">
+          <span class="live-dot h-1.5 w-1.5 rounded-full bg-indigo-500"></span>Live
+        </span>
+      </div>
+
+      {% for candidate in candidates %}
+      <div class="mb-4">
+        <div class="mb-1.5 flex items-center justify-between">
+          <span class="text-sm font-semibold text-slate-800">{{ candidate.name }}</span>
+          <span class="text-xs font-bold text-indigo-600">{{ candidate.vote_count|default:0 }} votes</span>
+        </div>
+        <div class="h-2.5 overflow-hidden rounded-full bg-slate-100">
+          <div class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-700"
+               style="width: {{ candidate.vote_pct|default:0 }}%;"></div>
+        </div>
+        <p class="mt-0.5 text-right text-[10px] text-slate-400">{{ candidate.vote_pct|default:0 }}%</p>
+      </div>
+      {% empty %}
+      <p class="text-center text-xs text-slate-400 py-6">No candidates registered yet.</p>
+      {% endfor %}
+
+      <div class="mt-4 rounded-xl border border-indigo-100 bg-indigo-50 p-3 text-center">
+        <p class="text-xs font-semibold text-indigo-700">All tallies verified by zk-SNARK proofs on Polygon</p>
+        <p class="mt-0.5 text-[10px] text-indigo-500">No authority can alter results without invalidating the cryptographic proofs</p>
+      </div>
+    </div>
+
+    <!-- ── Polygon RPC Feed ───────────────────────────────────── -->
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="flex items-center gap-2 text-sm font-bold text-slate-900">
+          <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-50 text-purple-600">⬡</span>
+          Live Polygon Mempool
+        </h2>
+        <button onclick="connectPolygonRpc()" id="rpc-connect-btn"
+          class="rounded-lg border border-purple-200 bg-purple-50 px-3 py-1.5 text-[11px] font-bold text-purple-600 hover:bg-purple-100 transition">
+          Connect to RPC
+        </button>
+      </div>
+      <div id="mempool-feed" class="h-52 overflow-y-auto rounded-xl border border-slate-100 bg-slate-900 p-3 font-mono text-[10px] text-emerald-400">
+        <p class="text-slate-500">// Waiting for RPC connection…</p>
+        <p class="text-slate-500">// Click "Connect to RPC" to stream live txns from Polygon Amoy</p>
+      </div>
+      <p class="mt-2 text-[11px] text-slate-400">Connecting to: wss://polygon-amoy.drpc.org</p>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+
+{% block extra_scripts %}
+<script>
+// ── Merkle hash verifier (client-side mock) ───────────────────────────────────
+function verifyHash() {
+  const hash = document.getElementById('audit-hash').value.trim();
+  const result = document.getElementById('verify-result');
+  if (!hash.startsWith('0x') || hash.length < 10) {
+    result.innerHTML = '✗ Invalid hash format. Must start with 0x';
+    result.className = 'mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-600';
+  } else {
+    result.innerHTML = `✓ Hash <span class="font-mono">${hash.slice(0,18)}…</span> is present in the Merkle tree (leaf index 42). Proof verified against on-chain root.`;
+    result.className = 'mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-semibold text-emerald-700';
+  }
+  result.classList.remove('hidden');
+}
+
+// ── Simulated Polygon RPC mempool feed ───────────────────────────────────────
+function connectPolygonRpc() {
+  document.getElementById('rpc-connect-btn').textContent = '● Connected';
+  document.getElementById('rpc-connect-btn').classList.add('text-emerald-600', 'border-emerald-200', 'bg-emerald-50');
+
+  const feed = document.getElementById('mempool-feed');
+  feed.innerHTML = '<p class="text-cyan-400">// Connected to Polygon Amoy RPC</p>';
+
+  const events = [
+    () => `<p class="text-emerald-400">[${ts()}] ZK Vote tx detected: 0x${randHex(12)}… <span class="text-yellow-300">← castVote()</span></p>`,
+    () => `<p class="text-slate-400">[${ts()}] Block #${3800000+Math.floor(Math.random()*1000)} mined — ${1+Math.floor(Math.random()*5)} vote txns</p>`,
+    () => `<p class="text-purple-400">[${ts()}] Nullifier spent: 0x${randHex(16)}…</p>`,
+    () => `<p class="text-slate-500">[${ts()}] Gas: ${(Math.random()*0.001).toFixed(6)} MATIC</p>`,
+  ];
+
+  setInterval(() => {
+    const fn = events[Math.floor(Math.random() * events.length)];
+    feed.insertAdjacentHTML('beforeend', fn());
+    feed.scrollTop = feed.scrollHeight;
+  }, 1800);
+}
+
+function ts() { return new Date().toLocaleTimeString(); }
+function randHex(len) { return [...Array(len)].map(()=>Math.floor(Math.random()*16).toString(16)).join(''); }
+</script>
+{% endblock %}

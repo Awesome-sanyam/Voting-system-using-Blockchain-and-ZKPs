@@ -6,6 +6,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from web3 import Web3
 from django.conf import settings
+from django.shortcuts import render
+from django.contrib import messages
+from .models import Election, Candidate, VoterIdentity, ThreatLog
 
 # In a real production environment, these would be in your .env file
 POLYGON_RPC_URL = os.getenv("POLYGON_RPC_URL", "https://rpc-amoy.polygon.technology")
@@ -182,3 +185,121 @@ def verify_epic_and_register(request):
 
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  SSR PORTAL VIEWS  — render HTML templates for the Django-served UI
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def voter_portal(request):
+    """
+    Renders the voter dashboard.
+    Passes the active candidate list so the template can build the ballot.
+    """
+    # Fetch candidates from the active (most recent) election
+    active_election = Election.objects.order_by('-created_at').first()
+    candidates = []
+    if active_election:
+        candidates = Candidate.objects.filter(election=active_election).order_by('candidate_id')
+
+    context = {
+        'candidates':        candidates,
+        'active_election':   active_election,
+        'security_features': [
+            'SHA-256 Hashed Identity',
+            'Zero-Knowledge Proof',
+            'HMAC-Signed QR Token',
+            'Gas-Free Relayer',
+            'Polygon Blockchain',
+            'Nullifier Anti-Replay',
+        ],
+    }
+    return render(request, 'api/voter_dashboard.html', context)
+
+
+def admin_portal(request):
+    """
+    Renders the admin dashboard.
+    Passes election stats, candidate list, and voter registry data.
+    """
+    active_election = Election.objects.order_by('-created_at').first()
+    candidates      = Candidate.objects.select_related('election').all().order_by('candidate_id')
+    voters          = VoterIdentity.objects.all().order_by('-registered_at')[:50]  # Latest 50
+    threats         = ThreatLog.objects.filter(resolved=False).order_by('-timestamp')[:20]
+
+    total_voters  = voters.count()
+    voted_count   = VoterIdentity.objects.filter(has_voted=True).count()
+    turnout_pct   = round((voted_count / total_voters * 100), 1) if total_voters > 0 else 0
+
+    context = {
+        'active_election': active_election,
+        'candidates':      candidates,
+        'voters':          voters,
+        'threats':         threats,
+        'voter_stats': {
+            'total':       total_voters,
+            'voted':       voted_count,
+            'turnout':     f'{turnout_pct}%',
+            'turnout_pct': turnout_pct,
+        },
+        'stats': [
+            {'icon': '🗳️', 'label': 'Total Requests',  'value': '—'},
+            {'icon': '🚫', 'label': 'IPs Blocked',     'value': threats.count()},
+            {'icon': '✅', 'label': 'Votes Cast',       'value': voted_count},
+            {'icon': '🧠', 'label': 'ML Model',         'value': 'Active'},
+        ],
+        'nav_items': [
+            {'icon': '🏠', 'label': 'Overview',     'anchor': 'overview'},
+            {'icon': '🗳️', 'label': 'Elections',    'anchor': 'elections'},
+            {'icon': '👥', 'label': 'Voters',        'anchor': 'voters'},
+            {'icon': '🛡️', 'label': 'Threat AI',    'anchor': 'threat-ai'},
+            {'icon': '🌳', 'label': 'Merkle Root',   'anchor': 'merkle'},
+            {'icon': '📊', 'label': 'Candidates',    'anchor': 'candidates'},
+        ],
+        'table_headers': ['ID', 'Name', 'Election', 'Status'],
+    }
+    return render(request, 'api/admin_dashboard.html', context)
+
+
+def auditor_portal(request):
+    """
+    Renders the public auditor dashboard.
+    All data here is public — no login required.
+    """
+    active_election = Election.objects.order_by('-created_at').first()
+    candidates      = Candidate.objects.filter(
+        election=active_election
+    ).order_by('candidate_id') if active_election else []
+
+    total_votes = VoterIdentity.objects.filter(has_voted=True).count()
+
+    # Build candidate vote percentages (mock vote counts for now; Phase 5 reads from blockchain)
+    candidate_data = []
+    for c in candidates:
+        # In Phase 5: query the smart contract event logs for real counts
+        mock_count = 0
+        pct        = round(mock_count / total_votes * 100, 1) if total_votes > 0 else 0
+        candidate_data.append({
+            'candidate_id': c.candidate_id,
+            'name':         c.name,
+            'vote_count':   mock_count,
+            'vote_pct':     pct,
+        })
+
+    context = {
+        'active_election':   active_election,
+        'candidates':        candidate_data,
+        'voter_count':       VoterIdentity.objects.count(),
+        'spent_nullifiers':  total_votes,
+        'merkle_root':       active_election.merkle_root if active_election else None,
+        'is_root_locked':    active_election.is_root_locked if active_election else False,
+        'nullifiers':        [],  # Phase 5: fetch from smart contract events
+        'trust_badges': [
+            {'icon': '🔒', 'label': 'End-to-End Encrypted'},
+            {'icon': '🌐', 'label': 'Public & Open'},
+            {'icon': '⬡',  'label': 'Polygon Verified'},
+            {'icon': '🧮', 'label': 'Mathematically Auditable'},
+            {'icon': '🕵️', 'label': 'Anonymous Ballots'},
+        ],
+    }
+    return render(request, 'api/auditor_dashboard.html', context)

@@ -118,3 +118,21 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# ── Django Channels (WebSocket support) ─────────────────────────────────────
+ASGI_APPLICATION = 'config.asgi.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    }
+}
+
+# ── CSRF trusted origins (allows fetch() from the same server) ───────────────
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
+
+# ── Static files ─────────────────────────────────────────────────────────────
+STATICFILES_DIRS = []   # Django finds static/ inside each app automatically
+STATIC_ROOT = BASE_DIR / 'staticfiles'

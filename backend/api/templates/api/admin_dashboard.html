@@ -1,0 +1,280 @@
+{% extends "api/base.html" %}
+{% load static %}
+
+{% block title %}Admin Panel — BlockVote India{% endblock %}
+{% block meta_description %}Election Commission administration panel for BlockVote India.{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js for live threat graph -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+  body { background: #0F172A !important; }
+  .admin-nav-item { transition: background 0.15s, color 0.15s; }
+  .admin-nav-item.active,
+  .admin-nav-item:hover { background: rgba(99,102,241,0.15); color: #818CF8; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="flex min-h-screen" style="background:#0F172A;">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────── -->
+  <aside class="flex w-60 flex-shrink-0 flex-col border-r" style="border-color:#334155;background:#0F172A;">
+    <div class="p-5">
+      <!-- Logo -->
+      <div class="mb-6 flex items-center gap-3">
+        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600">
+          <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-sm font-extrabold text-white">BlockVote</p>
+          <p class="text-[10px] font-bold text-indigo-400">Admin Portal</p>
+        </div>
+      </div>
+
+      <!-- Admin chip -->
+      <div class="mb-6 rounded-xl border p-3" style="border-color:#334155;background:rgba(255,255,255,0.04);">
+        <div class="flex items-center gap-3">
+          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600">
+            <span class="text-xs font-bold text-white">CE</span>
+          </div>
+          <div>
+            <p class="text-xs font-bold text-white">Chief Election Officer</p>
+            <p class="text-[10px]" style="color:#64748B;">admin001</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nav -->
+      <nav class="space-y-1">
+        {% for item in nav_items %}
+        <a href="#{{ item.anchor }}" class="admin-nav-item {% if forloop.first %}active{% endif %} flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold" style="color:#94A3B8;">
+          <span class="text-base">{{ item.icon }}</span>
+          {{ item.label }}
+        </a>
+        {% endfor %}
+        <a href="/" class="admin-nav-item flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold mt-8" style="color:#94A3B8;">
+          ← Back to Site
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- ── Main Content ─────────────────────────────────────────── -->
+  <main class="flex-1 overflow-y-auto p-8" style="color:#E2E8F0;">
+
+    <!-- Top bar -->
+    <div class="mb-8 flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-extrabold text-white tracking-tight">Election Control Center</h1>
+        <p class="mt-1 text-sm" style="color:#64748B;">{{ active_election.title|default:"No active election configured" }}</p>
+      </div>
+      <span class="flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold" style="border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.1);color:#10B981;">
+        <span class="live-dot h-2 w-2 rounded-full bg-emerald-400"></span> System Live
+      </span>
+    </div>
+
+    <!-- Stat cards -->
+    <section id="overview" class="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      {% for stat in stats %}
+      <div class="rounded-2xl border p-5" style="border-color:#334155;background:rgba(255,255,255,0.04);">
+        <div class="mb-3 flex h-9 w-9 items-center justify-center rounded-xl text-lg" style="background:rgba(99,102,241,0.15);">{{ stat.icon }}</div>
+        <p class="text-2xl font-extrabold text-white">{{ stat.value }}</p>
+        <p class="mt-1 text-xs" style="color:#64748B;">{{ stat.label }}</p>
+      </div>
+      {% endfor %}
+    </section>
+
+    <!-- Live Threat Chart + Election Status -->
+    <div class="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-5">
+
+      <!-- Threat Chart (3/5) -->
+      <div id="threat-ai" class="col-span-3 rounded-2xl border p-6" style="border-color:#334155;background:rgba(255,255,255,0.04);">
+        <div class="mb-4 flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-bold text-white">Live Threat Score</h2>
+            <p class="text-xs" style="color:#64748B;">Isolation Forest anomaly score · Auto-updates</p>
+          </div>
+          <span class="rounded-full border px-2 py-1 text-[9px] font-extrabold tracking-widest" style="border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.1);color:#EF4444;">REAL-TIME</span>
+        </div>
+        <canvas id="threat-chart" height="130"></canvas>
+      </div>
+
+      <!-- Election Status (2/5) -->
+      <div id="elections" class="col-span-2 rounded-2xl border p-6" style="background:linear-gradient(135deg,#4F46E5,#7C3AED);border-color:#4F46E5;">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 class="text-sm font-bold text-white">Election Status</h2>
+          {% if active_election %}
+          <span class="rounded-full px-2 py-1 text-[9px] font-extrabold tracking-widest" style="background:rgba(255,255,255,0.2);color:#fff;">LIVE</span>
+          {% endif %}
+        </div>
+        <div class="mb-3 flex justify-between text-center">
+          <div><p class="text-xl font-extrabold text-white">{{ voter_stats.total|default:"0" }}</p><p class="text-[10px] text-white/60">Eligible</p></div>
+          <div><p class="text-xl font-extrabold text-white">{{ voter_stats.voted|default:"0" }}</p><p class="text-[10px] text-white/60">Voted</p></div>
+          <div><p class="text-xl font-extrabold text-white">{{ voter_stats.turnout|default:"0%" }}</p><p class="text-[10px] text-white/60">Turnout</p></div>
+        </div>
+        <div class="h-2 overflow-hidden rounded-full bg-white/20">
+          <div class="h-full rounded-full bg-white" style="width:{{ voter_stats.turnout_pct|default:0 }}%;transition:width 1s ease;"></div>
+        </div>
+        <p class="mt-3 text-[10px] text-white/60">
+          Merkle Root: {% if active_election.is_root_locked %}🔒 LOCKED{% else %}⏳ Unlocked{% endif %}
+        </p>
+      </div>
+    </div>
+
+    <!-- Candidates Table -->
+    <section id="candidates" class="mb-8">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-sm font-bold text-white">Registered Candidates</h2>
+        <button onclick="alert('Add candidate — Phase 5 feature')"
+          class="btn-admin rounded-xl px-4 py-2 text-xs font-bold text-white">+ Add Candidate</button>
+      </div>
+      <div class="overflow-hidden rounded-2xl border" style="border-color:#334155;">
+        <table class="w-full text-sm">
+          <thead style="background:rgba(255,255,255,0.04);">
+            <tr>
+              {% for h in table_headers %}
+              <th class="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-widest" style="color:#64748B;">{{ h }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody class="divide-y" style="divide-color:#334155;">
+            {% for c in candidates %}
+            <tr class="transition hover:bg-white/5">
+              <td class="px-5 py-4 font-mono text-xs text-indigo-400">#{{ c.candidate_id }}</td>
+              <td class="px-5 py-4 font-semibold text-white">{{ c.name }}</td>
+              <td class="px-5 py-4 text-xs" style="color:#94A3B8;">{{ c.election.title }}</td>
+              <td class="px-5 py-4"><span class="rounded-full px-2 py-1 text-[10px] font-bold" style="background:rgba(16,185,129,0.15);color:#10B981;">Registered</span></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="px-5 py-10 text-center text-xs" style="color:#64748B;">No candidates registered yet. Add one above.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Voter Registry -->
+    <section id="voters" class="mb-8">
+      <h2 class="mb-4 text-sm font-bold text-white">Voter Registry (KYC)</h2>
+      <div class="overflow-hidden rounded-2xl border" style="border-color:#334155;">
+        <table class="w-full text-sm">
+          <thead style="background:rgba(255,255,255,0.04);">
+            <tr>
+              <th class="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-widest" style="color:#64748B;">Hash</th>
+              <th class="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-widest" style="color:#64748B;">Verified</th>
+              <th class="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-widest" style="color:#64748B;">Voted</th>
+              <th class="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-widest" style="color:#64748B;">Registered</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y" style="divide-color:#334155;">
+            {% for v in voters %}
+            <tr class="transition hover:bg-white/5">
+              <td class="px-5 py-4 font-mono text-xs text-indigo-300">{{ v.voter_hash|slice:":20" }}…</td>
+              <td class="px-5 py-4">
+                {% if v.is_verified %}
+                <span class="rounded-full px-2 py-1 text-[10px] font-bold" style="background:rgba(16,185,129,0.15);color:#10B981;">✓ Verified</span>
+                {% else %}
+                <span class="rounded-full px-2 py-1 text-[10px] font-bold" style="background:rgba(245,158,11,0.15);color:#F59E0B;">⏳ Pending</span>
+                {% endif %}
+              </td>
+              <td class="px-5 py-4">
+                {% if v.has_voted %}
+                <span class="text-[11px] font-semibold text-emerald-400">Voted</span>
+                {% else %}
+                <span class="text-[11px]" style="color:#64748B;">Not yet</span>
+                {% endif %}
+              </td>
+              <td class="px-5 py-4 text-xs" style="color:#64748B;">{{ v.registered_at|date:"d M Y, H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="px-5 py-10 text-center text-xs" style="color:#64748B;">No voters registered yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Merkle Root Lock -->
+    <section id="merkle" class="mb-8">
+      <div class="rounded-2xl border p-6" style="border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.06);">
+        <h2 class="mb-1 text-sm font-bold text-white">🔒 Lock Merkle Root</h2>
+        <p class="mb-4 text-xs" style="color:#94A3B8;">
+          Once locked, no new voters can be added. This freezes the whitelist before voting begins and records the Merkle root hash on-chain.
+          <strong class="text-red-400">This action is irreversible.</strong>
+        </p>
+        <button onclick="alert('Merkle Root lock — requires blockchain connection (Phase 5)')"
+          class="rounded-xl border border-red-500/40 bg-red-500/10 px-5 py-2.5 text-xs font-bold text-red-400 transition hover:bg-red-500/20">
+          Lock Merkle Root on Polygon
+        </button>
+      </div>
+    </section>
+
+  </main>
+</div>
+{% endblock %}
+
+
+{% block extra_scripts %}
+<script>
+// ── Live Threat Chart ────────────────────────────────────────────────────────
+const ctx = document.getElementById('threat-chart').getContext('2d');
+const labels = Array.from({length: 15}, (_, i) => `T-${15-i}`);
+const data   = Array.from({length: 15}, () => Math.random() * 0.3);
+
+const threatChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels,
+    datasets: [{
+      label: 'Anomaly Score',
+      data,
+      borderColor: '#6366F1',
+      backgroundColor: 'rgba(99,102,241,0.08)',
+      borderWidth: 2.5,
+      tension: 0.4,
+      fill: true,
+      pointRadius: 0,
+    }, {
+      label: 'Danger Threshold',
+      data: Array(15).fill(0.5),
+      borderColor: 'rgba(239,68,68,0.5)',
+      borderWidth: 1.5,
+      borderDash: [5, 5],
+      pointRadius: 0,
+      fill: false,
+    }],
+  },
+  options: {
+    responsive: true,
+    animation: { duration: 600 },
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748B', font: { size: 10 } } },
+      y: { min: 0, max: 1, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748B', font: { size: 10 }, stepSize: 0.25 } },
+    },
+  },
+});
+
+// Simulate real-time updates every 3 seconds
+setInterval(() => {
+  const isSpike = Math.random() > 0.8;
+  const newVal  = isSpike ? Math.random() * 0.9 + 0.3 : Math.random() * 0.25;
+  threatChart.data.labels.push('now');
+  threatChart.data.labels.shift();
+  threatChart.data.datasets[0].data.push(newVal);
+  threatChart.data.datasets[0].data.shift();
+  threatChart.update('active');
+}, 3000);
+
+// ── Sidebar active link ───────────────────────────────────────────────────────
+document.querySelectorAll('.admin-nav-item').forEach(link => {
+  link.addEventListener('click', function() {
+    document.querySelectorAll('.admin-nav-item').forEach(l => l.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+</script>
+{% endblock %}
