@@ -33,11 +33,11 @@ numpy>=1.25.0
 #    - npm (v9.0.0 or higher)
 #    - Packages: hardhat, @openzeppelin/contracts, circomlib, snarkjs
 
-# 2. Flutter Environment (for Frontend module)
-#    - Flutter SDK (v3.19.0 or higher)
-#    - Dart SDK
-#    - Xcode (macOS only, for iOS development)
-#    - Android Studio (macOS/Windows, for Android development)
+# 2. Frontend Environment
+#    - Django Server-Side Rendered (SSR) Application
+#    - Tailwind CSS (via CDN) + Modern Dark Theme UI
+#    - Native WebSockets (Django Channels)
+#    - Client-side zk-SNARK proof generation (SnarkJS / WebAssembly)
 
 # 3. Database Services
 #    - PostgreSQL (v15.0 or higher)

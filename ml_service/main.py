@@ -43,3 +43,4 @@ async def analyze_threat(request: ThreatRequest):
 @app.get("/health")
 async def health_check():
     return {"status": "Active Sentinel is running", "model_loaded": model is not None}
+    

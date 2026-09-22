@@ -1,182 +1,139 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en" class="dark scroll-smooth">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{% block title %}BlockVote India{% endblock %}</title>
-  <meta name="description" content="{% block meta_description %}Secure, anonymous blockchain voting powered by Zero-Knowledge Proofs on Polygon.{% endblock %}" />
+  <title>{% block title %}BlockVote India — Sovereign Zero-Knowledge Voting{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}Sovereign, anonymous, tamper-proof blockchain voting on Polygon with client-side zero-knowledge proofs.{% endblock %}" />
 
-  <!-- Tailwind CSS via CDN -->
+  <!-- Tailwind CSS CDN configured for Executive Dark Mode -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           colors: {
+            slate: {
+              850: '#111827',
+              900: '#0f172a',
+              950: '#030712',
+            },
+            cyan: {
+              400: '#22d3ee',
+              500: '#06b6d4',
+              600: '#0891b2',
+            },
             indigo: {
-              450: '#5b52f0',
-            },
-            brand: {
-              primary:   '#4F46E5',
-              dark:      '#3730A3',
-              light:     '#818CF8',
-              container: '#EEF2FF',
-            },
-            admin: {
-              bg:      '#0F172A',
-              surface: '#1E293B',
-              border:  '#334155',
-              accent:  '#6366F1',
-            },
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+            }
           },
           fontFamily: {
-            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
-          },
-          animation: {
-            'fade-in':    'fadeIn 0.4s ease-out both',
-            'slide-up':   'slideUp 0.4s ease-out both',
-            'pulse-slow': 'pulse 3s cubic-bezier(0.4,0,0.6,1) infinite',
-          },
-          keyframes: {
-            fadeIn:  { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-            slideUp: { '0%': { opacity: '0', transform: 'translateY(16px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
-          },
-        },
-      },
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['"JetBrains Mono"', '"Space Grotesk"', 'monospace'],
+          }
+        }
+      }
     };
   </script>
 
-  <!-- Inter font -->
+  <!-- Google Fonts: Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Custom Cybernetic CSS -->
+  <link rel="stylesheet" href="{% static 'api/css/custom.css' %}" />
 
   <!-- QRCode.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-  <!-- SnarkJS (for client-side ZK proof generation) -->
+  <!-- SnarkJS (Groth16 client-side zero-knowledge proof engine) -->
   <script src="https://cdn.jsdelivr.net/npm/snarkjs@latest/build/snarkjs.min.js"></script>
 
-  <!-- Custom ZKP Generator -->
-  <script src="{% static 'api/js/zkp_generator.js' %}" defer></script>
+  <!-- Core ZKP Prover JS -->
+  <script src="{% static 'api/js/zkp_prover.js' %}"></script>
 
   <style>
     body { font-family: 'Inter', sans-serif; }
-
-    /* ── Glassmorphism card ── */
-    .glass {
-      background: rgba(255,255,255,0.7);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-    }
-
-    /* ── Gradient text ── */
-    .gradient-text {
-      background: linear-gradient(135deg, #4F46E5, #7C3AED);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    /* ── Gradient button ── */
-    .btn-primary {
-      background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
-      transition: opacity 0.2s, transform 0.15s;
-      box-shadow: 0 4px 20px rgba(79,70,229,0.35);
-    }
-    .btn-primary:hover  { opacity: 0.92; transform: translateY(-1px); }
-    .btn-primary:active { transform: translateY(0); }
-
-    /* ── Admin button ── */
-    .btn-admin {
-      background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
-      transition: opacity 0.2s, transform 0.15s;
-      box-shadow: 0 4px 20px rgba(99,102,241,0.4);
-    }
-    .btn-admin:hover { opacity: 0.9; transform: translateY(-1px); }
-
-    /* ── Spinner ── */
-    .spinner {
-      border: 3px solid rgba(255,255,255,0.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      width: 20px; height: 20px;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Live dot ── */
-    .live-dot {
-      animation: livePulse 1.5s ease-in-out infinite;
-    }
-    @keyframes livePulse {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.2; }
-    }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
   </style>
 
   {% block extra_head %}{% endblock %}
 </head>
 
-<body class="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-cyan-50/20">
+<body class="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-cyan-500 selection:text-slate-950">
 
-  <!-- ═══════════ NAVIGATION BAR ═══════════ -->
-  <nav class="sticky top-0 z-50 border-b border-slate-200/80 bg-white/80 backdrop-blur-xl">
+  <!-- ══════════════ HEADER & NAVIGATION ══════════════ -->
+  <header class="sticky top-0 z-50 border-b border-slate-800/80 bg-slate-950/85 backdrop-blur-xl">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="flex h-16 items-center justify-between">
 
-        <!-- Brand -->
-        <a href="/" class="flex items-center gap-3">
-          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-200">
-            <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806
-                   3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438
-                   3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806
-                   3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138
-                   3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946
-                   3.42 3.42 0 013.138-3.138z"/>
-            </svg>
+        <!-- Brand Identity -->
+        <a href="/" class="flex items-center gap-3 group">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600 p-0.5 shadow-lg shadow-cyan-500/20 group-hover:shadow-cyan-500/40 transition">
+            <div class="flex h-full w-full items-center justify-center rounded-[10px] bg-slate-950">
+              <svg class="h-5 w-5 text-cyan-400 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
           </div>
-          <div class="leading-tight">
-            <p class="text-sm font-800 font-extrabold tracking-tight text-slate-900">BlockVote<span class="gradient-text">India</span></p>
-            <p class="text-[10px] font-medium text-slate-400">Secured by Polygon + zk-SNARKs</p>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-base font-extrabold tracking-tight text-white">BlockVote</span>
+              <span class="bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-base font-black text-transparent">India</span>
+              <span class="ml-1 rounded bg-cyan-950/80 border border-cyan-500/30 px-1.5 py-0.5 text-[9px] font-mono text-cyan-300">ZKP</span>
+            </div>
+            <p class="text-[10px] font-medium text-slate-400 tracking-wider">SOVEREIGN BALLOT INFRASTRUCTURE</p>
           </div>
         </a>
 
-        <!-- Nav links -->
-        <div class="hidden items-center gap-1 md:flex">
-          <a href="/voter/"   class="nav-link rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-indigo-50 hover:text-indigo-600">Voter Portal</a>
-          <a href="/admin-panel/" class="nav-link rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100">Admin</a>
-          <a href="/auditor/" class="nav-link rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100">Auditor</a>
-        </div>
+        <!-- Portal Navigation Links -->
+        <nav class="hidden md:flex items-center gap-1.5">
+          <a href="/voter/"
+             class="px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition {% if request.path == '/voter/' or request.path == '/' %}bg-slate-900 border border-cyan-500/40 text-cyan-300 shadow-sm shadow-cyan-500/10{% else %}text-slate-400 hover:text-white hover:bg-slate-900/60{% endif %}">
+            Voter Portal
+          </a>
+          <a href="/admin-panel/"
+             class="px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition {% if request.path == '/admin-panel/' %}bg-slate-900 border border-indigo-500/40 text-indigo-300 shadow-sm shadow-indigo-500/10{% else %}text-slate-400 hover:text-white hover:bg-slate-900/60{% endif %}">
+            Admin Console
+          </a>
+          <a href="/auditor/"
+             class="px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition {% if request.path == '/auditor/' %}bg-slate-900 border border-cyan-500/40 text-cyan-300 shadow-sm shadow-cyan-500/10{% else %}text-slate-400 hover:text-white hover:bg-slate-900/60{% endif %}">
+            Public Auditor
+          </a>
+        </nav>
 
-        <!-- Right actions -->
+        <!-- Right Side: Active Network Status -->
         <div class="flex items-center gap-3">
-          <!-- System live badge -->
-          <span class="hidden items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600 sm:flex">
-            <span class="live-dot h-1.5 w-1.5 rounded-full bg-emerald-500"></span>System Live
-          </span>
-          <!-- Polygon badge -->
-          <span class="hidden items-center gap-1.5 rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-xs font-semibold text-purple-600 sm:flex">
-            ⬡ Polygon Amoy
-          </span>
+          <div class="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/90 px-3 py-1 text-xs">
+            <span class="flex h-2 w-2 relative">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span class="font-mono text-[11px] text-slate-300">Polygon Amoy Testnet • Connected</span>
+          </div>
+
+          <!-- Gasless Badge -->
+          <div class="hidden sm:flex items-center gap-1 rounded-md border border-cyan-500/30 bg-cyan-950/40 px-2 py-0.5 text-[10px] font-mono text-cyan-300">
+            <span>⚡ Gasless</span>
+          </div>
         </div>
 
       </div>
     </div>
-  </nav>
-  <!-- ════════════════════════════════════════ -->
+  </header>
 
-  <!-- Page Content -->
-  <main>
+  <!-- ══════════════ MAIN CONTENT ══════════════ -->
+  <main class="flex-grow">
     {% if messages %}
-    <div class="mx-auto mt-4 max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-4">
       {% for message in messages %}
-      <div class="mb-3 flex items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium
-        {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700
-        {% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700
-        {% else %}border-indigo-200 bg-indigo-50 text-indigo-700{% endif %}">
+      <div class="rounded-xl border border-slate-800 bg-slate-900/80 p-3.5 text-xs font-mono text-slate-300 flex items-center gap-2.5">
+        <span class="h-2 w-2 rounded-full bg-cyan-400"></span>
         <span>{{ message }}</span>
       </div>
       {% endfor %}
@@ -186,11 +143,24 @@
     {% block content %}{% endblock %}
   </main>
 
-  <!-- Footer -->
-  <footer class="mt-20 border-t border-slate-100 py-10 text-center text-xs text-slate-400">
-    <p class="font-semibold text-slate-500">BlockVote India</p>
-    <p class="mt-1">Election Commission of India · All votes are cryptographically verified on Polygon Amoy Testnet.</p>
-    <p class="mt-1">Zero-Knowledge Proofs ensure your vote is anonymous and tamper-proof.</p>
+  <!-- ══════════════ FOOTER ══════════════ -->
+  <footer class="mt-20 border-t border-slate-900 bg-slate-950/90 py-8">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="h-2 w-2 rounded-full bg-cyan-400"></div>
+        <p class="text-xs text-slate-400 font-mono">
+          BlockVote India · Polygon Amoy Smart Contract: 
+          <a href="https://amoy.polygonscan.com/address/0x3B79d57a96F4B61c9e8D4Fe3B3cbfC465e63836B" target="_blank" class="text-cyan-400 hover:underline">0x3B79...836B</a>
+        </p>
+      </div>
+      <div class="flex items-center gap-4 text-xs text-slate-500 font-mono">
+        <span>Circom Groth16 Verifier</span>
+        <span>•</span>
+        <span>Zero Identity Leakage</span>
+        <span>•</span>
+        <span>Active Sentinel AI</span>
+      </div>
+    </div>
   </footer>
 
   {% block extra_scripts %}{% endblock %}
