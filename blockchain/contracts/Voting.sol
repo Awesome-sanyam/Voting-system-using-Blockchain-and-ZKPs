@@ -4,13 +4,15 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import "./ElectionRegistration.sol";
 
+// ── Interface matches SnarkJS-generated Groth16Verifier.sol exactly ──────────
+// Verifier.sol signature: verifyProof(uint[2] calldata, uint[2][2] calldata, uint[2] calldata, uint[4] calldata)
 interface IZKVerifier {
     function verifyProof(
-        uint256[2] memory a,
-        uint256[2][2] memory b,
-        uint256[2] memory c,
-        uint256[3] memory input
-    ) external view returns (bool r);
+        uint[2] calldata _pA,
+        uint[2][2] calldata _pB,
+        uint[2] calldata _pC,
+        uint[4] calldata _pubSignals
+    ) external view returns (bool);
 }
 
 contract Voting is ERC2771Context {
@@ -31,37 +33,44 @@ contract Voting is ERC2771Context {
         zkVerifier = IZKVerifier(_zkVerifier);
     }
 
-    /// @notice Casts an anonymous vote using a zk-SNARK proof
+    /// @notice Casts an anonymous vote using a zk-SNARK proof.
+    /// @dev Public signals order MUST match Circom circuit's public output order:
+    ///      [0] nullifier   — output of Poseidon(voterSecret, electionId)
+    ///      [1] merkleRoot  — from ElectionRegistration.merkleRoot()
+    ///      [2] electionId  — from ElectionRegistration.electionId()
+    ///      [3] candidateId — candidate chosen by voter
     function castVote(
-        uint256[2] memory a,
-        uint256[2][2] memory b,
-        uint256[2] memory c,
+        uint[2] calldata _pA,
+        uint[2][2] calldata _pB,
+        uint[2] calldata _pC,
         uint256 nullifier,
         uint256 candidateId
     ) external {
         require(registrationContract.isRootLocked(), "Election has not started");
         require(!usedNullifiers[nullifier], "Double Voting Error: Nullifier already spent");
 
-        // Prepare public input array expected by Circom Verifier: [nullifier, root, electionId, candidateId]
-        uint256[3] memory publicInputs = [
+        // Build public signal array in Circom output order: [nullifier, root, electionId, candidateId]
+        uint[4] memory publicInputs = [
             nullifier,
             uint256(registrationContract.merkleRoot()),
+            registrationContract.electionId(),
             candidateId
         ];
 
-        // Verify ZK Proof
+        // Verify the Groth16 proof against the on-chain verification key
         require(
-            zkVerifier.verifyProof(a, b, c, publicInputs),
+            zkVerifier.verifyProof(_pA, _pB, _pC, publicInputs),
             "Invalid Zero-Knowledge Proof"
         );
 
-        // Mark nullifier as spent to prevent reentrancy and double-voting
+        // Mark nullifier as spent BEFORE state change (CEI pattern)
         usedNullifiers[nullifier] = true;
         candidateVotes[candidateId] += 1;
 
         emit VoteCast(candidateId, nullifier);
     }
 
+    /// @notice Returns the on-chain vote tally for a candidate.
     function getTally(uint256 candidateId) external view returns (uint256) {
         return candidateVotes[candidateId];
     }

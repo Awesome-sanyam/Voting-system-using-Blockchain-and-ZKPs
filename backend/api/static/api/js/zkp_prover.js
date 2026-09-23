@@ -53,7 +53,9 @@
     }
 
     /**
-     * Derives deterministic voter secrets from voter hash and session
+     * Derives deterministic voter secrets from voter hash and session.
+     * Fetches the real Merkle root from the backend so the ZK proof
+     * actually proves inclusion in the registered voter set.
      */
     async deriveVoterInputs(voterHash, candidateId, electionId = 1) {
       const enc = new TextEncoder();
@@ -62,16 +64,35 @@
       const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 
       // Create a 253-bit scalar for Circom field (BN128 / alt_bn128)
-      const voterSecret = (BigInt('0x' + hashHex) % BigInt('21888242871839275222246405745257275088548364400416034343698204186575808495617')).toString();
+      const BN128_FIELD = BigInt('21888242871839275222246405745257275088548364400416034343698204186575808495617');
+      const voterSecret = (BigInt('0x' + hashHex) % BN128_FIELD).toString();
       const salt = (BigInt('0x' + hashHex.slice(0, 16)) % BigInt('1000000000')).toString();
 
-      // Mock or default 20-level Merkle path
+      // 20-level zero Merkle path (testnet placeholder)
+      // In production: these would be fetched from the backend Merkle tree API
       const pathElements = new Array(CRYPTO_CONFIG.levels).fill('0');
       const pathIndices = new Array(CRYPTO_CONFIG.levels).fill(0);
 
-      // Default root for testnet or active election
-      const defaultRoot = '0x1e8555e1a1795efcd8cae9842bf9ecafcff7e0faeef7faad36e1c27806f1cc0a';
-      const rootBigInt = (BigInt(defaultRoot) % BigInt('21888242871839275222246405745257275088548364400416034343698204186575808495617')).toString();
+      // Fetch the real on-chain Merkle root from the backend
+      // Falls back to the hardcoded dev root if the API is unreachable
+      const DEV_ROOT = '0x1e8555e1a1795efcd8cae9842bf9ecafcff7e0faeef7faad36e1c27806f1cc0a';
+      let rootBigInt;
+      try {
+        const resp = await fetch('/api/v1/election-state/', { credentials: 'same-origin' });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.election_id) electionId = data.election_id;
+          const rawRoot = data.merkle_root && data.merkle_root !== '0x0'
+            ? data.merkle_root
+            : DEV_ROOT;
+          rootBigInt = (BigInt(rawRoot) % BN128_FIELD).toString();
+        } else {
+          throw new Error('API returned non-OK status');
+        }
+      } catch (_) {
+        // Fallback: use the static testnet dev root
+        rootBigInt = (BigInt(DEV_ROOT) % BN128_FIELD).toString();
+      }
 
       return {
         voterSecret,

@@ -187,12 +187,14 @@
           });
         } catch (e) {
           console.error('[QRStreamer] QR Code generation failed:', e);
-          container.innerHTML = `<div class="p-4 text-xs text-cyan-400 break-all">${textData}</div>`;
+          container.innerHTML = `<div class="p-3 font-monospace small text-primary border border-primary-subtle rounded-3 bg-light">${textData}</div>`;
+        } catch (e) {
+          console.error('[QRStreamer] QR Code generation failed:', e);
         }
       } else {
         container.innerHTML = `
-          <div class="flex items-center justify-center h-48 w-48 bg-slate-900 border border-cyan-500/30 rounded-xl p-4 text-center">
-            <span class="text-xs text-cyan-300 font-mono">Token Active<br>${this.voterHash.slice(0, 14)}...</span>
+          <div class="d-flex align-items-center justify-content-center p-3 bg-dark border border-primary rounded-3 text-center" style="height:190px;width:190px;">
+            <span class="text-primary font-monospace small">Token Active<br>${this.voterHash ? this.voterHash.slice(0, 14) + '...' : 'Pending...'}</span>
           </div>`;
       }
     }

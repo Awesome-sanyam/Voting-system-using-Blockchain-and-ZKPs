@@ -3,6 +3,7 @@ import json
 import hashlib
 from functools import wraps
 import requests
+from asgiref.sync import async_to_sync
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -86,6 +87,30 @@ def submit_vote_relayer(request):
             if ai_response.status_code == 200:
                 threat_data = ai_response.json()
                 if threat_data.get("is_anomalous"):
+                    # Broadcast threat event to admin telemetry WebSocket group
+                    try:
+                        from channels.layers import get_channel_layer
+                        channel_layer = get_channel_layer()
+                        async_to_sync(channel_layer.group_send)("admin_telemetry", {
+                            "type": "threat_event",
+                            "event": {
+                                "type": "BLOCKED",
+                                "ip": client_ip,
+                                "score": threat_data.get("threat_score", 0),
+                                "msg": "Active Sentinel blocked anomalous vote relay",
+                                "timestamp": __import__('datetime').datetime.now().strftime('%H:%M:%S'),
+                                "id": f"EVT-{__import__('random').randint(10000, 99999)}"
+                            }
+                        })
+                    except Exception:
+                        pass  # Channel layer may not be available in all environments
+
+                    # Log to DB
+                    ThreatLog.objects.create(
+                        ip_address=client_ip,
+                        threat_score=threat_data.get("threat_score", 0),
+                        payload_size=payload_size
+                    )
                     return Response({
                         "error": "Security Threat Detected",
                         "details": "Active Sentinel blocked this request due to anomalous network behavior.",
@@ -95,7 +120,7 @@ def submit_vote_relayer(request):
             print("WARNING: Active Sentinel ML Service is offline. Bypassing threat detection.")
         # ---------------------------------------------------------
 
-        # 2. Extract ZK Proof Data sent by Flutter's SnarkJS WASM
+        # 2. Extract ZK Proof Data sent by the browser's SnarkJS WASM (via zkp_prover.js)
         a = data.get('a')
         b = data.get('b')
         c = data.get('c')
@@ -131,12 +156,17 @@ def submit_vote_relayer(request):
 
         # 6. Broadcast to the Blockchain
         tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+        tx_hex = w3.to_hex(tx_hash)
 
-        # Return the transaction hash to the voter immediately
+        # 7. Update has_voted flag in database
+        voter_hash_session = request.session.get('voter_hash')
+        if voter_hash_session:
+            VoterIdentity.objects.filter(voter_hash=voter_hash_session).update(has_voted=True)
+
         return Response({
             "status": "success",
             "message": "Vote cryptographically secured on Polygon.",
-            "transaction_hash": w3.to_hex(tx_hash)
+            "transaction_hash": tx_hex
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
@@ -147,10 +177,60 @@ def submit_vote_relayer(request):
 
 
 
+@api_view(['POST'])
+def lock_merkle_root(request):
+    """
+    Admin-only endpoint to lock the Merkle root for the active election.
+    Persists the root to the Django DB (Election.merkle_root) and sets is_root_locked=True.
+    The admin dashboard calls this via admin_telemetry.js when the Electoral Roll is sealed.
+
+    NOTE: In production, this should also call ElectionRegistration.lockMerkleRoot()
+    via Web3 to update the on-chain state. That call requires a funded admin wallet.
+    """
+    if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+        return Response({"error": "Unauthorized — Admin credentials required."}, status=403)
+
+    merkle_root = request.data.get('merkle_root', '').strip()
+    if not merkle_root:
+        return Response({"error": "merkle_root is required."}, status=400)
+
+    election = Election.objects.order_by('-created_at').first()
+    if not election:
+        return Response({"error": "No active election found in database."}, status=404)
+
+    if election.is_root_locked:
+        return Response({"error": "Merkle root is already locked for this election."}, status=409)
+
+    election.merkle_root = merkle_root
+    election.is_root_locked = True
+    election.save()
+
+    return Response({
+        "status": "locked",
+        "merkle_root": merkle_root,
+        "election_id": election.pk,
+        "message": "Electoral roll has been sealed. Voting is now open."
+    })
 
 
-import hashlib
-from .models import VoterIdentity
+@api_view(['GET'])
+def get_election_state(request):
+    """
+    Public endpoint returning the current election state.
+    Used by zkp_prover.js to fetch the real on-chain Merkle root
+    for inclusion proof generation before calling snarkjs.groth16.fullProve().
+    """
+    election = Election.objects.order_by('-created_at').first()
+    if not election:
+        return Response({"error": "No active election found."}, status=404)
+
+    return Response({
+        "election_id":   election.pk,
+        "election_name": election.name,
+        "merkle_root":   election.merkle_root or "0x0",
+        "is_locked":     election.is_root_locked,
+    })
+
 
 @api_view(['POST'])
 def verify_epic_and_register(request):
@@ -343,8 +423,9 @@ def voter_auth_view(request):
                 messages.error(request, "EPIC Voter ID and Registered Mobile Number are required.")
                 return render(request, 'api/auth_voter.html', {'active_tab': 'login', 'next': next_url})
 
-            if not otp or len(otp) < 4:
-                messages.error(request, "Please enter the 6-digit Security OTP (Sandbox code: 749201).")
+            SANDBOX_OTP = "749201"
+            if not otp or otp != SANDBOX_OTP:
+                messages.error(request, "Invalid Security OTP. Use sandbox code: 749201")
                 return render(request, 'api/auth_voter.html', {'active_tab': 'login', 'next': next_url})
 
             voter_hash = derive_voter_identity_hash(epic_number, phone_number)
@@ -556,14 +637,29 @@ def auditor_portal(request):
 
     total_votes = VoterIdentity.objects.filter(has_voted=True).count()
 
+    # Attempt to fetch real on-chain tallies via Web3
+    w3 = None
+    voting_contract = None
+    try:
+        w3 = Web3(Web3.HTTPProvider(POLYGON_RPC_URL))
+        if w3.is_connected() and VOTING_CONTRACT_ADDRESS != '0xYourDeployedContractAddress':
+            voting_contract = w3.eth.contract(address=VOTING_CONTRACT_ADDRESS, abi=VOTING_ABI)
+    except Exception:
+        pass
+
     candidate_data = []
     for c in candidates:
-        mock_count = 0
-        pct        = round(mock_count / total_votes * 100, 1) if total_votes > 0 else 0
+        real_count = 0
+        if voting_contract:
+            try:
+                real_count = voting_contract.functions.getTally(c.candidate_id).call()
+            except Exception:
+                real_count = 0
+        pct = round(real_count / total_votes * 100, 1) if total_votes > 0 else 0
         candidate_data.append({
             'candidate_id': c.candidate_id,
             'name':         c.name,
-            'vote_count':   mock_count,
+            'vote_count':   real_count,
             'vote_pct':     pct,
         })
 

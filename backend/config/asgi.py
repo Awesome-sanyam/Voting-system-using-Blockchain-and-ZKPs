@@ -1,16 +1,30 @@
 """
-ASGI config for config project.
+ASGI config for BlockVote India.
 
-It exposes the ASGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/6.0/howto/deployment/asgi/
+Mounts Django Channels ProtocolTypeRouter so that:
+  - HTTP requests  → handled by the standard Django ASGI application
+  - WebSocket upgrades → routed by URLRouter through api.routing
 """
 
 import os
-
-from django.core.asgi import get_asgi_application
+import django
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+django.setup()
 
-application = get_asgi_application()
+from django.core.asgi import get_asgi_application
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.auth import AuthMiddlewareStack
+import api.routing
+
+application = ProtocolTypeRouter({
+    # Standard Django HTTP handler
+    "http": get_asgi_application(),
+
+    # WebSocket handler — sessions are available inside consumers via self.scope["session"]
+    "websocket": AuthMiddlewareStack(
+        URLRouter(
+            api.routing.websocket_urlpatterns
+        )
+    ),
+})

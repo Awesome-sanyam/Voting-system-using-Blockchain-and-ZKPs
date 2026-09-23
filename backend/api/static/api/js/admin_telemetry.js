@@ -183,32 +183,67 @@
       if (!lockBtn) return;
 
       lockBtn.addEventListener('click', async () => {
-        if (confirm('Seal Electoral Roll Merkle Root on Polygon Amoy? No further voter registrations can be added.')) {
-          lockBtn.disabled = true;
-          lockBtn.innerHTML = `
-            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-            </svg> Sealing Root on-Chain...
-          `;
+        if (!confirm('Seal Electoral Roll Merkle Root on Polygon Amoy? No further voter registrations can be added.')) return;
 
-          // Generate or seal root
-          await new Promise(r => setTimeout(r, 1400));
+        const rootHash = '0x1e8555e1a1795efcd8cae9842bf9ecafcff7e0faeef7faad36e1c27806f1cc0a';
+        const originalHtml = lockBtn.innerHTML;
 
-          const rootHash = '0x1e8555e1a1795efcd8cae9842bf9ecafcff7e0faeef7faad36e1c27806f1cc0a';
+        // ── Show Bootstrap spinner (replaces Tailwind animate-spin) ──────────
+        lockBtn.disabled = true;
+        lockBtn.className = 'btn btn-secondary fw-bold px-4 py-2';
+        lockBtn.innerHTML = `
+          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+          Sealing Root on-Chain...
+        `;
+
+        // ── Call the real backend API endpoint ────────────────────────────────
+        const csrfToken = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('csrftoken='))
+          ?.split('=')[1] || '';
+
+        try {
+          const resp = await fetch('/api/v1/lock-merkle-root/', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ merkle_root: rootHash })
+          });
+
+          const result = await resp.json();
+
+          if (!resp.ok) {
+            // Already locked or other server error
+            alert(result.error || 'Failed to lock Merkle root. Check server logs.');
+            lockBtn.disabled = false;
+            lockBtn.className = 'btn btn-danger fw-bold px-4 py-2';
+            lockBtn.innerHTML = originalHtml;
+            return;
+          }
+
+          // ── Success — update UI with Bootstrap classes (replaces Tailwind) ──
           this.isMerkleLocked = true;
 
-          lockBtn.className = 'cursor-not-allowed rounded-xl bg-slate-800 border border-slate-700 px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider';
-          lockBtn.innerHTML = '✓ Electoral Roll Sealed';
+          lockBtn.className = 'btn btn-outline-success fw-bold px-4 py-2';
+          lockBtn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Electoral Roll Sealed';
 
           if (badgeContainer) {
+            const shortRoot = `${rootHash.substring(0, 16)}...${rootHash.slice(-8)}`;
             badgeContainer.innerHTML = `
-              <div class="flex items-center gap-2 rounded-xl border border-cyan-500/40 bg-cyan-950/40 px-4 py-2.5 text-xs font-mono text-cyan-300">
-                <span class="inline-block h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span>
-                <span>Merkle Root Sealed on-Chain: <strong class="text-cyan-200">${rootHash.substring(0, 16)}...${rootHash.slice(-8)}</strong></span>
+              <div class="d-flex align-items-center gap-2 border border-success rounded-3 px-3 py-2 bg-success bg-opacity-10 font-monospace small text-success">
+                <span class="badge bg-success rounded-pill pulse-indicator">LOCKED</span>
+                <span>Merkle Root Sealed: <strong>${shortRoot}</strong></span>
               </div>
             `;
           }
+        } catch (err) {
+          alert('Network error — could not reach the server. Is Django running?');
+          lockBtn.disabled = false;
+          lockBtn.className = 'btn btn-danger fw-bold px-4 py-2';
+          lockBtn.innerHTML = originalHtml;
         }
       });
     }

@@ -9,11 +9,13 @@
 Django>=5.0.0
 djangorestframework>=3.14.0
 channels>=4.0.0
+channels_redis>=4.0.0     # Required for production multi-worker WebSocket channel layer
 daphne>=4.0.0
 web3>=6.10.0
-psycopg2-binary>=2.9.9  # Pre-compiled PostgreSQL adapter (works on macOS/Windows)
-redis>=5.0.1
-python-dotenv>=1.0.0
+psycopg2-binary>=2.9.9    # PostgreSQL adapter (optional — SQLite used by default)
+redis>=5.0.1              # Used transitively by channels_redis
+python-dotenv>=1.0.0      # Loads backend/.env into Django settings
+asgiref>=3.7.0            # Needed for async_to_sync in views (Channels broadcast)
 
 # --- ML Microservice Dependencies (Active Sentinel) ---
 fastapi>=0.100.0

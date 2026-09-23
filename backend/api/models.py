@@ -22,7 +22,7 @@ class Election(models.Model):
 
 class Candidate(models.Model):
     """
-    Stores the candidates available for selection in the Flutter UI.
+    Stores the candidates available for selection in the Voter Portal.
     """
     election = models.ForeignKey(Election, on_delete=models.CASCADE, related_name='candidates')
     candidate_id = models.PositiveIntegerField(unique=True, help_text="Matches the ID on the smart contract")
