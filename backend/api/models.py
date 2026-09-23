@@ -63,3 +63,20 @@ class ThreatLog(models.Model):
 
     def __str__(self):
         return f"Threat from {self.ip_address} at {self.timestamp}"
+
+
+from django.contrib.auth.models import User
+
+class AuditorProfile(models.Model):
+    """
+    Manages gated access for certified electoral observers and public auditors.
+    Requires an authorized RSA/SHA-256 trusted invite token or administrator approval.
+    """
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='auditor_profile')
+    organization = models.CharField(max_length=255, help_text="Observer institution, NGO, or Electoral agency")
+    access_token_hash = models.CharField(max_length=66, blank=True, help_text="SHA-256 hash of the trusted invite token")
+    is_approved = models.BooleanField(default=False, help_text="Requires manual admin approval or valid trusted token")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Auditor: {self.user.username} ({self.organization}) | Approved: {self.is_approved}"

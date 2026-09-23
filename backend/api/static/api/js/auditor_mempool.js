@@ -90,20 +90,20 @@
       const timeStr = new Date().toLocaleTimeString();
 
       const tr = document.createElement('tr');
-      tr.className = 'border-b border-slate-800/60 transition hover:bg-slate-900/60 font-mono text-xs';
+      tr.className = 'font-monospace small';
       tr.innerHTML = `
-        <td class="py-3 px-4">
-          <a href="${AUDIT_CONFIG.explorerUrl}/tx/${txHash}" target="_blank" class="text-cyan-400 hover:text-cyan-300 underline font-medium">
+        <td class="px-4 py-2.5">
+          <a href="${AUDIT_CONFIG.explorerUrl}/tx/${txHash}" target="_blank" class="fw-semibold text-primary text-decoration-none">
             ${txHash.substring(0, 10)}...${txHash.slice(-8)}
           </a>
         </td>
-        <td class="py-3 px-4 text-slate-300">#${blockNumber}</td>
-        <td class="py-3 px-4 text-indigo-300 truncate max-w-[120px]">${nullifier}</td>
-        <td class="py-3 px-4 text-slate-400">${gasUsed} wei</td>
-        <td class="py-3 px-4 text-slate-400">${timeStr}</td>
-        <td class="py-3 px-4">
-          <span class="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-950/40 px-2 py-0.5 text-[10px] text-emerald-400">
-            <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Confirmed
+        <td class="px-4 py-2.5 text-secondary">#${blockNumber}</td>
+        <td class="px-4 py-2.5 text-dark fw-bold text-truncate" style="max-width: 140px;">${nullifier}</td>
+        <td class="px-4 py-2.5 text-muted">${gasUsed} wei</td>
+        <td class="px-4 py-2.5 text-muted">${timeStr}</td>
+        <td class="px-4 py-2.5">
+          <span class="badge bg-success-subtle text-success font-monospace">
+            <i class="bi bi-check-circle-fill me-1"></i>Confirmed
           </span>
         </td>
       `;
@@ -141,14 +141,14 @@
         if (resultsContainer) {
           resultsContainer.classList.remove('hidden');
           resultsContainer.innerHTML = `
-            <div class="rounded-2xl border border-cyan-500/30 bg-slate-900/90 p-6 font-mono text-xs">
-              <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
-                <span class="text-cyan-400 font-bold tracking-wider uppercase text-sm">Running Verification Pipeline</span>
-                <span class="text-slate-400 animate-pulse">Checking On-Chain Cryptography...</span>
+            <div class="card border-0 bg-light p-4 font-monospace small">
+              <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                <span class="text-primary fw-bold text-uppercase">Running Verification Pipeline</span>
+                <span class="text-muted small">Checking On-Chain Cryptography...</span>
               </div>
-              <div class="space-y-3" id="audit-log-steps">
-                <div class="flex items-center gap-2 text-slate-300">
-                  <span class="text-cyan-400">▶</span> Connecting to Polygon Amoy RPC (${AUDIT_CONFIG.rpcUrl})...
+              <div class="d-flex flex-column gap-2" id="audit-log-steps">
+                <div class="d-flex align-items-center gap-2 text-dark">
+                  <span class="text-primary">▶</span> Connecting to Polygon Amoy RPC (${AUDIT_CONFIG.rpcUrl})...
                 </div>
               </div>
             </div>
@@ -160,8 +160,8 @@
         const addStep = (msg, isSuccess = true) => {
           if (!logContainer) return;
           const div = document.createElement('div');
-          div.className = 'flex items-center gap-2 ' + (isSuccess ? 'text-slate-300' : 'text-rose-400');
-          div.innerHTML = `<span class="${isSuccess ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}">✓</span> ${msg}`;
+          div.className = 'd-flex align-items-center gap-2 ' + (isSuccess ? 'text-secondary' : 'text-danger');
+          div.innerHTML = `<span class="${isSuccess ? 'text-success fw-bold' : 'text-danger fw-bold'}">✓</span> ${msg}`;
           logContainer.appendChild(div);
         };
 
@@ -184,22 +184,20 @@
 
         if (resultsContainer) {
           const finalBanner = document.createElement('div');
-          finalBanner.className = 'mt-5 rounded-xl border border-emerald-500/40 bg-emerald-950/30 p-4 text-center';
+          finalBanner.className = 'mt-3 alert alert-success border-0 p-3 text-center mb-0';
           finalBanner.innerHTML = `
-            <div class="flex items-center justify-center gap-2 text-emerald-400 font-bold text-base mb-1">
-              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
-              </svg>
+            <div class="d-flex align-items-center justify-center justify-content-center gap-2 text-success fw-bold fs-6 mb-1">
+              <i class="bi bi-patch-check-fill fs-5"></i>
               MATHEMATICAL AUDIT PASSED: 100% ELECTION INTEGRITY VERIFIED
             </div>
-            <p class="text-xs text-slate-400">All votes are cryptographically valid, zero double-voting instances found, zero state tampering.</p>
+            <p class="small text-muted mb-0">All votes are cryptographically valid, zero double-voting instances found, zero state tampering.</p>
           `;
           resultsContainer.firstElementChild.appendChild(finalBanner);
         }
 
         btn.disabled = false;
-        btn.innerHTML = '✓ Audit Completed (Re-run Verification)';
-        btn.className = 'rounded-xl border border-emerald-500/50 bg-emerald-600/20 px-5 py-2.5 text-xs font-bold text-emerald-300 transition hover:bg-emerald-600/30 uppercase tracking-wider';
+        btn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Audit Completed (Re-run Verification)';
+        btn.className = 'btn btn-outline-success fw-bold px-4 py-2.5 shadow-sm d-flex align-items-center gap-2';
         this.isAuditing = false;
       });
     }

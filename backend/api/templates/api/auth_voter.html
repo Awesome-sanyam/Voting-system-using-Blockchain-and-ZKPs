@@ -1,0 +1,210 @@
+{% extends "api/base.html" %}
+{% load static %}
+
+{% block title %}Voter Authentication & Identity Gateway — BlockVote India{% endblock %}
+{% block meta_description %}Authenticate or register your citizen identity using the API Setu KYC Sandbox simulation.{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+
+      <!-- ── Breadcrumb / Back ─────────────────────────────────────────── -->
+      <div class="mb-3">
+        <a href="/" class="text-decoration-none text-muted small font-monospace">
+          <i class="bi bi-arrow-left me-1"></i>Back to Operational Hub
+        </a>
+      </div>
+
+      <!-- ── Authentication Card ───────────────────────────────────────── -->
+      <div class="card card-mnc">
+        
+        <!-- Header -->
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="badge bg-primary-subtle text-primary font-monospace text-uppercase">Voter Gateway</span>
+            <span class="badge bg-light text-secondary font-monospace border">ECI Sandbox</span>
+          </div>
+          <h1 class="h4 fw-bold text-dark mb-1">Citizen Identity Verification</h1>
+          <p class="text-muted small mb-3">
+            Mathematical zero-knowledge voter whitelisting. Identity hashes are salted locally before entering the Merkle roll.
+          </p>
+
+          <!-- Tab Navigation -->
+          <ul class="nav nav-pills nav-fill bg-light p-1 rounded font-monospace small mb-2" id="voterAuthTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link rounded py-2 {% if active_tab != 'register' %}active fw-semibold{% endif %}" id="login-tab" data-bs-toggle="pill" data-bs-target="#login-panel" type="button" role="tab" aria-controls="login-panel" aria-selected="{% if active_tab != 'register' %}true{% else %}false{% endif %}">
+                <i class="bi bi-box-arrow-in-right me-1"></i>Voter OTP Login
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link rounded py-2 {% if active_tab == 'register' %}active fw-semibold{% endif %}" id="register-tab" data-bs-toggle="pill" data-bs-target="#register-panel" type="button" role="tab" aria-controls="register-panel" aria-selected="{% if active_tab == 'register' %}true{% else %}false{% endif %}">
+                <i class="bi bi-person-plus me-1"></i>Register (API Setu)
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Body -->
+        <div class="card-body p-4 pt-2">
+          
+          <div class="tab-content" id="voterAuthTabContent">
+
+            <!-- ════════════════════════════════════════════════════════════
+                 TAB 1: OTP LOGIN
+                 ════════════════════════════════════════════════════════════ -->
+            <div class="tab-pane fade {% if active_tab != 'register' %}show active{% endif %}" id="login-panel" role="tabpanel" aria-labelledby="login-tab">
+              <form method="POST" action="/auth/voter/" id="form-voter-login" class="d-flex flex-column gap-3 mt-2">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="login">
+                <input type="hidden" name="next" value="{{ next }}">
+
+                <!-- EPIC Input -->
+                <div>
+                  <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="login-epic">
+                    EPIC Voter ID
+                  </label>
+                  <input type="text" id="login-epic" name="epic_number" maxlength="10" placeholder="e.g. IND1234567" value="IND1234567"
+                         class="form-control font-monospace text-uppercase" required />
+                  <div class="form-text small font-monospace text-muted" id="login-epic-feedback">
+                    Standard 10-character Electoral Photo Identity Card number.
+                  </div>
+                </div>
+
+                <!-- Mobile Input -->
+                <div>
+                  <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="login-mobile">
+                    Registered Mobile Number
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light font-monospace small text-muted">+91</span>
+                    <input type="tel" id="login-mobile" name="phone_number" maxlength="10" placeholder="9876543210" value="9876543210"
+                           class="form-control font-monospace" required />
+                  </div>
+                </div>
+
+                <!-- OTP Input with Sandbox Hint -->
+                <div>
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label fw-bold small text-secondary text-uppercase mb-0" for="login-otp">
+                      6-Digit Security OTP
+                    </label>
+                    <span class="badge bg-info-subtle text-info font-monospace small">Sandbox Code: 749201</span>
+                  </div>
+                  <input type="text" id="login-otp" name="otp" maxlength="6" placeholder="749201" value="749201"
+                         class="form-control font-monospace fw-bold fs-5 text-center letter-spacing-2" required />
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg rounded-3 fw-semibold shadow-sm w-100 py-3 mt-2 d-flex align-items-center justify-content-center gap-2">
+                  <i class="bi bi-shield-check"></i>
+                  <span>Validate OTP & Enter Terminal</span>
+                </button>
+              </form>
+            </div>
+
+            <!-- ════════════════════════════════════════════════════════════
+                 TAB 2: REGISTER VIA API SETU
+                 ════════════════════════════════════════════════════════════ -->
+            <div class="tab-pane fade {% if active_tab == 'register' %}show active{% endif %}" id="register-panel" role="tabpanel" aria-labelledby="register-tab">
+              <form method="POST" action="/auth/voter/" id="form-voter-register" class="d-flex flex-column gap-3 mt-2">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="register">
+                <input type="hidden" name="next" value="{{ next }}">
+
+                <div class="alert alert-light border small font-monospace text-muted mb-0 py-2 px-3">
+                  <i class="bi bi-info-circle-fill text-primary me-1"></i>
+                  Simulates government KYC query via API Setu to verify eligibility (>18 years).
+                </div>
+
+                <!-- Registration EPIC Input -->
+                <div>
+                  <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="reg-epic">
+                    EPIC Voter ID Number
+                  </label>
+                  <input type="text" id="reg-epic" name="epic_number" maxlength="10" placeholder="e.g. IND9876543" value="IND9876543"
+                         class="form-control font-monospace text-uppercase" required />
+                  <div id="epic-format-alert" class="small font-monospace mt-1 text-muted">
+                    Format: 3 letters + 7 digits (e.g., <span class="fw-bold">IND9876543</span>).
+                  </div>
+                </div>
+
+                <!-- Registration Mobile Input -->
+                <div>
+                  <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="reg-mobile">
+                    Aadhaar-Linked Mobile Number
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light font-monospace small text-muted">+91</span>
+                    <input type="tel" id="reg-mobile" name="phone_number" maxlength="10" placeholder="9876543211" value="9876543211"
+                           class="form-control font-monospace" required />
+                  </div>
+                </div>
+
+                <button type="submit" id="btn-submit-registration" class="btn btn-success btn-lg rounded-3 fw-semibold shadow-sm w-100 py-3 mt-2 d-flex align-items-center justify-content-center gap-2">
+                  <i class="bi bi-person-check-fill"></i>
+                  <span>Register & Whitelist Citizen Hash</span>
+                </button>
+              </form>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Card Footer -->
+        <div class="card-footer bg-light border-top py-3 font-monospace small text-muted text-center">
+          <i class="bi bi-lock-fill me-1"></i>
+          Raw Voter IDs are cryptographically hashed using SHA-256 + Server Salt.
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Real-time client-side validation for EPIC format (e.g., 3 letters + 7 numbers)
+    const epicRegex = /^[A-Z]{3}[0-9]{7}$/;
+
+    const regEpicInput = document.getElementById('reg-epic');
+    const formatAlert = document.getElementById('epic-format-alert');
+    const submitBtn = document.getElementById('btn-submit-registration');
+
+    function validateEpicInput(input, feedbackEl) {
+      if (!input || !feedbackEl) return;
+      const val = input.value.trim().toUpperCase();
+      input.value = val;
+
+      if (val.length === 0) {
+        feedbackEl.className = 'small font-monospace mt-1 text-muted';
+        feedbackEl.textContent = 'Format: 3 letters + 7 digits (e.g., IND9876543).';
+        return true;
+      }
+
+      if (epicRegex.test(val)) {
+        feedbackEl.className = 'small font-monospace mt-1 text-success fw-semibold';
+        feedbackEl.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Valid EPIC Identifier Format';
+        return true;
+      } else {
+        feedbackEl.className = 'small font-monospace mt-1 text-danger';
+        feedbackEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i>Invalid format: Expecting 3 uppercase letters followed by 7 digits';
+        return false;
+      }
+    }
+
+    regEpicInput?.addEventListener('input', () => {
+      validateEpicInput(regEpicInput, formatAlert);
+    });
+
+    const loginEpicInput = document.getElementById('login-epic');
+    const loginFeedback = document.getElementById('login-epic-feedback');
+    loginEpicInput?.addEventListener('input', () => {
+      validateEpicInput(loginEpicInput, loginFeedback);
+    });
+  });
+</script>
+{% endblock %}

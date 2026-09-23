@@ -1,140 +1,198 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en" class="dark scroll-smooth">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}BlockVote India — Sovereign Zero-Knowledge Voting{% endblock %}</title>
-  <meta name="description" content="{% block meta_description %}Sovereign, anonymous, tamper-proof blockchain voting on Polygon with client-side zero-knowledge proofs.{% endblock %}" />
+  <meta name="description" content="{% block meta_description %}Sovereign Zero-Knowledge Electronic Voting System on Polygon Amoy.{% endblock %}">
 
-  <!-- Tailwind CSS CDN configured for Executive Dark Mode -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            slate: {
-              850: '#111827',
-              900: '#0f172a',
-              950: '#030712',
-            },
-            cyan: {
-              400: '#22d3ee',
-              500: '#06b6d4',
-              600: '#0891b2',
-            },
-            indigo: {
-              400: '#818cf8',
-              500: '#6366f1',
-              600: '#4f46e5',
-            }
-          },
-          fontFamily: {
-            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-            mono: ['"JetBrains Mono"', '"Space Grotesk"', 'monospace'],
-          }
-        }
-      }
-    };
-  </script>
+  <!-- ── Google Fonts: Plus Jakarta Sans & JetBrains Mono ──────────────── -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Google Fonts: Inter & JetBrains Mono -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- ── Bootstrap 5.3.3 & Bootstrap Icons ─────────────────────────────── -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-  <!-- Custom Cybernetic CSS -->
-  <link rel="stylesheet" href="{% static 'api/css/custom.css' %}" />
-
-  <!-- QRCode.js -->
+  <!-- ── SnarkJS Groth16 In-Browser Prover & QRCode Library ────────────── -->
+  <script src="https://cdn.jsdelivr.net/npm/snarkjs@0.7.4/build/snarkjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-  <!-- SnarkJS (Groth16 client-side zero-knowledge proof engine) -->
-  <script src="https://cdn.jsdelivr.net/npm/snarkjs@latest/build/snarkjs.min.js"></script>
-
-  <!-- Core ZKP Prover JS -->
-  <script src="{% static 'api/js/zkp_prover.js' %}"></script>
-
+  <!-- ── MNC Enterprise Design System Overrides ────────────────────────── -->
   <style>
-    body { font-family: 'Inter', sans-serif; }
-    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    :root {
+      --bv-bg: #f8fafc;
+      --bv-surface: #ffffff;
+      --bv-primary: #2563eb;
+      --bv-primary-hover: #1d4ed8;
+      --bv-border: #e2e8f0;
+      --bv-text-primary: #0f172a;
+      --bv-text-muted: #64748b;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bv-bg);
+      color: var(--bv-text-primary);
+      letter-spacing: -0.01em;
+    }
+    .font-monospace, code, pre, .font-mono {
+      font-family: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    }
+    /* Sleek Navigation Hover Transitions */
+    .nav-link-mnc {
+      color: var(--bv-text-muted);
+      font-weight: 500;
+      transition: all 0.2s ease;
+      border-radius: 8px;
+      padding: 0.5rem 0.85rem !important;
+    }
+    .nav-link-mnc:hover {
+      color: var(--bv-primary);
+      background-color: #f1f5f9;
+    }
+    .nav-link-mnc.active {
+      color: var(--bv-primary) !important;
+      background-color: #eff6ff !important;
+      font-weight: 600;
+    }
+    /* Elevated MNC Cards & Soft Shadows */
+    .card-mnc {
+      background: var(--bv-surface);
+      border-radius: 1rem !important;
+      border: 1px solid rgba(226, 232, 240, 0.8) !important;
+      box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.02) !important;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card-mnc-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.08), 0 4px 8px -2px rgba(15, 23, 42, 0.03) !important;
+    }
+    /* Large Airy Form Inputs */
+    .form-control-mnc {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+    .form-control-mnc:focus {
+      background-color: #ffffff;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+    }
+    /* Smooth Pulse Animation for Live Sessions */
+    @keyframes pulse-live {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .pulse-indicator {
+      animation: pulse-live 2s infinite ease-in-out;
+    }
+    /* Compatibility alias for existing JS modules using classList toggle('hidden') */
+    .hidden {
+      display: none !important;
+    }
+    .cursor-pointer {
+      cursor: pointer;
+    }
   </style>
 
   {% block extra_head %}{% endblock %}
 </head>
 
-<body class="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-cyan-500 selection:text-slate-950">
+<body class="bg-light d-flex flex-column min-vh-100 text-dark">
 
-  <!-- ══════════════ HEADER & NAVIGATION ══════════════ -->
-  <header class="sticky top-0 z-50 border-b border-slate-800/80 bg-slate-950/85 backdrop-blur-xl">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="flex h-16 items-center justify-between">
+  <!-- ══════════════ SLEEK WHITE GLASS-LIKE HEADER ══════════════ -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm py-3 mb-4 sticky-top border-bottom border-light-subtle">
+    <div class="container-fluid px-4">
 
-        <!-- Brand Identity -->
-        <a href="/" class="flex items-center gap-3 group">
-          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600 p-0.5 shadow-lg shadow-cyan-500/20 group-hover:shadow-cyan-500/40 transition">
-            <div class="flex h-full w-full items-center justify-center rounded-[10px] bg-slate-950">
-              <svg class="h-5 w-5 text-cyan-400 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-            </div>
+      <!-- Brand Identity -->
+      <a class="navbar-brand d-flex align-items-center fw-bold text-dark me-4" href="/">
+        <div class="bg-primary text-white rounded-3 p-2 d-flex align-items-center justify-content-center me-2.5 shadow-sm" style="width: 36px; height: 36px;">
+          <i class="bi bi-shield-check fs-5"></i>
+        </div>
+        <div>
+          <span class="fs-5 tracking-tight">BlockVote</span>
+          <span class="text-primary fs-5 ms-0.5">India</span>
+        </div>
+        <span class="badge bg-primary-subtle text-primary ms-2.5 px-2 py-1 small font-monospace rounded-pill" style="font-size: 0.65rem; font-weight: 600;">ENTERPRISE ZKP</span>
+      </a>
+
+      <!-- Mobile Hamburger Toggler -->
+      <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarEnterprise" aria-controls="navbarEnterprise" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <!-- Nav Links & System Telemetry -->
+      <div class="collapse navbar-collapse" id="navbarEnterprise">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1">
+          <li class="nav-item">
+            <a class="nav-link nav-link-mnc {% if request.path == '/' %}active{% endif %}" href="/">
+              <i class="bi bi-grid-fill me-1.5 opacity-75"></i>Portal Hub
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-mnc {% if request.path == '/voter/' or '/auth/voter/' in request.path %}active{% endif %}" href="/voter/">
+              <i class="bi bi-person-check-fill me-1.5 opacity-75"></i>Voter Portal
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-mnc {% if request.path == '/admin-panel/' or '/auth/admin/' in request.path %}active{% endif %}" href="/admin-panel/">
+              <i class="bi bi-speedometer2 me-1.5 opacity-75"></i>Admin Console
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-mnc {% if request.path == '/auditor/' or '/auth/auditor/' in request.path %}active{% endif %}" href="/auditor/">
+              <i class="bi bi-journal-check me-1.5 opacity-75"></i>Public Auditor
+            </a>
+          </li>
+        </ul>
+
+        <!-- Network & Gasless Telemetry Badges + Session Logout -->
+        <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
+          <div class="badge bg-light text-secondary border d-flex align-items-center py-2 px-3 rounded-pill font-monospace small">
+            <span class="spinner-grow spinner-grow-sm text-success me-2" role="status" style="width: 0.5rem; height: 0.5rem;"></span>
+            <span class="text-dark fw-semibold">Polygon Amoy</span>
+            <span class="text-muted ms-1">(80002)</span>
           </div>
-          <div>
-            <div class="flex items-center gap-1.5">
-              <span class="text-base font-extrabold tracking-tight text-white">BlockVote</span>
-              <span class="bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-base font-black text-transparent">India</span>
-              <span class="ml-1 rounded bg-cyan-950/80 border border-cyan-500/30 px-1.5 py-0.5 text-[9px] font-mono text-cyan-300">ZKP</span>
-            </div>
-            <p class="text-[10px] font-medium text-slate-400 tracking-wider">SOVEREIGN BALLOT INFRASTRUCTURE</p>
-          </div>
-        </a>
 
-        <!-- Portal Navigation Links -->
-        <nav class="hidden md:flex items-center gap-1.5">
-          <a href="/voter/"
-             class="px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition {% if request.path == '/voter/' or request.path == '/' %}bg-slate-900 border border-cyan-500/40 text-cyan-300 shadow-sm shadow-cyan-500/10{% else %}text-slate-400 hover:text-white hover:bg-slate-900/60{% endif %}">
-            Voter Portal
+          <div class="badge bg-primary-subtle text-primary border border-primary-subtle py-2 px-3 rounded-pill font-monospace small d-flex align-items-center">
+            <i class="bi bi-lightning-charge-fill me-1.5 text-primary"></i>
+            <span>Gasless Relayer</span>
+          </div>
+
+          {% if request.session.voter_hash or request.user.is_authenticated %}
+          <a href="/logout/" class="btn btn-outline-danger btn-sm font-monospace ms-2 rounded-pill px-3 py-1.5 d-flex align-items-center shadow-xs" title="Terminate Session">
+            <i class="bi bi-box-arrow-right me-1.5"></i>Logout
           </a>
-          <a href="/admin-panel/"
-             class="px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition {% if request.path == '/admin-panel/' %}bg-slate-900 border border-indigo-500/40 text-indigo-300 shadow-sm shadow-indigo-500/10{% else %}text-slate-400 hover:text-white hover:bg-slate-900/60{% endif %}">
-            Admin Console
-          </a>
-          <a href="/auditor/"
-             class="px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition {% if request.path == '/auditor/' %}bg-slate-900 border border-cyan-500/40 text-cyan-300 shadow-sm shadow-cyan-500/10{% else %}text-slate-400 hover:text-white hover:bg-slate-900/60{% endif %}">
-            Public Auditor
-          </a>
-        </nav>
-
-        <!-- Right Side: Active Network Status -->
-        <div class="flex items-center gap-3">
-          <div class="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/90 px-3 py-1 text-xs">
-            <span class="flex h-2 w-2 relative">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span class="font-mono text-[11px] text-slate-300">Polygon Amoy Testnet • Connected</span>
-          </div>
-
-          <!-- Gasless Badge -->
-          <div class="hidden sm:flex items-center gap-1 rounded-md border border-cyan-500/30 bg-cyan-950/40 px-2 py-0.5 text-[10px] font-mono text-cyan-300">
-            <span>⚡ Gasless</span>
-          </div>
+          {% endif %}
         </div>
 
       </div>
     </div>
-  </header>
+  </nav>
 
   <!-- ══════════════ MAIN CONTENT ══════════════ -->
-  <main class="flex-grow">
+  <main class="flex-grow-1">
     {% if messages %}
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-4">
+    <div class="container-fluid px-4 mb-3">
       {% for message in messages %}
-      <div class="rounded-xl border border-slate-800 bg-slate-900/80 p-3.5 text-xs font-mono text-slate-300 flex items-center gap-2.5">
-        <span class="h-2 w-2 rounded-full bg-cyan-400"></span>
-        <span>{{ message }}</span>
+      <div class="alert {% if message.tags == 'error' %}alert-danger border-danger-subtle{% elif message.tags == 'success' %}alert-success border-success-subtle{% elif message.tags == 'warning' %}alert-warning border-warning-subtle{% else %}alert-info border-info-subtle{% endif %} alert-dismissible fade show shadow-sm rounded-4 d-flex align-items-center p-3 mb-2" role="alert">
+        {% if message.tags == 'error' %}
+        <i class="bi bi-exclamation-octagon-fill me-2.5 fs-5 text-danger"></i>
+        {% elif message.tags == 'success' %}
+        <i class="bi bi-check-circle-fill me-2.5 fs-5 text-success"></i>
+        {% elif message.tags == 'warning' %}
+        <i class="bi bi-exclamation-triangle-fill me-2.5 fs-5 text-warning"></i>
+        {% else %}
+        <i class="bi bi-info-circle-fill me-2.5 fs-5 text-info"></i>
+        {% endif %}
+        <div class="fw-medium small">{{ message }}</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
       {% endfor %}
     </div>
@@ -143,25 +201,32 @@
     {% block content %}{% endblock %}
   </main>
 
-  <!-- ══════════════ FOOTER ══════════════ -->
-  <footer class="mt-20 border-t border-slate-900 bg-slate-950/90 py-8">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <div class="h-2 w-2 rounded-full bg-cyan-400"></div>
-        <p class="text-xs text-slate-400 font-mono">
-          BlockVote India · Polygon Amoy Smart Contract: 
-          <a href="https://amoy.polygonscan.com/address/0x3B79d57a96F4B61c9e8D4Fe3B3cbfC465e63836B" target="_blank" class="text-cyan-400 hover:underline">0x3B79...836B</a>
-        </p>
+  <!-- ══════════════ ENTERPRISE ACADEMIC FOOTER ══════════════ -->
+  <footer class="bg-white border-top py-4 mt-5">
+    <div class="container-fluid px-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 text-muted small font-monospace">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-shield-lock text-primary"></i>
+        <span>BlockVote India · Polygon Amoy Smart Contract: </span>
+        <a href="https://amoy.polygonscan.com/address/0x3B79d57a96F4B61c9e8D4Fe3B3cbfC465e63836B" target="_blank" class="text-primary text-decoration-none fw-semibold">
+          0x3B79d57a96F4B61c9e8D4Fe3B3cbfC465e63836B
+        </a>
       </div>
-      <div class="flex items-center gap-4 text-xs text-slate-500 font-mono">
-        <span>Circom Groth16 Verifier</span>
+
+      <div class="d-flex align-items-center gap-3">
+        <span>ZKP Standard: <strong>Groth16 / BN128</strong></span>
         <span>•</span>
-        <span>Zero Identity Leakage</span>
+        <span>Merkle Depth: <strong>20 Levels</strong></span>
         <span>•</span>
-        <span>Active Sentinel AI</span>
+        <span class="text-success"><i class="bi bi-shield-fill-check me-1"></i>MNC Tier Security</span>
       </div>
     </div>
   </footer>
+
+  <!-- ── Bootstrap 5.3.3 Bundle JS ────────────────────────────────────── -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+  <!-- ── Local Circuit Helper (SnarkJS / ZKP Prover) ───────────────────── -->
+  <script src="{% static 'api/js/zkp_prover.js' %}"></script>
 
   {% block extra_scripts %}{% endblock %}
 </body>

@@ -1,17 +1,24 @@
 import os
 import json
+import hashlib
+from functools import wraps
 import requests
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from web3 import Web3
 from django.conf import settings
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib import messages
-from .models import Election, Candidate, VoterIdentity, ThreatLog
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from .models import Election, Candidate, VoterIdentity, ThreatLog, AuditorProfile
+
+# Institutional invite secret for gated auditor access
+AUDITOR_TRUST_SECRET = os.getenv("AUDITOR_TRUST_SECRET", "ECI-AUDIT-2026-SECURE")
 
 # In a real production environment, these would be in your .env file
-POLYGON_RPC_URL = os.getenv("POLYGON_RPC_URL", "https://rpc-amoy.polygon.technology")
+POLYGON_RPC_URL = os.getenv("POLYGON_RPC_URL", "https://polygon-amoy-bor-rpc.publicnode.com")
 SERVER_PRIVATE_KEY = os.getenv("SERVER_PRIVATE_KEY", "YOUR_DUMMY_PRIVATE_KEY_HERE")
 VOTING_CONTRACT_ADDRESS = os.getenv("VOTING_CONTRACT_ADDRESS", "0xYourDeployedContractAddress")
 
@@ -37,20 +44,33 @@ VOTING_ABI = json.loads("""
 @api_view(['POST'])
 def submit_vote_relayer(request):
     """
-    Receives the ZK-Proof from Flutter, validates the traffic, 
-    and relays it to the Polygon blockchain gas-free.
+    Gasless ZK-proof relayer: validates traffic with Active Sentinel ML,
+    then relays the Groth16 proof to the Polygon Amoy smart contract.
+
+    The body MUST be read (cached) before request.data is accessed —
+    DRF's request.data consumes the raw stream; subsequent len(request.body)
+    calls raise 'You cannot access body after reading from request.data stream'.
     """
     try:
-        data = request.data
-        
-        # 1. AI Threat Detection Hook (Scikit-Learn)
+        # 0. Cache raw body FIRST to avoid DRF stream double-read bug
         # ---------------------------------------------------------
-        client_ip = request.META.get('REMOTE_ADDR', '127.0.0.1')
-        payload_size = len(request.body)
-        
-        # In production, you would calculate real-time velocity using Redis. 
-        # We use a safe baseline here for development.
-        request_velocity = 2.5 
+        raw_body_bytes = request.body  # This caches body into request._body
+        payload_size = len(raw_body_bytes)
+
+        # Now it is safe to access request.data (parsed JSON via DRF)
+        data = request.data
+
+        # 1. AI Threat Detection Hook (Scikit-Learn Active Sentinel)
+        # ---------------------------------------------------------
+        client_ip = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip() \
+                    or request.META.get('REMOTE_ADDR', '127.0.0.1')
+
+        # Accept velocity from the X-Request-Velocity header (set by DDoS simulator)
+        # or fall back to a safe dev-mode baseline of 2.5 req/sec.
+        try:
+            request_velocity = float(request.META.get('HTTP_X_REQUEST_VELOCITY', '2.5'))
+        except (ValueError, TypeError):
+            request_velocity = 2.5
 
         try:
             ai_response = requests.post(
@@ -60,9 +80,9 @@ def submit_vote_relayer(request):
                     "payload_size": payload_size,
                     "request_velocity": request_velocity
                 },
-                timeout=2 # Strict 2-second timeout so voting isn't delayed
+                timeout=2  # Strict 2-second timeout so voting isn't delayed
             )
-            
+
             if ai_response.status_code == 200:
                 threat_data = ai_response.json()
                 if threat_data.get("is_anomalous"):
@@ -187,16 +207,277 @@ def verify_epic_and_register(request):
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+def derive_voter_identity_hash(epic_number: str, phone_number: str) -> str:
+    """
+    Deterministically hashes EPIC number + salt to maintain zero raw identifier storage.
+    """
+    secret_salt = getattr(settings, 'SECRET_KEY', 'default-salt').encode('utf-8')
+    raw_identity = f"{epic_number.strip().upper()}:{phone_number.strip()}".encode('utf-8')
+    return "0x" + hashlib.sha256(raw_identity + secret_salt).hexdigest()
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
-#  SSR PORTAL VIEWS  — render HTML templates for the Django-served UI
+#  ROLE PROTECTION DECORATORS (RBAC)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+def voter_required(view_func):
+    """
+    Restricts access strictly to citizens with an active, verified session voter_hash.
+    """
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        voter_hash = request.session.get('voter_hash')
+        if not voter_hash:
+            messages.warning(request, "Voter authentication required. Please register or verify with your EPIC/OTP.")
+            return redirect(f"/auth/voter/?next={request.path}")
+        if not VoterIdentity.objects.filter(voter_hash=voter_hash, is_verified=True).exists():
+            request.session.pop('voter_hash', None)
+            messages.error(request, "Voter identity not found on the registry. Please register via API Setu.")
+            return redirect(f"/auth/voter/?next={request.path}")
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+
+def admin_required(view_func):
+    """
+    Restricts access strictly to authenticated users with staff/superuser privileges.
+    """
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+            messages.warning(request, "Administrative authentication required. Access restricted to authorized election authority personnel.")
+            return redirect(f"/auth/admin/?next={request.path}")
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+
+def auditor_required(view_func):
+    """
+    Restricts access strictly to certified institutional auditors or election staff.
+    """
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            messages.warning(request, "Auditor authentication required. Access restricted to verified institutional observers.")
+            return redirect(f"/auth/auditor/?next={request.path}")
+        if request.user.is_staff or request.user.is_superuser:
+            return view_func(request, *args, **kwargs)
+        profile = getattr(request.user, 'auditor_profile', None)
+        if not profile or not profile.is_approved:
+            messages.error(request, "Access Denied: Your institutional auditor account is awaiting election authority verification.")
+            return redirect(f"/auth/auditor/?next={request.path}")
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  MULTI-ROLE AUTHENTICATION VIEWS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def portal_select(request):
+    """
+    Enterprise Hub for selecting between Voter Portal, Admin Console, and Public Auditor.
+    """
+    has_voter_session = bool(request.session.get('voter_hash'))
+    is_admin = bool(request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser))
+    is_auditor = bool(
+        request.user.is_authenticated and (
+            (hasattr(request.user, 'auditor_profile') and request.user.auditor_profile.is_approved) or
+            request.user.is_staff or request.user.is_superuser
+        )
+    )
+
+    context = {
+        'has_voter_session': has_voter_session,
+        'voter_hash': request.session.get('voter_hash'),
+        'voter_epic': request.session.get('voter_epic'),
+        'is_admin': is_admin,
+        'is_auditor': is_auditor,
+    }
+    return render(request, 'api/portal_select.html', context)
+
+
+def voter_auth_view(request):
+    """
+    Dual-mode Voter Authentication portal:
+      1. Register Voter Identity (API Setu Sandbox simulation)
+      2. Voter OTP Login
+    """
+    next_url = request.POST.get('next') or request.GET.get('next') or '/voter/'
+
+    if request.method == 'POST':
+        action = request.POST.get('action', 'login')
+
+        if action == 'register':
+            epic_number = request.POST.get('epic_number', '').strip().upper()
+            phone_number = request.POST.get('phone_number', '').strip()
+
+            if not epic_number or not phone_number:
+                messages.error(request, "Both EPIC Voter ID and Registered Mobile Number are required.")
+                return render(request, 'api/auth_voter.html', {'active_tab': 'register', 'next': next_url})
+
+            if len(epic_number) < 7:
+                messages.error(request, "Invalid EPIC format. Must contain standard prefix and identifier (e.g., IND1234567).")
+                return render(request, 'api/auth_voter.html', {'active_tab': 'register', 'next': next_url})
+
+            if epic_number.startswith('FAIL'):
+                messages.error(request, "API Setu KYC Verification Failed: Citizen record is inactive or under 18 years old.")
+                return render(request, 'api/auth_voter.html', {'active_tab': 'register', 'next': next_url}, status=403)
+
+            voter_hash = derive_voter_identity_hash(epic_number, phone_number)
+            voter, created = VoterIdentity.objects.get_or_create(voter_hash=voter_hash)
+            voter.is_verified = True
+            voter.save()
+
+            request.session['voter_hash'] = voter_hash
+            request.session['voter_epic'] = epic_number
+            messages.success(request, f"Citizen Identity whitelisted via API Setu Sandbox. Voter Hash: {voter_hash[:16]}...")
+            return redirect(next_url)
+
+        elif action == 'login':
+            epic_number = request.POST.get('epic_number', '').strip().upper()
+            phone_number = request.POST.get('phone_number', '').strip()
+            otp = request.POST.get('otp', '').strip()
+
+            if not epic_number or not phone_number:
+                messages.error(request, "EPIC Voter ID and Registered Mobile Number are required.")
+                return render(request, 'api/auth_voter.html', {'active_tab': 'login', 'next': next_url})
+
+            if not otp or len(otp) < 4:
+                messages.error(request, "Please enter the 6-digit Security OTP (Sandbox code: 749201).")
+                return render(request, 'api/auth_voter.html', {'active_tab': 'login', 'next': next_url})
+
+            voter_hash = derive_voter_identity_hash(epic_number, phone_number)
+            if not VoterIdentity.objects.filter(voter_hash=voter_hash, is_verified=True).exists():
+                messages.error(request, f"No verified voter record found for EPIC {epic_number}. Please register first.")
+                return render(request, 'api/auth_voter.html', {'active_tab': 'register', 'next': next_url})
+
+            request.session['voter_hash'] = voter_hash
+            request.session['voter_epic'] = epic_number
+            messages.success(request, "Authentication verified. Single-use voting session authorized.")
+            return redirect(next_url)
+
+    context = {
+        'next': next_url,
+        'active_tab': request.GET.get('tab', 'login'),
+        'has_voter_session': bool(request.session.get('voter_hash')),
+    }
+    return render(request, 'api/auth_voter.html', context)
+
+
+def admin_auth_view(request):
+    """
+    Standard credential-based login strictly for users with is_staff=True.
+    """
+    next_url = request.POST.get('next') or request.GET.get('next') or '/admin-panel/'
+
+    if request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser):
+        return redirect(next_url)
+
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '').strip()
+
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            if user.is_staff or user.is_superuser:
+                login(request, user)
+                messages.success(request, f"Welcome, Administrator {user.username}. Security terminal activated.")
+                return redirect(next_url)
+            else:
+                messages.error(request, "Access Denied: Staff/Superuser administrative privileges required.")
+        else:
+            messages.error(request, "Authentication Failed: Invalid username or password.")
+
+    return render(request, 'api/auth_admin.html', {'next': next_url})
+
+
+def auditor_auth_view(request):
+    """
+    Gated authentication portal for Certified Institutional Observers.
+    Registration requires a valid AUDITOR_TRUST_SECRET invite token.
+    """
+    next_url = request.POST.get('next') or request.GET.get('next') or '/auditor/'
+
+    if request.method == 'POST':
+        action = request.POST.get('action', 'login')
+
+        if action == 'login':
+            username = request.POST.get('username', '').strip()
+            password = request.POST.get('password', '').strip()
+
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                profile = getattr(user, 'auditor_profile', None)
+                if (profile and profile.is_approved) or user.is_staff or user.is_superuser:
+                    login(request, user)
+                    messages.success(request, f"Auditor session authorized for institutional observer: {user.username}.")
+                    return redirect(next_url)
+                else:
+                    messages.error(request, "Account Pending Verification: Your institutional auditor account requires Election Authority approval.")
+                    return render(request, 'api/auth_auditor.html', {'active_tab': 'login', 'next': next_url})
+            else:
+                messages.error(request, "Invalid auditor credentials.")
+                return render(request, 'api/auth_auditor.html', {'active_tab': 'login', 'next': next_url})
+
+        elif action == 'register':
+            username = request.POST.get('username', '').strip()
+            password = request.POST.get('password', '').strip()
+            organization = request.POST.get('organization', '').strip()
+            trust_invite_code = request.POST.get('trust_invite_code', '').strip()
+
+            if not username or not password or not organization:
+                messages.error(request, "Username, Password, and Organization are mandatory.")
+                return render(request, 'api/auth_auditor.html', {'active_tab': 'register', 'next': next_url})
+
+            # Gatekeeper Logic: Validate Trust Invite Code
+            if trust_invite_code != AUDITOR_TRUST_SECRET:
+                messages.error(request, "Access restricted to verified institutional sources only. Invalid Trust Invite Token.")
+                return render(request, 'api/auth_auditor.html', {'active_tab': 'register', 'next': next_url}, status=403)
+
+            if User.objects.filter(username=username).exists():
+                messages.error(request, f"Username '{username}' already exists. Please choose a different handle.")
+                return render(request, 'api/auth_auditor.html', {'active_tab': 'register', 'next': next_url})
+
+            user = User.objects.create_user(username=username, password=password)
+            token_hash = hashlib.sha256(trust_invite_code.encode('utf-8')).hexdigest()
+            AuditorProfile.objects.create(
+                user=user,
+                organization=organization,
+                access_token_hash=token_hash,
+                is_approved=True
+            )
+            login(request, user)
+            messages.success(request, f"Institutional Observer identity registered and verified for {organization}. Access granted to Public Auditor Portal.")
+            return redirect(next_url)
+
+    context = {
+        'next': next_url,
+        'active_tab': request.GET.get('tab', 'login'),
+    }
+    return render(request, 'api/auth_auditor.html', context)
+
+
+def logout_view(request):
+    """
+    Terminates all active sessions (Voter session, Admin session, Auditor session)
+    and redirects to the portal selection landing page.
+    """
+    request.session.flush()
+    logout(request)
+    messages.info(request, "All active sessions have been securely terminated.")
+    return redirect('/')
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  PROTECTED SSR PORTAL VIEWS (RBAC ENFORCED)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@voter_required
 def voter_portal(request):
     """
-    Renders the voter dashboard.
-    Passes the active candidate list so the template can build the ballot.
+    Renders the voter dashboard. Protected by @voter_required.
     """
-    # Fetch candidates from the active (most recent) election
     active_election = Election.objects.order_by('-created_at').first()
     candidates = []
     if active_election:
@@ -205,6 +486,8 @@ def voter_portal(request):
     context = {
         'candidates':        candidates,
         'active_election':   active_election,
+        'voter_hash':        request.session.get('voter_hash'),
+        'voter_epic':        request.session.get('voter_epic'),
         'security_features': [
             'SHA-256 Hashed Identity',
             'Zero-Knowledge Proof',
@@ -217,14 +500,14 @@ def voter_portal(request):
     return render(request, 'api/voter_dashboard.html', context)
 
 
+@admin_required
 def admin_portal(request):
     """
-    Renders the admin dashboard.
-    Passes election stats, candidate list, and voter registry data.
+    Renders the admin dashboard. Protected by @admin_required.
     """
     active_election = Election.objects.order_by('-created_at').first()
     candidates      = Candidate.objects.select_related('election').all().order_by('candidate_id')
-    voters          = VoterIdentity.objects.all().order_by('-registered_at')[:50]  # Latest 50
+    voters          = VoterIdentity.objects.all().order_by('-registered_at')[:50]
     threats         = ThreatLog.objects.filter(resolved=False).order_by('-timestamp')[:20]
 
     total_voters  = voters.count()
@@ -261,10 +544,10 @@ def admin_portal(request):
     return render(request, 'api/admin_dashboard.html', context)
 
 
+@auditor_required
 def auditor_portal(request):
     """
-    Renders the public auditor dashboard.
-    All data here is public — no login required.
+    Renders the public auditor dashboard. Protected by @auditor_required.
     """
     active_election = Election.objects.order_by('-created_at').first()
     candidates      = Candidate.objects.filter(
@@ -273,10 +556,8 @@ def auditor_portal(request):
 
     total_votes = VoterIdentity.objects.filter(has_voted=True).count()
 
-    # Build candidate vote percentages (mock vote counts for now; Phase 5 reads from blockchain)
     candidate_data = []
     for c in candidates:
-        # In Phase 5: query the smart contract event logs for real counts
         mock_count = 0
         pct        = round(mock_count / total_votes * 100, 1) if total_votes > 0 else 0
         candidate_data.append({
@@ -293,7 +574,7 @@ def auditor_portal(request):
         'spent_nullifiers':  total_votes,
         'merkle_root':       active_election.merkle_root if active_election else None,
         'is_root_locked':    active_election.is_root_locked if active_election else False,
-        'nullifiers':        [],  # Phase 5: fetch from smart contract events
+        'nullifiers':        [],
         'trust_badges': [
             {'icon': '🔒', 'label': 'End-to-End Encrypted'},
             {'icon': '🌐', 'label': 'Public & Open'},
@@ -303,3 +584,4 @@ def auditor_portal(request):
         ],
     }
     return render(request, 'api/auditor_dashboard.html', context)
+

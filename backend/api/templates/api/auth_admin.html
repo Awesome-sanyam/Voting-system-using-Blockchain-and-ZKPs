@@ -1,0 +1,88 @@
+{% extends "api/base.html" %}
+{% load static %}
+
+{% block title %}Admin Console Login — BlockVote India{% endblock %}
+{% block meta_description %}High-security administrative login for election authority personnel to manage Merkle roots and AI threat monitoring.{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-7 col-lg-5">
+
+      <!-- ── Breadcrumb / Back ─────────────────────────────────────────── -->
+      <div class="mb-3">
+        <a href="/" class="text-decoration-none text-muted small font-monospace">
+          <i class="bi bi-arrow-left me-1"></i>Back to Operational Hub
+        </a>
+      </div>
+
+      <!-- ── Admin Authentication Card ─────────────────────────────────── -->
+      <div class="card card-mnc">
+        
+        <!-- Header -->
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="badge bg-danger-subtle text-danger font-monospace text-uppercase">High-Security Tier</span>
+            <span class="badge bg-dark text-light font-monospace small"><i class="bi bi-shield-lock-fill me-1"></i>Staff Level</span>
+          </div>
+          <h1 class="h4 fw-bold text-dark mb-1">Election Authority Login</h1>
+          <p class="text-muted small mb-3">
+            Administrative access required to seal the on-chain Merkle root, monitor AI threat defense, and orchestrate the election lifecycle.
+          </p>
+        </div>
+
+        <!-- Body -->
+        <div class="card-body p-4 pt-2">
+          
+          <form method="POST" action="/auth/admin/" class="d-flex flex-column gap-3">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+
+            <!-- Username Input -->
+            <div>
+              <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="admin-username">
+                Authority Username
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-muted"><i class="bi bi-person-fill"></i></span>
+                <input type="text" id="admin-username" name="username" placeholder="e.g. admin" value="admin"
+                       class="form-control font-monospace" required autofocus />
+              </div>
+            </div>
+
+            <!-- Password Input -->
+            <div>
+              <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="admin-password">
+                Password
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-muted"><i class="bi bi-key-fill"></i></span>
+                <input type="password" id="admin-password" name="password" placeholder="••••••••" value="admin123"
+                       class="form-control font-monospace" required />
+              </div>
+              <div class="form-text small font-monospace text-muted mt-1">
+                Local Sandbox Credential: <code class="text-danger fw-bold font-monospace">admin</code> / <code class="text-danger fw-bold font-monospace">admin123</code>
+              </div>
+            </div>
+
+            <!-- Action Button -->
+            <button type="submit" class="btn btn-danger btn-lg rounded-3 fw-semibold shadow-sm w-100 py-3 mt-2 d-flex align-items-center justify-content-center gap-2">
+              <i class="bi bi-shield-lock-fill"></i>
+              <span>Authenticate Administrator</span>
+            </button>
+          </form>
+
+        </div>
+
+        <!-- Card Footer -->
+        <div class="card-footer bg-light border-top py-3 font-monospace small text-muted text-center">
+          <i class="bi bi-cpu-fill text-danger me-1"></i>
+          All authority operations are cryptographically audited on Polygon Amoy.
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

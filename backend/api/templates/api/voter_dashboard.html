@@ -1,345 +1,297 @@
 {% extends "api/base.html" %}
 {% load static %}
 
-{% block title %}Voter Portal — BlockVote India{% endblock %}
-{% block meta_description %}Authenticate, generate your dynamic QR session, and cast an anonymous zero-knowledge vote on Polygon.{% endblock %}
+{% block title %}Citizen Voter Portal — BlockVote India{% endblock %}
+{% block meta_description %}Authenticate, generate your dynamic QR session, and cast an anonymous zero-knowledge vote on Polygon Amoy.{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+<div class="container-fluid px-4 py-2">
 
   <!-- ── Top Status & Title ─────────────────────────────────────────────── -->
-  <div class="mb-8">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
-      <div>
-        <div class="flex items-center gap-2 mb-1">
-          <span class="inline-block h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span>
-          <span class="text-xs font-mono uppercase tracking-widest text-cyan-400">Zero-Knowledge Voting Terminal</span>
-        </div>
-        <h1 class="text-3xl font-extrabold tracking-tight text-white">Voter <span class="bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent">Dashboard</span></h1>
-        <p class="text-xs text-slate-400 mt-1">Mathematical anonymity guaranteed via Groth16 zero-knowledge SNARK circuits on Polygon Amoy.</p>
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center pb-4 mb-4 gap-3">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <span class="badge bg-primary-subtle text-primary font-monospace rounded-pill px-3 py-1.5 fw-semibold">
+          <i class="bi bi-shield-shaded me-1"></i>GROTH16 ZKP TERMINAL
+        </span>
+        <span class="badge bg-light text-secondary border rounded-pill px-3 py-1.5 font-monospace">ECI SANDBOX</span>
       </div>
+      <h1 class="h2 fw-bold text-dark tracking-tight mb-1">Citizen Voting Terminal</h1>
+      <p class="text-muted small mb-0">Cryptographic privacy guaranteed via client-side Groth16 zero-knowledge SNARK circuits on Polygon Amoy.</p>
+    </div>
 
-      <!-- Step Indicator -->
-      <div class="flex items-center gap-2 bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-2 text-xs font-mono">
-        <div class="flex items-center gap-1.5" id="step-badge-1">
-          <span class="flex h-5 w-5 items-center justify-center rounded-full bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40 text-[10px]">1</span>
-          <span class="text-cyan-300 font-semibold">Auth</span>
-        </div>
-        <span class="text-slate-600">→</span>
-        <div class="flex items-center gap-1.5 opacity-60" id="step-badge-2">
-          <span class="flex h-5 w-5 items-center justify-center rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[10px]">2</span>
-          <span class="text-slate-400">Hologram QR</span>
-        </div>
-        <span class="text-slate-600">→</span>
-        <div class="flex items-center gap-1.5 opacity-60" id="step-badge-3">
-          <span class="flex h-5 w-5 items-center justify-center rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[10px]">3</span>
-          <span class="text-slate-400">ZK Booth</span>
-        </div>
-      </div>
+    <!-- Step Progress Indicator -->
+    <div class="d-flex align-items-center gap-2 bg-white p-2 rounded-4 shadow-sm border border-light-subtle font-monospace small">
+      <span id="step-badge-1" class="badge bg-primary text-white py-2 px-3 rounded-pill fw-semibold">1. Authentication</span>
+      <i class="bi bi-chevron-right text-muted small"></i>
+      <span id="step-badge-2" class="badge bg-light text-muted border py-2 px-3 rounded-pill">2. Hologram QR</span>
+      <i class="bi bi-chevron-right text-muted small"></i>
+      <span id="step-badge-3" class="badge bg-light text-muted border py-2 px-3 rounded-pill">3. ZK Ballot</span>
     </div>
   </div>
 
-  <!-- ── 3 Core Modules Grid ─────────────────────────────────────────── -->
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+  <!-- ── 3 Core Modules Grid (MNC Tier Cards) ─────────────────────────── -->
+  <div class="row g-4">
 
     <!-- ══════════════════════════════════════════════════════════════════
-         CARD 1: Authentication & Identity Card (col-span-4)
+         CARD 1: Authentication & Identity Gateway
          ══════════════════════════════════════════════════════════════════ -->
-    <div class="lg:col-span-4 flex flex-col">
-      <div class="hud-card rounded-2xl p-6 flex-1 flex flex-col justify-between border-glow-cyan">
-        <div>
-          <!-- Header -->
-          <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-800">
-            <div class="flex items-center gap-2.5">
-              <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-950/80 border border-cyan-500/30 text-cyan-400">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 004 11m0 0a8 8 0 00.5 2.766" />
-                </svg>
-              </div>
+    <div class="col-12 col-lg-4">
+      <div class="card card-mnc h-100 mb-4">
+        
+        <!-- Header -->
+        <div class="card-header bg-white border-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center">
+          <div>
+            <span class="text-primary font-monospace small fw-bold text-uppercase" style="font-size: 0.72rem;">STEP 1 • VERIFICATION</span>
+            <h2 class="h5 fw-bold text-dark mb-0 mt-0.5">
+              <i class="bi bi-person-badge text-primary me-2"></i>Identity Gateway
+            </h2>
+          </div>
+          <span id="auth-status-pill" class="badge bg-secondary-subtle text-secondary font-monospace rounded-pill px-3 py-1.5">Pending</span>
+        </div>
+
+        <!-- Body -->
+        <div class="card-body p-4 d-flex flex-column justify-content-between">
+          <div>
+            <p class="text-muted small mb-4">
+              Enter registered credentials to obtain an authorized session. Identity is hashed with SHA-256 and salted locally — raw identifiers never touch the ledger.
+            </p>
+
+            <!-- Step 1: Mobile & EPIC -->
+            <div id="auth-phase-1" class="d-flex flex-column gap-3">
               <div>
-                <h2 class="text-sm font-bold text-white tracking-wide">Identity & OTP Gateway</h2>
-                <p class="text-[10px] text-slate-400 font-mono">STEP 1 • ECI SANDBOX</p>
+                <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="voter-mobile">Registered Mobile Number</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-0 font-monospace text-muted px-3">+91</span>
+                  <input type="tel" id="voter-mobile" maxlength="10" placeholder="9876543210" value="9876543210"
+                         class="form-control form-control-lg bg-light border-0 font-monospace" />
+                </div>
               </div>
-            </div>
-            <span id="auth-status-pill" class="rounded-full border border-slate-700 bg-slate-800 px-2 py-0.5 text-[10px] font-mono text-slate-400">Pending</span>
-          </div>
 
-          <!-- Description -->
-          <p class="text-xs text-slate-400 mb-4 leading-relaxed">
-            Enter your mobile number to request an authentication token. Identity is hashed with SHA-256 and salted locally — raw identifiers never touch the ledger.
-          </p>
-
-          <!-- Form Step 1: Mobile & EPIC -->
-          <div id="auth-phase-1" class="space-y-4">
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5" for="voter-mobile">Registered Mobile Number</label>
-              <div class="relative">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-xs font-mono text-slate-500">+91</span>
-                <input type="tel" id="voter-mobile" maxlength="10" placeholder="9876543210" value="9876543210"
-                       class="w-full rounded-xl border border-slate-800 bg-slate-900/90 pl-11 pr-3 py-2.5 text-xs font-mono text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500" />
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5" for="voter-epic">EPIC Voter ID</label>
-              <input type="text" id="voter-epic" maxlength="10" placeholder="IND9876543" value="IND9876543"
-                     class="w-full rounded-xl border border-slate-800 bg-slate-900/90 px-3 py-2.5 text-xs font-mono uppercase text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500" />
-            </div>
-
-            <button type="button" id="btn-request-otp"
-                    class="w-full rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 px-4 py-2.5 text-xs font-bold text-white uppercase tracking-wider transition shadow-lg shadow-cyan-900/40">
-              Request Authentication OTP
-            </button>
-          </div>
-
-          <!-- Form Step 2: OTP Entry (Hidden initially) -->
-          <div id="auth-phase-2" class="space-y-4 hidden mt-2">
-            <div class="rounded-xl border border-cyan-500/30 bg-cyan-950/20 p-3 text-xs text-cyan-300">
-              <span class="font-bold">Sandbox OTP Dispatched:</span> Use code <strong class="font-mono text-white tracking-widest">749201</strong> to simulate instant SMS delivery.
-            </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">6-Digit Security OTP</label>
-              <div class="flex gap-2 justify-between" id="otp-input-group">
-                <input type="text" maxlength="1" value="7" class="otp-box w-11 h-11 text-center font-mono font-bold text-lg rounded-xl border border-slate-700 bg-slate-900 text-cyan-400 focus:border-cyan-400 focus:outline-none" />
-                <input type="text" maxlength="1" value="4" class="otp-box w-11 h-11 text-center font-mono font-bold text-lg rounded-xl border border-slate-700 bg-slate-900 text-cyan-400 focus:border-cyan-400 focus:outline-none" />
-                <input type="text" maxlength="1" value="9" class="otp-box w-11 h-11 text-center font-mono font-bold text-lg rounded-xl border border-slate-700 bg-slate-900 text-cyan-400 focus:border-cyan-400 focus:outline-none" />
-                <input type="text" maxlength="1" value="2" class="otp-box w-11 h-11 text-center font-mono font-bold text-lg rounded-xl border border-slate-700 bg-slate-900 text-cyan-400 focus:border-cyan-400 focus:outline-none" />
-                <input type="text" maxlength="1" value="0" class="otp-box w-11 h-11 text-center font-mono font-bold text-lg rounded-xl border border-slate-700 bg-slate-900 text-cyan-400 focus:border-cyan-400 focus:outline-none" />
-                <input type="text" maxlength="1" value="1" class="otp-box w-11 h-11 text-center font-mono font-bold text-lg rounded-xl border border-slate-700 bg-slate-900 text-cyan-400 focus:border-cyan-400 focus:outline-none" />
-              </div>
-            </div>
-
-            <button type="button" id="btn-verify-otp"
-                    class="w-full rounded-xl bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 px-4 py-2.5 text-xs font-bold text-white uppercase tracking-wider transition shadow-lg shadow-emerald-900/40">
-              Verify & Authorize Session
-            </button>
-          </div>
-
-          <!-- Verified State View (Hidden initially) -->
-          <div id="auth-phase-verified" class="hidden space-y-3 mt-2">
-            <div class="rounded-xl border border-emerald-500/40 bg-emerald-950/30 p-4">
-              <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs mb-1">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-                </svg>
-                Identity Authenticated
-              </div>
-              <p class="text-[11px] text-slate-300 font-mono break-all">
-                Voter Hash: <span id="display-voter-hash" class="text-cyan-300 font-semibold">0x...</span>
-              </p>
-            </div>
-            <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 px-1">
-              <span>ECI Status: Whitelisted</span>
-              <span class="text-emerald-400">Ready to Vote</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Privacy Assurance Note -->
-        <div class="mt-6 pt-4 border-t border-slate-800/80 text-[10px] text-slate-500 font-mono">
-          🔒 Zero-Knowledge Guarantee: Your vote cannot be linked to this device or identity hash.
-        </div>
-      </div>
-    </div>
-
-    <!-- ══════════════════════════════════════════════════════════════════
-         CARD 2: Dynamic Hologram Card (col-span-4)
-         ══════════════════════════════════════════════════════════════════ -->
-    <div class="lg:col-span-4 flex flex-col">
-      <div class="hud-card rounded-2xl p-6 flex-1 flex flex-col justify-between border-glow-indigo relative overflow-hidden">
-
-        <!-- Top Header & Live WebSocket Badge -->
-        <div>
-          <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-800">
-            <div class="flex items-center gap-2.5">
-              <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-950/80 border border-indigo-500/30 text-indigo-400">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                </svg>
-              </div>
               <div>
-                <h2 class="text-sm font-bold text-white tracking-wide">3-Minute Hologram Token</h2>
-                <p class="text-[10px] text-slate-400 font-mono">STEP 2 • LIVE WEBSOCKET</p>
+                <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="voter-epic">EPIC Voter ID Number</label>
+                <input type="text" id="voter-epic" maxlength="10" placeholder="IND9876543" value="IND9876543"
+                       class="form-control form-control-lg bg-light border-0 font-monospace text-uppercase" />
               </div>
-            </div>
-            <div id="qr-status-indicator">
-              <span class="inline-flex items-center gap-1 text-[10px] font-mono text-cyan-300">
-                <span class="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping"></span> Stream Ready
-              </span>
-            </div>
-          </div>
 
-          <!-- Holographic QR Container with Scanning Beam -->
-          <div class="relative my-4 flex flex-col items-center justify-center">
-            <div class="qr-pulse-container relative rounded-2xl border border-cyan-500/40 bg-slate-900/90 p-4 shadow-2xl overflow-hidden">
-              <!-- Scanline animation effect -->
-              <div class="scanline-beam"></div>
-
-              <!-- Target QR Container -->
-              <div id="qr-code-target" class="rounded-xl overflow-hidden bg-white p-2.5 flex items-center justify-center">
-                <!-- QR gets dynamically injected here by qr_streamer.js -->
-                <div class="h-44 w-44 flex flex-col items-center justify-center text-center p-2 bg-slate-950 border border-slate-800 rounded-lg">
-                  <div class="h-6 w-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin mb-2"></div>
-                  <span class="text-[11px] font-mono text-cyan-300">Awaiting Auth...</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 180-Second Linear Progress Bar -->
-          <div class="space-y-1.5 mt-4">
-            <div class="flex items-center justify-between text-[11px] font-mono">
-              <span class="text-slate-400">Token Lifetime (180s)</span>
-              <span id="qr-countdown-text" class="font-bold text-cyan-400 tracking-wider">03:00</span>
-            </div>
-            <div class="h-2 w-full rounded-full bg-slate-800 overflow-hidden p-0.5 border border-slate-700/60">
-              <div id="qr-progress-bar" class="h-full w-full rounded-full bg-gradient-to-r from-cyan-500 via-indigo-500 to-emerald-400 progress-bar-smooth"></div>
-            </div>
-          </div>
-
-          <!-- Token Cryptographic Credentials -->
-          <div class="mt-4 rounded-xl border border-slate-800/80 bg-slate-900/60 p-3 space-y-1.5 font-mono text-[10px]">
-            <div class="flex justify-between items-center text-slate-400">
-              <span>HMAC Signature:</span>
-              <span id="qr-signature" class="text-indigo-300 font-bold">HMAC-SHA256</span>
-            </div>
-            <div class="flex justify-between items-center text-slate-400">
-              <span>Anti-Replay Nonce:</span>
-              <span id="qr-nonce" class="text-slate-300 font-bold">d8f4e2...</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-4 pt-3 border-t border-slate-800/80 text-[10px] text-slate-500 font-mono text-center">
-          Pushed continuously via Django Channels WebSocket. Auto-rotates at 00:00.
-        </div>
-      </div>
-    </div>
-
-    <!-- ══════════════════════════════════════════════════════════════════
-         CARD 3: ZK Voting Booth Card (col-span-4)
-         ══════════════════════════════════════════════════════════════════ -->
-    <div class="lg:col-span-4 flex flex-col">
-      <div class="hud-card rounded-2xl p-6 flex-1 flex flex-col justify-between border-glow-cyan">
-        <div>
-          <!-- Header -->
-          <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-800">
-            <div class="flex items-center gap-2.5">
-              <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-950/80 border border-emerald-500/30 text-emerald-400">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-              <div>
-                <h2 class="text-sm font-bold text-white tracking-wide">ZK Anonymous Ballot</h2>
-                <p class="text-[10px] text-slate-400 font-mono">STEP 3 • GROTH16 PROOF</p>
-              </div>
-            </div>
-            <span class="rounded-full border border-cyan-500/30 bg-cyan-950/40 px-2 py-0.5 text-[10px] font-mono text-cyan-300">Gas-Free</span>
-          </div>
-
-          <p class="text-xs text-slate-400 mb-4">
-            Select a candidate below. When submitted, <span class="text-cyan-300 font-mono">snarkjs</span> compiles a mathematical proof locally on this browser before transmission.
-          </p>
-
-          <!-- Candidate Selection List -->
-          <form id="vote-form" class="space-y-2.5">
-            {% csrf_token %}
-
-            {% if candidates %}
-              {% for candidate in candidates %}
-              <label class="candidate-option block relative rounded-xl border border-slate-800 bg-slate-900/70 p-3 cursor-pointer transition hover:border-cyan-500/40 hover:bg-slate-900">
-                <input type="radio" name="candidate" value="{{ candidate.candidate_id }}" class="peer sr-only" />
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-3">
-                    <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-800 border border-slate-700 text-sm font-bold text-white group-peer-checked:border-cyan-400">
-                      {{ candidate.candidate_id }}
-                    </div>
-                    <div>
-                      <p class="text-xs font-bold text-white peer-checked:text-cyan-400">{{ candidate.name }}</p>
-                      <p class="text-[10px] text-slate-400 font-mono">{{ candidate.party }}</p>
-                    </div>
-                  </div>
-                  <div class="h-4 w-4 rounded-full border border-slate-600 flex items-center justify-center peer-checked:border-cyan-400 peer-checked:bg-cyan-500/20">
-                    <div class="h-2 w-2 rounded-full bg-cyan-400 hidden peer-checked:block"></div>
-                  </div>
-                </div>
-              </label>
-              {% endfor %}
-            {% else %}
-              <!-- Fallback mock candidates for seamless demo -->
-              <label class="candidate-option block relative rounded-xl border border-slate-800 bg-slate-900/70 p-3 cursor-pointer transition hover:border-cyan-500/40">
-                <input type="radio" name="candidate" value="1" checked class="peer sr-only" />
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-3">
-                    <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-800 border border-slate-700 text-sm font-bold text-white">
-                      01
-                    </div>
-                    <div>
-                      <p class="text-xs font-bold text-white">Dr. A. Sharma</p>
-                      <p class="text-[10px] text-slate-400 font-mono">National Tech & Integrity Coalition</p>
-                    </div>
-                  </div>
-                  <div class="h-4 w-4 rounded-full border border-slate-600 flex items-center justify-center peer-checked:border-cyan-400 peer-checked:bg-cyan-500/20">
-                    <div class="h-2 w-2 rounded-full bg-cyan-400 hidden peer-checked:block"></div>
-                  </div>
-                </div>
-              </label>
-
-              <label class="candidate-option block relative rounded-xl border border-slate-800 bg-slate-900/70 p-3 cursor-pointer transition hover:border-cyan-500/40">
-                <input type="radio" name="candidate" value="2" class="peer sr-only" />
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-3">
-                    <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-800 border border-slate-700 text-sm font-bold text-white">
-                      02
-                    </div>
-                    <div>
-                      <p class="text-xs font-bold text-white">Priya Sundaram</p>
-                      <p class="text-[10px] text-slate-400 font-mono">Democratic Progressive Front</p>
-                    </div>
-                  </div>
-                  <div class="h-4 w-4 rounded-full border border-slate-600 flex items-center justify-center peer-checked:border-cyan-400 peer-checked:bg-cyan-500/20">
-                    <div class="h-2 w-2 rounded-full bg-cyan-400 hidden peer-checked:block"></div>
-                  </div>
-                </div>
-              </label>
-
-              <label class="candidate-option block relative rounded-xl border border-slate-800 bg-slate-900/70 p-3 cursor-pointer transition hover:border-cyan-500/40">
-                <input type="radio" name="candidate" value="3" class="peer sr-only" />
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-3">
-                    <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-800 border border-slate-700 text-sm font-bold text-white">
-                      03
-                    </div>
-                    <div>
-                      <p class="text-xs font-bold text-white">Rajesh Verma</p>
-                      <p class="text-[10px] text-slate-400 font-mono">Sovereign Reform Alliance</p>
-                    </div>
-                  </div>
-                  <div class="h-4 w-4 rounded-full border border-slate-600 flex items-center justify-center peer-checked:border-cyan-400 peer-checked:bg-cyan-500/20">
-                    <div class="h-2 w-2 rounded-full bg-cyan-400 hidden peer-checked:block"></div>
-                  </div>
-                </div>
-              </label>
-            {% endif %}
-
-            <!-- Cast Anonymous Vote Action -->
-            <div class="pt-3">
-              <button type="button" id="btn-cast-vote"
-                      class="w-full rounded-xl bg-gradient-to-r from-cyan-500 via-indigo-600 to-purple-600 hover:from-cyan-400 hover:via-indigo-500 hover:to-purple-500 px-4 py-3 text-xs font-bold text-white uppercase tracking-wider transition shadow-xl shadow-cyan-950 flex items-center justify-center gap-2">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                Cast Anonymous Vote
+              <button type="button" id="btn-request-otp" class="btn btn-primary btn-lg rounded-3 fw-semibold shadow-sm w-100 py-3 mt-2 d-flex align-items-center justify-content-center gap-2">
+                <i class="bi bi-shield-lock-fill"></i>
+                <span>Request Authentication OTP</span>
               </button>
             </div>
-          </form>
+
+            <!-- Step 2: OTP Entry (Hidden initially) -->
+            <div id="auth-phase-2" class="hidden d-flex flex-column gap-3">
+              <div class="alert alert-info border-0 rounded-4 py-2.5 px-3 small mb-1">
+                <i class="bi bi-info-circle-fill me-1"></i>
+                <strong>Sandbox OTP Dispatched:</strong> Code: <code class="fw-bold font-monospace text-dark">749201</code>
+              </div>
+
+              <div>
+                <label class="form-label fw-bold small text-secondary text-uppercase mb-2">6-Digit Security OTP</label>
+                <div class="d-flex justify-content-between gap-1" id="otp-input-group">
+                  <input type="text" maxlength="1" value="7" class="otp-box form-control form-control-lg bg-light border-0 text-center font-monospace fw-bold fs-5 p-0 rounded-3" style="width: 46px; height: 50px;" />
+                  <input type="text" maxlength="1" value="4" class="otp-box form-control form-control-lg bg-light border-0 text-center font-monospace fw-bold fs-5 p-0 rounded-3" style="width: 46px; height: 50px;" />
+                  <input type="text" maxlength="1" value="9" class="otp-box form-control form-control-lg bg-light border-0 text-center font-monospace fw-bold fs-5 p-0 rounded-3" style="width: 46px; height: 50px;" />
+                  <input type="text" maxlength="1" value="2" class="otp-box form-control form-control-lg bg-light border-0 text-center font-monospace fw-bold fs-5 p-0 rounded-3" style="width: 46px; height: 50px;" />
+                  <input type="text" maxlength="1" value="0" class="otp-box form-control form-control-lg bg-light border-0 text-center font-monospace fw-bold fs-5 p-0 rounded-3" style="width: 46px; height: 50px;" />
+                  <input type="text" maxlength="1" value="1" class="otp-box form-control form-control-lg bg-light border-0 text-center font-monospace fw-bold fs-5 p-0 rounded-3" style="width: 46px; height: 50px;" />
+                </div>
+              </div>
+
+              <button type="button" id="btn-verify-otp" class="btn btn-success btn-lg rounded-3 fw-semibold shadow-sm w-100 py-3 mt-2 d-flex align-items-center justify-content-center gap-2">
+                <i class="bi bi-check-circle-fill"></i>
+                <span>Verify & Authorize Session</span>
+              </button>
+            </div>
+
+            <!-- Verified State View -->
+            <div id="auth-phase-verified" class="hidden mt-2">
+              <div class="alert alert-success border-0 rounded-4 p-3 mb-2 shadow-xs">
+                <div class="d-flex align-items-center text-success fw-bold small mb-1">
+                  <i class="bi bi-patch-check-fill me-1.5 fs-6"></i>Identity Whitelisted & Authenticated
+                </div>
+                <div class="text-muted font-monospace small text-break">
+                  Voter Hash: <span id="display-voter-hash" class="text-dark fw-bold">0x...</span>
+                </div>
+              </div>
+              <div class="d-flex justify-content-between text-muted font-monospace small px-1">
+                <span>ECI Status: Whitelisted</span>
+                <span class="text-success fw-semibold"><i class="bi bi-check2 me-1"></i>Ready to Vote</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Privacy Assurance Note -->
+          <div class="border-top pt-3 mt-4 text-muted font-monospace small">
+            <i class="bi bi-shield-check text-success me-1"></i>Zero-Knowledge Guarantee: Raw citizen identifiers are never transmitted to Polygon.
+          </div>
         </div>
 
-        <div class="mt-4 pt-3 border-t border-slate-800/80 text-[10px] text-slate-500 font-mono text-center">
-          ZK Circuit: 20-Level Merkle Tree • Nullifier Anti-Replay
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         CARD 2: 3-Minute Hologram Dynamic QR Token (Prominent Center)
+         ══════════════════════════════════════════════════════════════════ -->
+    <div class="col-12 col-lg-4">
+      <div class="card card-mnc h-100 mb-4">
+        
+        <!-- Header -->
+        <div class="card-header bg-white border-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center">
+          <div>
+            <span class="text-info font-monospace small fw-bold text-uppercase" style="font-size: 0.72rem;">STEP 2 • LIVE TOKEN</span>
+            <h2 class="h5 fw-bold text-dark mb-0 mt-0.5">
+              <i class="bi bi-qr-code-scan text-info me-2"></i>Dynamic Session QR
+            </h2>
+          </div>
+          <div id="qr-status-indicator">
+            <span class="badge bg-success rounded-pill px-3 py-1.5 font-monospace pulse-indicator shadow-xs">
+              <i class="bi bi-broadcast me-1"></i>Live Session
+            </span>
+          </div>
         </div>
+
+        <!-- Body -->
+        <div class="card-body p-4 d-flex flex-column justify-content-between text-center">
+          <div>
+            <p class="text-muted small mb-3">
+              Cryptographically signed via server HMAC. Rotates automatically every 180 seconds via WebSocket stream.
+            </p>
+
+            <!-- Prominent Dynamic QR Canvas Container -->
+            <div class="d-flex justify-content-center my-3">
+              <div class="p-3 bg-light border border-light-subtle rounded-4 shadow-xs d-flex align-items-center justify-content-center position-relative" style="min-height: 220px; min-width: 220px;">
+                <div id="qr-code-target" class="d-flex flex-column align-items-center justify-content-center text-center">
+                  <div class="spinner-border text-primary mb-2" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                  <span class="small font-monospace text-muted">Awaiting Identity Auth...</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Linear Countdown Progress Bar -->
+            <div class="mb-3 px-2">
+              <div class="d-flex justify-content-between font-monospace small mb-1.5">
+                <span class="text-muted">Token Lifetime</span>
+                <span id="qr-countdown-text" class="fw-bold text-primary font-monospace">03:00</span>
+              </div>
+              <div class="progress rounded-pill bg-light" style="height: 10px;">
+                <div id="qr-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary rounded-pill" role="progressbar" style="width: 100%;"></div>
+              </div>
+            </div>
+
+            <!-- Token Cryptographic Credentials -->
+            <ul class="list-group list-group-flush border-0 rounded-3 small font-monospace text-start bg-light p-2 mb-0">
+              <li class="list-group-item d-flex justify-content-between align-items-center py-2 bg-transparent border-0">
+                <span class="text-muted">Signature:</span>
+                <span id="qr-signature" class="fw-bold text-dark text-truncate" style="max-width: 150px;">HMAC-SHA256</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center py-2 bg-transparent border-0">
+                <span class="text-muted">Anti-Replay Nonce:</span>
+                <span id="qr-nonce" class="fw-bold text-secondary">d8f4e2...</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="border-top pt-3 mt-4 text-muted font-monospace small text-center">
+            Pushed continuously via Django Channels WebSocket. Auto-rotates at 00:00.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         CARD 3: ZK Voting Booth (Anonymous Ballot)
+         ══════════════════════════════════════════════════════════════════ -->
+    <div class="col-12 col-lg-4">
+      <div class="card card-mnc h-100 mb-4">
+        
+        <!-- Header -->
+        <div class="card-header bg-white border-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center">
+          <div>
+            <span class="text-success font-monospace small fw-bold text-uppercase" style="font-size: 0.72rem;">STEP 3 • ANONYMOUS VOTE</span>
+            <h2 class="h5 fw-bold text-dark mb-0 mt-0.5">
+              <i class="bi bi-box-seam text-success me-2"></i>ZK Anonymous Ballot
+            </h2>
+          </div>
+          <span class="badge bg-success-subtle text-success font-monospace rounded-pill px-3 py-1.5">Gasless Relay</span>
+        </div>
+
+        <!-- Body -->
+        <div class="card-body p-4 d-flex flex-column justify-content-between">
+          <div>
+            <p class="text-muted small mb-3">
+              Select your candidate below. When submitted, client-side <span class="font-monospace text-primary fw-semibold">snarkjs</span> generates a zero-knowledge proof locally on this browser.
+            </p>
+
+            <!-- Candidate Selection List (Borderless Clickable List Items) -->
+            <form id="vote-form" class="d-flex flex-column gap-2 mb-3" onsubmit="event.preventDefault();">
+              {% csrf_token %}
+
+              {% if candidates %}
+                {% for candidate in candidates %}
+                <div class="candidate-option list-group-item list-group-item-action border-0 rounded-3 mb-2 p-3 bg-light cursor-pointer d-flex justify-content-between align-items-center transition">
+                  <div class="d-flex align-items-center gap-3">
+                    <input type="radio" name="candidate" value="{{ candidate.candidate_id }}" class="form-check-input mt-0" />
+                    <div>
+                      <div class="fw-bold text-dark small">{{ candidate.name }}</div>
+                      <div class="text-muted font-monospace small" style="font-size: 0.75rem;">{{ candidate.party }}</div>
+                    </div>
+                  </div>
+                  <span class="badge bg-white text-secondary font-monospace border rounded-pill px-2.5 py-1">#{{ candidate.candidate_id }}</span>
+                </div>
+                {% endfor %}
+              {% else %}
+                <div class="candidate-option list-group-item list-group-item-action border-0 rounded-3 mb-2 p-3 bg-primary-subtle text-primary cursor-pointer d-flex justify-content-between align-items-center transition">
+                  <div class="d-flex align-items-center gap-3">
+                    <input type="radio" name="candidate" value="1" checked class="form-check-input mt-0" />
+                    <div>
+                      <div class="fw-bold text-dark small">Dr. A. Sharma</div>
+                      <div class="text-muted font-monospace small" style="font-size: 0.75rem;">National Tech & Integrity Coalition</div>
+                    </div>
+                  </div>
+                  <span class="badge bg-white text-primary font-monospace border rounded-pill px-2.5 py-1">#01</span>
+                </div>
+
+                <div class="candidate-option list-group-item list-group-item-action border-0 rounded-3 mb-2 p-3 bg-light cursor-pointer d-flex justify-content-between align-items-center transition">
+                  <div class="d-flex align-items-center gap-3">
+                    <input type="radio" name="candidate" value="2" class="form-check-input mt-0" />
+                    <div>
+                      <div class="fw-bold text-dark small">Priya Sundaram</div>
+                      <div class="text-muted font-monospace small" style="font-size: 0.75rem;">Democratic Progressive Front</div>
+                    </div>
+                  </div>
+                  <span class="badge bg-white text-secondary font-monospace border rounded-pill px-2.5 py-1">#02</span>
+                </div>
+
+                <div class="candidate-option list-group-item list-group-item-action border-0 rounded-3 mb-2 p-3 bg-light cursor-pointer d-flex justify-content-between align-items-center transition">
+                  <div class="d-flex align-items-center gap-3">
+                    <input type="radio" name="candidate" value="3" class="form-check-input mt-0" />
+                    <div>
+                      <div class="fw-bold text-dark small">Rajesh Verma</div>
+                      <div class="text-muted font-monospace small" style="font-size: 0.75rem;">Sovereign Reform Alliance</div>
+                    </div>
+                  </div>
+                  <span class="badge bg-white text-secondary font-monospace border rounded-pill px-2.5 py-1">#03</span>
+                </div>
+              {% endif %}
+
+              <!-- Cast Action Button -->
+              <button type="button" id="btn-cast-vote" class="btn btn-primary btn-lg rounded-3 fw-semibold shadow-sm w-100 py-3 mt-2 d-flex align-items-center justify-content-center gap-2">
+                <i class="bi bi-check2-circle fs-5"></i>
+                <span>Cast Anonymous Vote</span>
+              </button>
+            </form>
+          </div>
+
+          <div class="border-top pt-3 mt-3 text-muted font-monospace small text-center">
+            ZK Circuit: 20-Level Merkle Tree • Nullifier Anti-Replay
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -350,73 +302,66 @@
 <!-- ══════════════════════════════════════════════════════════════════
      MODAL: ZK Proof Computation & Cryptographic Receipt
      ══════════════════════════════════════════════════════════════════ -->
-<div id="zk-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md hidden p-4">
-  <div class="hud-card relative w-full max-w-lg rounded-2xl border border-cyan-500/40 p-6 shadow-2xl">
+<div id="zk-modal" class="modal fade show hidden" tabindex="-1" style="background: rgba(15, 23, 42, 0.65); display: none;">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4 p-2 bg-white">
 
-    <!-- Active Computing State View -->
-    <div id="modal-computing-view" class="flex flex-col items-center text-center py-4">
-      <div class="zk-pulse-icon relative flex h-20 w-20 items-center justify-center rounded-2xl bg-cyan-950/80 border border-cyan-500/50 mb-6">
-        <svg class="h-10 w-10 text-cyan-400 animate-spin" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
-          <path class="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-        </svg>
+      <!-- Active Computing State View -->
+      <div id="modal-computing-view" class="modal-body text-center p-4">
+        <div class="spinner-border text-primary mb-3" style="width: 3.5rem; height: 3.5rem;" role="status">
+          <span class="visually-hidden">Computing...</span>
+        </div>
+        <h3 class="h5 fw-bold text-dark mb-1">Generating Local zk-SNARK Proof...</h3>
+        <p class="text-muted small mb-4">
+          Compiling cryptographic witness via <code class="font-monospace">voter_eligibility.wasm</code> and generating Groth16 proof using client-side WASM.
+        </p>
+
+        <!-- Live Computation Status Step -->
+        <div class="alert alert-light border small font-monospace text-primary text-start d-flex align-items-center gap-2 mb-0 rounded-3">
+          <span class="spinner-grow spinner-grow-sm text-primary" role="status"></span>
+          <span id="modal-status-text">Deriving private voter scalar & nullifier witness...</span>
+        </div>
       </div>
 
-      <h3 class="text-lg font-bold text-white mb-2">Generating Local zk-SNARK Proof...</h3>
-      <p class="text-xs text-slate-400 max-w-sm mb-6 leading-relaxed">
-        Compiling cryptographic witness via <code class="text-cyan-300 font-mono">voter_eligibility.wasm</code> and generating Groth16 proof using client-side WASM.
-      </p>
+      <!-- Success Receipt View -->
+      <div id="modal-receipt-view" class="modal-body text-center p-4 hidden">
+        <div class="text-success display-5 mb-2">
+          <i class="bi bi-patch-check-fill"></i>
+        </div>
+        <h3 class="h5 fw-bold text-dark">Cryptographic Ballot Secured</h3>
+        <p class="text-muted small mb-3">Your anonymous zero-knowledge vote has been broadcast to the Polygon blockchain.</p>
 
-      <!-- Live Computation Status Step -->
-      <div class="w-full rounded-xl border border-slate-800 bg-slate-900/80 px-4 py-3 text-left font-mono text-xs text-cyan-300 flex items-center gap-3">
-        <span class="h-2 w-2 rounded-full bg-cyan-400 animate-ping"></span>
-        <span id="modal-status-text">Deriving private voter scalar & nullifier witness...</span>
+        <!-- Receipt Details Box -->
+        <div class="card bg-light border-0 rounded-4 p-3 text-start font-monospace small mb-3">
+          <div class="mb-2">
+            <span class="text-muted small text-uppercase d-block mb-1">Transaction Hash</span>
+            <a id="receipt-tx-link" href="#" target="_blank" class="fw-bold text-primary text-break text-decoration-none">
+              0x...
+            </a>
+          </div>
+          <div>
+            <span class="text-muted small text-uppercase d-block mb-1">Cryptographic Nullifier</span>
+            <span id="receipt-nullifier" class="text-secondary text-break fw-semibold">0x...</span>
+          </div>
+          <hr class="my-2" />
+          <div class="d-flex justify-content-between small">
+            <span class="text-muted">Network: Polygon Amoy</span>
+            <span class="text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Confirmed On-Chain</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex gap-2">
+          <button type="button" id="btn-copy-receipt" class="btn btn-outline-secondary w-50 rounded-3 fw-semibold py-2.5">
+            Copy Tx Hash
+          </button>
+          <button type="button" id="btn-close-modal" class="btn btn-primary w-50 rounded-3 fw-semibold py-2.5">
+            Done
+          </button>
+        </div>
       </div>
+
     </div>
-
-    <!-- Success Receipt View -->
-    <div id="modal-receipt-view" class="hidden py-2 space-y-4">
-      <div class="text-center">
-        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 mb-3">
-          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
-        <h3 class="text-lg font-bold text-white">Cryptographic Ballot Secured</h3>
-        <p class="text-xs text-slate-400">Your anonymous zero-knowledge vote has been broadcast to the Polygon blockchain.</p>
-      </div>
-
-      <!-- Receipt Details Box -->
-      <div class="rounded-xl border border-slate-800 bg-slate-900/90 p-4 space-y-3 font-mono text-xs">
-        <div>
-          <span class="text-slate-500 text-[10px] uppercase tracking-wider block">Transaction Hash</span>
-          <a id="receipt-tx-link" href="#" target="_blank" class="text-cyan-400 hover:text-cyan-300 font-bold break-all underline">
-            0x...
-          </a>
-        </div>
-        <div>
-          <span class="text-slate-500 text-[10px] uppercase tracking-wider block">Cryptographic Nullifier</span>
-          <span id="receipt-nullifier" class="text-indigo-300 break-all">0x...</span>
-        </div>
-        <div class="flex justify-between items-center pt-2 border-t border-slate-800/80 text-[11px]">
-          <span class="text-slate-400">Network: Polygon Amoy</span>
-          <span class="text-emerald-400 font-semibold">Status: Confirmed On-Chain</span>
-        </div>
-      </div>
-
-      <!-- Actions -->
-      <div class="flex gap-3 pt-2">
-        <button type="button" id="btn-copy-receipt"
-                class="flex-1 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 py-2.5 text-xs font-bold text-slate-200 transition">
-          Copy Tx Hash
-        </button>
-        <button type="button" id="btn-close-modal"
-                class="flex-1 rounded-xl bg-cyan-600 hover:bg-cyan-500 py-2.5 text-xs font-bold text-slate-950 transition">
-          Done
-        </button>
-      </div>
-    </div>
-
   </div>
 </div>
 {% endblock %}
@@ -440,7 +385,6 @@
     // Default or stored voter hash
     let activeVoterHash = sessionStorage.getItem('blockvote_voter_hash') || null;
 
-    // Automatically initialize QR streamer if previously authenticated
     if (activeVoterHash) {
       advanceToVerified(activeVoterHash);
     }
@@ -454,14 +398,13 @@
       authPhase1.classList.add('hidden');
       authPhase2.classList.remove('hidden');
       authStatusPill.textContent = 'OTP Sent';
-      authStatusPill.className = 'rounded-full border border-cyan-500/40 bg-cyan-950/60 px-2 py-0.5 text-[10px] font-mono text-cyan-300';
+      authStatusPill.className = 'badge bg-info-subtle text-info font-monospace rounded-pill px-3 py-1.5';
     });
 
     btnVerifyOtp?.addEventListener('click', async () => {
       btnVerifyOtp.disabled = true;
-      btnVerifyOtp.innerHTML = 'Verifying...';
+      btnVerifyOtp.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Verifying...';
 
-      // Simulate API Setu registration / local hashing
       const epic = document.getElementById('voter-epic').value.trim() || 'IND9876543';
       const mobile = document.getElementById('voter-mobile').value.trim() || '9876543210';
 
@@ -478,7 +421,6 @@
         const derivedHash = data.voter_hash || ('0x' + Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, '0')).join(''));
         advanceToVerified(derivedHash);
       } catch (e) {
-        // Dev fallback
         const mockHash = '0x' + Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, '0')).join('');
         advanceToVerified(mockHash);
       }
@@ -494,16 +436,12 @@
 
       displayVoterHash.textContent = hash.substring(0, 10) + '...' + hash.slice(-6);
       authStatusPill.textContent = 'Verified';
-      authStatusPill.className = 'rounded-full border border-emerald-500/40 bg-emerald-950/60 px-2 py-0.5 text-[10px] font-mono text-emerald-300';
+      authStatusPill.className = 'badge bg-success-subtle text-success font-monospace rounded-pill px-3 py-1.5';
 
       // Update Step Badges
-      stepBadge2.classList.remove('opacity-60');
-      stepBadge2.querySelector('span:first-child').className = 'flex h-5 w-5 items-center justify-center rounded-full bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40 text-[10px]';
-      stepBadge2.querySelector('span:last-child').className = 'text-cyan-300 font-semibold';
-
-      stepBadge3.classList.remove('opacity-60');
-      stepBadge3.querySelector('span:first-child').className = 'flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/40 text-[10px]';
-      stepBadge3.querySelector('span:last-child').className = 'text-indigo-300 font-semibold';
+      stepBadge1.className = 'badge bg-secondary-subtle text-secondary py-2 px-3 rounded-pill';
+      stepBadge2.className = 'badge bg-primary text-white py-2 px-3 rounded-pill fw-semibold';
+      stepBadge3.className = 'badge bg-light text-muted border py-2 px-3 rounded-pill';
 
       // Initialize QR Streamer
       if (window.QRStreamer) {
@@ -516,11 +454,19 @@
     candidateOptions.forEach(opt => {
       opt.addEventListener('click', () => {
         candidateOptions.forEach(o => {
-          o.classList.remove('border-cyan-400', 'bg-cyan-950/30', 'border-glow-cyan');
-          o.classList.add('border-slate-800', 'bg-slate-900/70');
+          o.classList.remove('bg-primary-subtle', 'text-primary');
+          o.classList.add('bg-light');
+          const badge = o.querySelector('.badge');
+          if (badge) {
+            badge.className = 'badge bg-white text-secondary font-monospace border rounded-pill px-2.5 py-1';
+          }
         });
-        opt.classList.add('border-cyan-400', 'bg-cyan-950/30', 'border-glow-cyan');
-        opt.classList.remove('border-slate-800', 'bg-slate-900/70');
+        opt.classList.remove('bg-light');
+        opt.classList.add('bg-primary-subtle', 'text-primary');
+        const activeBadge = opt.querySelector('.badge');
+        if (activeBadge) {
+          activeBadge.className = 'badge bg-white text-primary font-monospace border rounded-pill px-2.5 py-1';
+        }
         const radio = opt.querySelector('input[type=radio]');
         if (radio) radio.checked = true;
       });
@@ -549,16 +495,15 @@
         return;
       }
 
-      // 1. Disable button & show animated modal
       btnCastVote.disabled = true;
-      btnCastVote.classList.add('opacity-50', 'cursor-not-allowed');
+      btnCastVote.classList.add('disabled');
 
       zkModal.classList.remove('hidden');
+      zkModal.style.display = 'block';
       modalComputingView.classList.remove('hidden');
       modalReceiptView.classList.add('hidden');
 
       try {
-        // 2. Run snarkjs locally via zkp_prover.js & post proof to /api/v1/cast-vote/
         const result = await window.ZKPProver.castVote(
           selected.value,
           activeVoterHash,
@@ -567,7 +512,6 @@
           }
         );
 
-        // 3. Display cryptographic receipt containing transaction hash
         modalComputingView.classList.add('hidden');
         modalReceiptView.classList.remove('hidden');
 
@@ -581,19 +525,25 @@
           btnCopyReceipt.textContent = '✓ Copied!';
           setTimeout(() => { btnCopyReceipt.textContent = 'Copy Tx Hash'; }, 2000);
         };
+
+        // Advance to step 3 completed
+        stepBadge2.className = 'badge bg-secondary-subtle text-secondary py-2 px-3 rounded-pill';
+        stepBadge3.className = 'badge bg-success text-white py-2 px-3 rounded-pill fw-semibold';
       } catch (err) {
         console.error('[CastVote] Error:', err);
         alert('Voting error: ' + (err.message || 'Transaction could not be submitted.'));
         zkModal.classList.add('hidden');
+        zkModal.style.display = 'none';
         btnCastVote.disabled = false;
-        btnCastVote.classList.remove('opacity-50', 'cursor-not-allowed');
+        btnCastVote.classList.remove('disabled');
       }
     });
 
     btnCloseModal?.addEventListener('click', () => {
       zkModal.classList.add('hidden');
-      btnCastVote.innerHTML = '✓ Vote Recorded on-Chain';
-      btnCastVote.className = 'w-full rounded-xl bg-slate-800 border border-slate-700 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider cursor-not-allowed';
+      zkModal.style.display = 'none';
+      btnCastVote.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Vote Recorded on-Chain';
+      btnCastVote.className = 'btn btn-secondary btn-lg rounded-3 fw-semibold w-100 py-3 mt-2 disabled';
     });
   });
 </script>

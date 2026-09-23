@@ -145,23 +145,23 @@
 
       const isBlocked = evt.type === 'BLOCKED';
       const badgeClass = isBlocked
-        ? 'border-rose-500/40 bg-rose-500/10 text-rose-300'
+        ? 'badge bg-danger-subtle text-danger font-monospace'
         : evt.type === 'VERIFIED'
-        ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
-        : 'border-cyan-500/40 bg-cyan-500/10 text-cyan-300';
+        ? 'badge bg-success-subtle text-success font-monospace'
+        : 'badge bg-info-subtle text-info font-monospace';
 
       const row = document.createElement('div');
-      row.className = 'flex items-center justify-between border-b border-slate-800/80 px-4 py-2.5 text-xs font-mono transition hover:bg-slate-800/40';
+      row.className = 'd-flex justify-content-between align-items-center p-2 border-bottom font-monospace small';
       row.innerHTML = `
-        <div class="flex items-center gap-3">
-          <span class="rounded px-1.5 py-0.5 text-[10px] font-bold border ${badgeClass}">${evt.type}</span>
-          <span class="text-slate-400">${evt.timestamp || new Date().toLocaleTimeString()}</span>
-          <span class="text-slate-300 font-semibold">${evt.ip || '0.0.0.0'}</span>
-          <span class="text-slate-400 truncate max-w-xs md:max-w-md">${evt.msg}</span>
+        <div class="d-flex align-items-center gap-2">
+          <span class="${badgeClass}">${evt.type}</span>
+          <span class="text-muted">${evt.timestamp || new Date().toLocaleTimeString()}</span>
+          <span class="fw-semibold text-dark">${evt.ip || '0.0.0.0'}</span>
+          <span class="text-secondary text-truncate" style="max-width: 200px;">${evt.msg}</span>
         </div>
-        <div class="flex items-center gap-2">
-          <span class="text-[11px] text-slate-500">Score:</span>
-          <span class="font-bold ${evt.score > 0.7 ? 'text-rose-400' : 'text-emerald-400'}">${evt.score}</span>
+        <div>
+          <span class="text-muted small">Score: </span>
+          <span class="fw-bold ${evt.score > 0.7 ? 'text-danger' : 'text-success'}">${evt.score}</span>
         </div>
       `;
 

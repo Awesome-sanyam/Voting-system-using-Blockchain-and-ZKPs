@@ -1,0 +1,213 @@
+{% extends "api/base.html" %}
+{% load static %}
+
+{% block title %}Select Operational Portal — BlockVote India{% endblock %}
+{% block meta_description %}Select your authorized operational portal: Citizen Voter Portal, Administrative Command Center, or Institutional Auditor Verifier.{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <!-- ── Hub Header ──────────────────────────────────────────────────────── -->
+  <div class="text-center mb-5">
+    <span class="badge bg-primary-subtle text-primary font-monospace text-uppercase mb-2 px-3 py-1.5">
+      <i class="bi bi-shield-check me-1"></i>Zero-Trust Multi-Role Architecture
+    </span>
+    <h1 class="h2 fw-bold text-dark mb-2">BlockVote India Operational Hub</h1>
+    <p class="text-muted mx-auto" style="max-width: 680px;">
+      Cryptographically enforced access control boundaries across Voter, Administrative Authority, and Certified Institutional Auditor tiers. Select your destination below.
+    </p>
+  </div>
+
+  <!-- ── 3 Main Enterprise Cards Grid ────────────────────────────────────── -->
+  <div class="row g-4 justify-content-center">
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         PORTAL 1: Citizen Voter Portal
+         ══════════════════════════════════════════════════════════════════ -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card card-mnc card-mnc-hover h-100">
+        
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+          <h2 class="h5 fw-bold text-dark mb-0">
+            <i class="bi bi-person-check text-primary me-2"></i>Voter Portal
+          </h2>
+          <span class="badge bg-primary-subtle text-primary font-monospace">Electorate</span>
+        </div>
+
+        <div class="card-body p-4 d-flex flex-column justify-content-between">
+          <div>
+            <p class="text-muted small mb-3">
+              Access the anonymous voting terminal. Register via API Setu KYC simulation, receive 3-minute dynamic QR session tokens, and cast gasless Groth16 zero-knowledge ballots.
+            </p>
+
+            <ul class="list-group list-group-flush small font-monospace mb-4">
+              <li class="list-group-item px-0 py-1.5 bg-transparent text-muted">
+                <i class="bi bi-check2 text-success me-2"></i>EPIC & Mobile OTP Validation
+              </li>
+              <li class="list-group-item px-0 py-1.5 bg-transparent text-muted">
+                <i class="bi bi-check2 text-success me-2"></i>Client-Side SnarkJS Prover
+              </li>
+              <li class="list-group-item px-0 py-1.5 bg-transparent text-muted">
+                <i class="bi bi-check2 text-success me-2"></i>Zero Raw Identity Storage
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            {% if has_voter_session %}
+            <div class="alert alert-success py-2 px-3 small font-monospace mb-3 border-0 d-flex align-items-center">
+              <i class="bi bi-patch-check-fill me-2 fs-6"></i>
+              <div>
+                <div>Active Voter Session</div>
+                <div class="text-muted small font-monospace text-truncate" style="max-width: 220px;">{{ voter_hash }}</div>
+              </div>
+            </div>
+            <a href="/voter/" class="btn btn-primary w-100 fw-bold py-2.5 shadow-sm d-flex align-items-center justify-content-center gap-2">
+              <i class="bi bi-box-arrow-in-right"></i>
+              <span>Enter Voting Terminal</span>
+            </a>
+            {% else %}
+            <a href="/auth/voter/" class="btn btn-primary w-100 fw-bold py-2.5 shadow-sm d-flex align-items-center justify-content-center gap-2">
+              <i class="bi bi-box-arrow-in-right"></i>
+              <span>Authenticate / Register Voter</span>
+            </a>
+            {% endif %}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         PORTAL 2: Admin Command Console
+         ══════════════════════════════════════════════════════════════════ -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card card-mnc card-mnc-hover h-100">
+        
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+          <h2 class="h5 fw-bold text-dark mb-0">
+            <i class="bi bi-shield-lock-fill text-danger me-2"></i>Admin Console
+          </h2>
+          <span class="badge bg-danger-subtle text-danger font-monospace">Authority</span>
+        </div>
+
+        <div class="card-body p-4 d-flex flex-column justify-content-between">
+          <div>
+            <p class="text-muted small mb-3">
+              Election Authority management console. Freeze the voter roll via on-chain Merkle root cryptographic lock, inspect live request velocity, and review AI Sentinel DDoS mitigation logs.
+            </p>
+
+            <ul class="list-group list-group-flush small font-monospace mb-4">
+              <li class="list-group-item px-0 py-1.5 bg-transparent text-muted">
+                <i class="bi bi-check2 text-success me-2"></i>Merkle Electoral Roll Sealing
+              </li>
+              <li class="list-group-item px-0 py-1.5 bg-transparent text-muted">
+                <i class="bi bi-check2 text-success me-2"></i>Active Sentinel AI Monitor
+              </li>
+              <li class="list-group-item px-0 py-1.5 bg-transparent text-muted">
+                <i class="bi bi-check2 text-success me-2"></i>Staff & Superuser RBAC
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            {% if is_admin %}
+            <div class="alert alert-danger py-2 px-3 small font-monospace mb-3 border-0 d-flex align-items-center">
+              <i class="bi bi-shield-check me-2 fs-6"></i>
+              <div>
+                <div>Administrator Authenticated</div>
+                <div class="text-muted small font-monospace">Authorized as Staff</div>
+              </div>
+            </div>
+            <a href="/admin-panel/" class="btn btn-danger w-100 fw-bold py-2.5 shadow-sm d-flex align-items-center justify-content-center gap-2">
+              <i class="bi bi-speedometer2"></i>
+              <span>Open Command Center</span>
+            </a>
+            {% else %}
+            <a href="/auth/admin/" class="btn btn-outline-danger w-100 fw-bold py-2.5 d-flex align-items-center justify-content-center gap-2">
+              <i class="bi bi-shield-lock-fill"></i>
+              <span>Admin Console Login</span>
+            </a>
+            {% endif %}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         PORTAL 3: Public Auditor Portal
+         ══════════════════════════════════════════════════════════════════ -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card card-mnc card-mnc-hover h-100">
+        
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+          <h2 class="h5 fw-bold text-dark mb-0">
+            <i class="bi bi-journal-check text-success me-2"></i>Public Auditor
+          </h2>
+          <span class="badge bg-success-subtle text-success font-monospace">Observer</span>
+        </div>
+
+        <div class="card-body p-4 d-flex flex-column justify-content-between">
+          <div>
+            <p class="text-muted small mb-3">
+              Independent cryptographic verification suite. Real-time Polygon Amoy mempool event listener, spent nullifier anti-double-vote scanner, and mathematical tally integrity audit engine.
+            </p>
+
+            <ul class="list-group list-group-flush small font-monospace mb-4">
+              <li class="list-group-item px-0 py-1.5 bg-transparent text-muted">
+                <i class="bi bi-check2 text-success me-2"></i>Direct On-Chain RPC Stream
+              </li>
+              <li class="list-group-item px-0 py-1.5 bg-transparent text-muted">
+                <i class="bi bi-check2 text-success me-2"></i>Ballot Conservation Law Proof
+              </li>
+              <li class="list-group-item px-0 py-1.5 bg-transparent text-muted">
+                <i class="bi bi-check2 text-success me-2"></i>Institutional Observer Token Gating
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            {% if is_auditor %}
+            <div class="alert alert-success py-2 px-3 small font-monospace mb-3 border-0 d-flex align-items-center">
+              <i class="bi bi-patch-check-fill me-2 fs-6"></i>
+              <div>
+                <div>Auditor Authorized</div>
+                <div class="text-muted small font-monospace">Institutional Verifier Session</div>
+              </div>
+            </div>
+            <a href="/auditor/" class="btn btn-success w-100 fw-bold py-2.5 shadow-sm d-flex align-items-center justify-content-center gap-2">
+              <i class="bi bi-journal-check"></i>
+              <span>Launch Auditor Portal</span>
+            </a>
+            {% else %}
+            <a href="/auth/auditor/" class="btn btn-outline-success w-100 fw-bold py-2.5 d-flex align-items-center justify-content-center gap-2">
+              <i class="bi bi-key-fill"></i>
+              <span>Auditor Sign In / Token Entry</span>
+            </a>
+            {% endif %}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Information Banner ──────────────────────────────────────────────── -->
+  <div class="card card-mnc p-4 mt-5">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 font-monospace small">
+      <div>
+        <span class="text-primary fw-bold"><i class="bi bi-info-circle-fill me-1"></i>Security Architecture:</span>
+        <span class="text-muted ms-1">No plain identity information (Name, EPIC, Phone) is ever published on the Polygon blockchain or persisted unhashed.</span>
+      </div>
+      <div class="text-muted">
+        <span>Curvature: <strong>Alt-BN128</strong></span>
+        <span class="mx-2">•</span>
+        <span>Chain: <strong>Polygon Amoy (80002)</strong></span>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
