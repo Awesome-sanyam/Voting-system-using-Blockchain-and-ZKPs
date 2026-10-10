@@ -136,6 +136,18 @@ def submit_vote_relayer(request):
             return Response({"error": "Failed to connect to Polygon network"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         # 4. Prepare the Smart Contract Transaction
+        if SERVER_PRIVATE_KEY == "YOUR_DUMMY_PRIVATE_KEY_HERE" or not SERVER_PRIVATE_KEY.startswith('0x'):
+            return Response({
+                "error": "Relayer Not Configured",
+                "details": "SERVER_PRIVATE_KEY is not set in backend/.env. Add your Polygon Amoy funded wallet private key."
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        if VOTING_CONTRACT_ADDRESS == '0xYourDeployedContractAddress':
+            return Response({
+                "error": "Contract Not Deployed",
+                "details": "VOTING_CONTRACT_ADDRESS is not set in backend/.env. Deploy contracts first with: cd blockchain && npx hardhat run scripts/deploy.js --network polygonAmoy"
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
         server_account = w3.eth.account.from_key(SERVER_PRIVATE_KEY)
         voting_contract = w3.eth.contract(address=VOTING_CONTRACT_ADDRESS, abi=VOTING_ABI)
 
@@ -154,8 +166,8 @@ def submit_vote_relayer(request):
         # 5. Sign with the Server's Wallet (The Gasless Magic)
         signed_tx = w3.eth.account.sign_transaction(tx, private_key=SERVER_PRIVATE_KEY)
 
-        # 6. Broadcast to the Blockchain
-        tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+        # 6. Broadcast to the Blockchain (web3.py v6: raw_transaction not rawTransaction)
+        tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
         tx_hex = w3.to_hex(tx_hash)
 
         # 7. Update has_voted flag in database

@@ -37,9 +37,12 @@ numpy>=1.25.0
 
 # 2. Frontend Environment
 #    - Django Server-Side Rendered (SSR) Application
-#    - Tailwind CSS (via CDN) + Modern Dark Theme UI
+#    - Bootstrap 5.3.3 (via CDN) + Enterprise Minimalist UI
 #    - Native WebSockets (Django Channels)
 #    - Client-side zk-SNARK proof generation (SnarkJS / WebAssembly)
+#    - IMPORTANT: After compiling circuits, run:
+#      `cd backend && python manage.py copy_zkp_assets`
+#      to copy voter_eligibility.wasm and .zkey into Django static files.
 
 # 3. Database Services
 #    - PostgreSQL (v15.0 or higher)

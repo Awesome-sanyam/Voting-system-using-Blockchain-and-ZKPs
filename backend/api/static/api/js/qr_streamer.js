@@ -187,9 +187,7 @@
           });
         } catch (e) {
           console.error('[QRStreamer] QR Code generation failed:', e);
-          container.innerHTML = `<div class="p-3 font-monospace small text-primary border border-primary-subtle rounded-3 bg-light">${textData}</div>`;
-        } catch (e) {
-          console.error('[QRStreamer] QR Code generation failed:', e);
+          container.innerHTML = `<div class="p-3 font-monospace small text-primary border border-primary-subtle rounded-3 bg-light">${textData.substring(0, 80)}...</div>`;
         }
       } else {
         container.innerHTML = `
@@ -239,11 +237,11 @@
       if (timerEl) {
         timerEl.textContent = formatted;
         if (this.remainingSeconds <= 30) {
-          timerEl.classList.add('text-rose-400');
-          timerEl.classList.remove('text-cyan-400');
+          timerEl.classList.add('text-danger');
+          timerEl.classList.remove('text-primary');
         } else {
-          timerEl.classList.add('text-cyan-400');
-          timerEl.classList.remove('text-rose-400');
+          timerEl.classList.add('text-primary');
+          timerEl.classList.remove('text-danger');
         }
       }
 
@@ -251,9 +249,11 @@
         const percentage = Math.max(0, Math.min(100, (this.remainingSeconds / this.totalDurationSeconds) * 100));
         barEl.style.width = `${percentage}%`;
         if (percentage < 20) {
-          barEl.className = 'h-full bg-gradient-to-r from-amber-500 to-rose-500 transition-all duration-1000 ease-linear rounded-full';
+          barEl.className = 'progress-bar rounded-pill bg-danger transition';
+        } else if (percentage < 50) {
+          barEl.className = 'progress-bar progress-bar-striped progress-bar-animated rounded-pill bg-warning transition';
         } else {
-          barEl.className = 'h-full bg-gradient-to-r from-cyan-500 via-indigo-500 to-emerald-400 transition-all duration-1000 ease-linear rounded-full';
+          barEl.className = 'progress-bar progress-bar-striped progress-bar-animated rounded-pill bg-primary transition';
         }
       }
     }
@@ -261,10 +261,9 @@
     updateConnectionStatus(isConnected, label) {
       const statusBadge = document.getElementById('qr-status-indicator');
       if (statusBadge) {
-        statusBadge.innerHTML = `
-          <span class="inline-block h-2 w-2 rounded-full ${isConnected ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'} mr-1.5"></span>
-          <span class="text-xs font-mono ${isConnected ? 'text-emerald-300' : 'text-amber-300'}">${label}</span>
-        `;
+        statusBadge.innerHTML = isConnected
+          ? `<span class="badge bg-success rounded-pill px-3 py-1 font-monospace small pulse-indicator"><i class="bi bi-broadcast me-1"></i>${label}</span>`
+          : `<span class="badge bg-warning text-dark rounded-pill px-3 py-1 font-monospace small"><i class="bi bi-exclamation-triangle me-1"></i>${label}</span>`;
       }
     }
 

@@ -26,7 +26,13 @@ SECRET_KEY = os.environ.get(
 # Set DEBUG=False in production .env
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() != 'false'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver', '[::1]', '*']
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'testserver',
+    '[::1]',
+    # Add your production domain here, e.g.: 'blockvote.example.com'
+]
 
 
 # Application definition

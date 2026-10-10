@@ -27,11 +27,11 @@ class Candidate(models.Model):
     election = models.ForeignKey(Election, on_delete=models.CASCADE, related_name='candidates')
     candidate_id = models.PositiveIntegerField(unique=True, help_text="Matches the ID on the smart contract")
     name = models.CharField(max_length=150)
+    party = models.CharField(max_length=150, blank=True, default='Independent', help_text="Party or coalition name")
     party_symbol_url = models.URLField(blank=True, null=True)
     
     def __str__(self):
-        return f"[{self.candidate_id}] {self.name}"
-
+        return f"[{self.candidate_id}] {self.name} ({self.party})"
 
 class VoterIdentity(models.Model):
     """

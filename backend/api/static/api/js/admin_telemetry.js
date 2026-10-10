@@ -114,19 +114,19 @@
         gaugeBar.style.width = `${pct}%`;
 
         if (this.velocity > 12) {
-          gaugeBar.className = 'h-full rounded-full bg-gradient-to-r from-amber-500 to-rose-600 transition-all duration-700 ease-out';
+          gaugeBar.className = 'progress-bar rounded-pill bg-danger progress-bar-striped progress-bar-animated';
           if (gaugeStatus) {
-            gaugeStatus.innerHTML = '<span class="inline-block h-2 w-2 rounded-full bg-rose-500 animate-ping mr-1.5"></span><span class="text-rose-400 font-mono">DDoS BURST MITIGATED</span>';
+            gaugeStatus.innerHTML = '<span class="badge bg-danger-subtle text-danger font-monospace rounded-pill px-3 py-1"><i class="bi bi-shield-fill-x me-1"></i>DDoS BURST MITIGATED</span>';
           }
         } else if (this.velocity > 6) {
-          gaugeBar.className = 'h-full rounded-full bg-gradient-to-r from-cyan-500 to-amber-500 transition-all duration-700 ease-out';
+          gaugeBar.className = 'progress-bar rounded-pill bg-warning progress-bar-striped progress-bar-animated';
           if (gaugeStatus) {
-            gaugeStatus.innerHTML = '<span class="inline-block h-2 w-2 rounded-full bg-amber-400 mr-1.5"></span><span class="text-amber-300 font-mono">ELEVATED TRAFFIC</span>';
+            gaugeStatus.innerHTML = '<span class="badge bg-warning-subtle text-warning-emphasis font-monospace rounded-pill px-3 py-1"><i class="bi bi-exclamation-triangle-fill me-1"></i>ELEVATED TRAFFIC</span>';
           }
         } else {
-          gaugeBar.className = 'h-full rounded-full bg-gradient-to-r from-cyan-500 to-indigo-500 transition-all duration-700 ease-out';
+          gaugeBar.className = 'progress-bar rounded-pill bg-primary progress-bar-striped progress-bar-animated';
           if (gaugeStatus) {
-            gaugeStatus.innerHTML = '<span class="inline-block h-2 w-2 rounded-full bg-emerald-400 mr-1.5"></span><span class="text-emerald-300 font-mono">NORMAL VELOCITY</span>';
+            gaugeStatus.innerHTML = '<span class="badge bg-success-subtle text-success font-monospace rounded-pill px-3 py-1"><i class="bi bi-check-circle-fill me-1"></i>NORMAL VELOCITY</span>';
           }
         }
       }
