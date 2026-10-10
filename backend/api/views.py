@@ -226,7 +226,7 @@ def get_election_state(request):
 
     return Response({
         "election_id":   election.pk,
-        "election_name": election.name,
+        "election_name": election.title,
         "merkle_root":   election.merkle_root or "0x0",
         "is_locked":     election.is_root_locked,
     })
@@ -525,7 +525,7 @@ def auditor_auth_view(request):
             AuditorProfile.objects.create(
                 user=user,
                 organization=organization,
-                access_token_hash=token_hash,
+                trust_token_hash=token_hash,
                 is_approved=True
             )
             login(request, user)

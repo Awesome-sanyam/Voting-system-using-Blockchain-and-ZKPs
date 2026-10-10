@@ -74,7 +74,7 @@ class AuditorProfile(models.Model):
     """
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='auditor_profile')
     organization = models.CharField(max_length=255, help_text="Observer institution, NGO, or Electoral agency")
-    access_token_hash = models.CharField(max_length=66, blank=True, help_text="SHA-256 hash of the trusted invite token")
+    trust_token_hash = models.CharField(max_length=66, blank=True, help_text="SHA-256 hash of the trusted institutional invite token")
     is_approved = models.BooleanField(default=False, help_text="Requires manual admin approval or valid trusted token")
     created_at = models.DateTimeField(auto_now_add=True)
 
