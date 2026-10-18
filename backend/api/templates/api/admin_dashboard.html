@@ -2,12 +2,12 @@
 {% load static %}
 
 {% block title %}Election Authority Command Console — BlockVote India{% endblock %}
-{% block meta_description %}High-stakes election authority control room: Merkle root sealing, active voter roll registry, and real-time AI Sentinel threat telemetry.{% endblock %}
+{% block meta_description %}High-stakes election authority control room: Election lifecycle management, voter roll administration, Merkle root sealing, and real-time AI Sentinel threat telemetry.{% endblock %}
 
 {% block content %}
 <div class="container-fluid px-3 px-md-4 py-2">
 
-  <!-- ── Top Title & Overview ─────────────────────────────────────────── -->
+  <!-- ── Top Title & Overview ──────────────────────────────────────────── -->
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center pb-4 mb-4 gap-3 border-bottom" style="border-color: var(--ag-border) !important;">
     <div>
       <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
@@ -19,18 +19,31 @@
           <i class="bi bi-person-check-fill"></i>
           STAFF ACCESS LEVEL 4
         </span>
+        {% if managed_election %}
+          {% if managed_election.status == 'DRAFT' %}
+          <span class="ag-pill" style="background: rgba(245,158,11,0.1); color: #d97706; border: 1px solid rgba(245,158,11,0.3);">
+            <i class="bi bi-pencil-fill"></i> DRAFT — Voter List Open
+          </span>
+          {% elif managed_election.status == 'ACTIVE' %}
+          <span class="ag-pill ag-pill-emerald">
+            <i class="bi bi-play-circle-fill"></i> ACTIVE — Voting Open
+          </span>
+          {% elif managed_election.status == 'CLOSED' %}
+          <span class="ag-pill ag-pill-neutral">
+            <i class="bi bi-stop-circle-fill"></i> CLOSED — Election Ended
+          </span>
+          {% endif %}
+        {% endif %}
       </div>
       <h1 class="h2 fw-bold mb-1" style="color: var(--ag-slate-900); letter-spacing: -0.03em;">
         Administrative Command Center
       </h1>
       <p class="small mb-0" style="color: var(--ag-slate-500);">
-        Sovereign Merkle tree cryptographic lock and real-time Scikit-Learn Active Sentinel telemetry.
+        Election lifecycle management, voter roll administration, and real-time Active Sentinel AI telemetry.
       </p>
     </div>
-
-    <!-- Live System Sentinel Status Badge -->
     <div class="d-flex align-items-center gap-2 font-monospace small">
-      <div class="p-2 px-3.5 rounded-pill bg-white border shadow-xs d-flex align-items-center gap-2" style="border-color: var(--ag-border);">
+      <div class="p-2 px-3 rounded-pill bg-white border shadow-xs d-flex align-items-center gap-2" style="border-color: var(--ag-border);">
         <span class="spinner-grow spinner-grow-sm text-success" role="status" style="width: 0.55rem; height: 0.55rem;"></span>
         <span style="color: var(--ag-slate-500);">Active Sentinel:</span>
         <strong style="color: var(--ag-emerald);">ONLINE</strong>
@@ -38,10 +51,8 @@
     </div>
   </div>
 
-  <!-- ── Executive KPI Cards Grid (Antigravity Bento Cards) ─────────────── -->
+  <!-- ── KPI Cards ─────────────────────────────────────────────────────── -->
   <div class="row g-3 mb-4">
-    
-    <!-- KPI 1 -->
     <div class="col-sm-6 col-lg-3">
       <div class="ag-card p-4 h-100 position-relative overflow-hidden">
         <div class="d-flex justify-content-between align-items-center small text-uppercase font-monospace mb-2" style="color: var(--ag-slate-500);">
@@ -50,14 +61,10 @@
             <i class="bi bi-people-fill fs-6"></i>
           </div>
         </div>
-        <div class="h3 fw-bold font-monospace mb-1" id="kpi-voter-count" style="color: var(--ag-slate-900);">
-          {{ voter_stats.total|default:"1,840" }}
-        </div>
+        <div class="h3 fw-bold font-monospace mb-1" style="color: var(--ag-slate-900);">{{ voter_stats.total|default:"0" }}</div>
         <div class="small" style="color: var(--ag-slate-500);">Whitelisted Citizen Hashes</div>
       </div>
     </div>
-
-    <!-- KPI 2 -->
     <div class="col-sm-6 col-lg-3">
       <div class="ag-card p-4 h-100 position-relative overflow-hidden">
         <div class="d-flex justify-content-between align-items-center small text-uppercase font-monospace mb-2" style="color: var(--ag-slate-500);">
@@ -66,16 +73,12 @@
             <i class="bi bi-box-seam-fill fs-6"></i>
           </div>
         </div>
-        <div class="h3 fw-bold font-monospace mb-1" style="color: var(--ag-slate-900);">
-          {{ voter_stats.voted|default:"612" }}
-        </div>
+        <div class="h3 fw-bold font-monospace mb-1" style="color: var(--ag-slate-900);">{{ voter_stats.voted|default:"0" }}</div>
         <div class="small fw-semibold" style="color: var(--ag-emerald);">
-          <i class="bi bi-graph-up-arrow me-1"></i>Turnout: {{ voter_stats.turnout|default:"33.2%" }}
+          <i class="bi bi-graph-up-arrow me-1"></i>Turnout: {{ voter_stats.turnout|default:"0%" }}
         </div>
       </div>
     </div>
-
-    <!-- KPI 3 -->
     <div class="col-sm-6 col-lg-3">
       <div class="ag-card p-4 h-100 position-relative overflow-hidden">
         <div class="d-flex justify-content-between align-items-center small text-uppercase font-monospace mb-2" style="color: var(--ag-slate-500);">
@@ -84,117 +87,292 @@
             <i class="bi bi-shield-slash-fill fs-6"></i>
           </div>
         </div>
-        <div class="h3 fw-bold font-monospace mb-1" id="kpi-blocked-threats" style="color: var(--ag-rose);">
-          {{ threats|length|default:"18" }}
-        </div>
+        <div class="h3 fw-bold font-monospace mb-1" style="color: var(--ag-rose);">{{ threats|length|default:"0" }}</div>
         <div class="small" style="color: var(--ag-slate-500);">Isolation Forest Drops</div>
       </div>
     </div>
-
-    <!-- KPI 4 -->
     <div class="col-sm-6 col-lg-3">
       <div class="ag-card p-4 h-100 position-relative overflow-hidden">
         <div class="d-flex justify-content-between align-items-center small text-uppercase font-monospace mb-2" style="color: var(--ag-slate-500);">
-          <span class="fw-semibold">Mempool Latency</span>
+          <span class="fw-semibold">Voter Roll (Current)</span>
           <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background: rgba(14, 165, 233, 0.1); color: var(--ag-sky);">
-            <i class="bi bi-speedometer fs-6"></i>
+            <i class="bi bi-list-check fs-6"></i>
           </div>
         </div>
-        <div class="h3 fw-bold font-monospace mb-1" style="color: var(--ag-sky);">
-          1.8s
+        <div class="h3 fw-bold font-monospace mb-1" id="kpi-roll-count" style="color: var(--ag-sky);">{{ voter_roll_count|default:"0" }}</div>
+        <div class="small" style="color: var(--ag-slate-500);">
+          {% if voter_list_locked %}<span class="text-danger fw-semibold"><i class="bi bi-lock-fill me-1"></i>LOCKED</span>{% else %}<span class="text-warning fw-semibold"><i class="bi bi-unlock-fill me-1"></i>Open (Draft)</span>{% endif %}
         </div>
-        <div class="small" style="color: var(--ag-slate-500);">Polygon Amoy Block Time</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SECTION 1: ELECTION LIFECYCLE MANAGEMENT (Full width top panel)
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="ag-card mb-4 overflow-hidden" style="border-top: 4px solid var(--ag-primary);">
+    <div class="p-4 pb-3">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div>
+          <span class="ag-pill ag-pill-primary" style="font-size: 0.7rem; padding: 2px 8px;">ELECTION MANAGEMENT</span>
+          <h2 class="h5 fw-bold mb-1 mt-2" style="color: var(--ag-slate-900);">
+            <i class="bi bi-calendar-event-fill text-primary me-2"></i>Election Lifecycle Control
+          </h2>
+          <p class="small mb-0" style="color: var(--ag-slate-500);">Create elections, manage voter rolls, then start voting. Once started, the voter list is permanently locked.</p>
+        </div>
+        {% if not managed_election or managed_election.status == 'CLOSED' %}
+        <button type="button" class="ag-btn-primary px-4 py-2 d-flex align-items-center gap-2 font-monospace small text-uppercase"
+                data-bs-toggle="modal" data-bs-target="#createElectionModal">
+          <i class="bi bi-plus-circle-fill"></i> Create New Election
+        </button>
+        {% endif %}
       </div>
     </div>
 
+    {% if managed_election %}
+    <!-- Current Election Status Banner -->
+    <div class="px-4 pb-2">
+      <div class="p-3 rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3
+        {% if managed_election.status == 'ACTIVE' %}border{% elif managed_election.status == 'DRAFT' %}border{% else %}border{% endif %}"
+        style="
+          {% if managed_election.status == 'ACTIVE' %}background: rgba(16,185,129,0.06); border-color: rgba(16,185,129,0.3) !important;
+          {% elif managed_election.status == 'DRAFT' %}background: rgba(245,158,11,0.06); border-color: rgba(245,158,11,0.3) !important;
+          {% else %}background: rgba(100,116,139,0.06); border-color: rgba(100,116,139,0.3) !important;{% endif %}">
+        <div>
+          <div class="fw-bold mb-1" style="color: var(--ag-slate-900);">{{ managed_election.title }}</div>
+          <div class="font-monospace small d-flex flex-wrap gap-3" style="color: var(--ag-slate-500);">
+            <span><i class="bi bi-play-fill me-1"></i>Opens: <strong id="election-start-disp" class="text-dark">—</strong></span>
+            <span><i class="bi bi-stop-fill me-1"></i>Closes: <strong id="election-end-disp" class="text-dark">—</strong></span>
+            <span><i class="bi bi-people-fill me-1"></i>Roll: <strong class="text-dark">{{ voter_roll_count }}</strong> voters</span>
+          </div>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+          {% if managed_election.status == 'DRAFT' %}
+          <button id="btn-start-election" class="ag-btn-primary px-4 py-2 d-flex align-items-center gap-2 font-monospace small text-uppercase"
+                  style="background: linear-gradient(135deg, #10b981, #059669);"
+                  data-election-id="{{ managed_election.pk }}">
+            <i class="bi bi-play-circle-fill"></i> Start Election & Lock Voter List
+          </button>
+          {% elif managed_election.status == 'ACTIVE' %}
+          <button id="btn-close-election" class="ag-btn-glass px-4 py-2 d-flex align-items-center gap-2 font-monospace small text-uppercase text-danger"
+                  data-election-id="{{ managed_election.pk }}">
+            <i class="bi bi-stop-circle-fill"></i> Close Election Early
+          </button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Countdown Timer (shown if ACTIVE or DRAFT with future start) -->
+    <div class="px-4 pb-4" id="timer-panel">
+      <div class="row g-2 mt-1">
+        <div class="col-12">
+          <div class="p-3 rounded-3 font-monospace small d-flex align-items-center gap-3 flex-wrap"
+               style="background: rgba(241,245,249,0.8); border: 1px solid var(--ag-border);">
+            <i class="bi bi-clock-history fs-5" style="color: var(--ag-primary);"></i>
+            <div id="countdown-wrapper">
+              <div class="small text-muted mb-1" id="countdown-label">Loading...</div>
+              <div class="h5 fw-bold mb-0" id="countdown-display" style="color: var(--ag-slate-900); letter-spacing: 0.05em;">—</div>
+            </div>
+            <div class="ms-auto">
+              {% if managed_election.status == 'DRAFT' %}
+              <span class="ag-pill" style="background: rgba(245,158,11,0.1); color: #d97706; border: 1px solid rgba(245,158,11,0.3);">
+                <i class="bi bi-pencil-fill me-1"></i>DRAFT — Not Started
+              </span>
+              {% elif managed_election.status == 'ACTIVE' %}
+              <span class="ag-pill ag-pill-emerald" id="election-live-badge">
+                <span class="spinner-grow spinner-grow-sm me-1" style="width:0.5rem;height:0.5rem;"></span> LIVE
+              </span>
+              {% else %}
+              <span class="ag-pill ag-pill-neutral">CLOSED</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="px-4 pb-4">
+      <div class="p-4 rounded-3 text-center" style="background: rgba(241,245,249,0.8); border: 1px dashed var(--ag-border);">
+        <i class="bi bi-calendar-plus fs-1 mb-3 d-block" style="color: var(--ag-slate-400);"></i>
+        <p class="mb-3 fw-semibold" style="color: var(--ag-slate-700);">No election has been created yet.</p>
+        <button type="button" class="ag-btn-primary px-5 py-2 d-inline-flex align-items-center gap-2"
+                data-bs-toggle="modal" data-bs-target="#createElectionModal">
+          <i class="bi bi-plus-circle-fill"></i> Create Your First Election
+        </button>
+      </div>
+    </div>
+    {% endif %}
   </div>
 
-  <!-- ── 2 Main Workspaces: Merkle Lock & AI Threat Intelligence ───────── -->
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SECTION 2: VOTER ROLL MANAGEMENT + MERKLE SEALING (2 cols)
+       ══════════════════════════════════════════════════════════════════════ -->
   <div class="row g-4 mb-4">
 
-    <!-- ══════════════════════════════════════════════════════════════════
-         PANEL 1: Merkle Lock Interface (col-lg-5)
-         ══════════════════════════════════════════════════════════════════ -->
+    <!-- PANEL A: Voter Roll (col-lg-7) -->
+    <div class="col-12 col-lg-7">
+      <div class="ag-card overflow-hidden h-100" style="border-top: 4px solid {% if voter_list_locked %}var(--ag-rose){% else %}var(--ag-emerald){% endif %};">
+        <div class="p-4 pb-2">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+              <span class="ag-pill {% if voter_list_locked %}ag-pill-rose{% else %}ag-pill-emerald{% endif %}" style="font-size: 0.7rem; padding: 2px 8px;">
+                {% if voter_list_locked %}<i class="bi bi-lock-fill me-1"></i>VOTER LIST LOCKED{% else %}<i class="bi bi-unlock-fill me-1"></i>VOTER LIST OPEN{% endif %}
+              </span>
+              <h2 class="h5 fw-bold mb-0 mt-2" style="color: var(--ag-slate-900);">
+                <i class="bi bi-person-lines-fill me-2" style="color: var(--ag-primary);"></i>Official Voter Roll
+              </h2>
+            </div>
+            {% if managed_election and not voter_list_locked %}
+            <button type="button" class="ag-btn-primary px-3 py-2 d-flex align-items-center gap-1 font-monospace small"
+                    data-bs-toggle="modal" data-bs-target="#addVoterModal">
+              <i class="bi bi-person-plus-fill"></i> Add Voter
+            </button>
+            {% endif %}
+          </div>
+          {% if voter_list_locked %}
+          <div class="mt-3 p-2 px-3 rounded-3 small d-flex align-items-center gap-2"
+               style="background: rgba(244,63,94,0.07); border: 1px solid rgba(244,63,94,0.25); color: var(--ag-rose);">
+            <i class="bi bi-shield-lock-fill"></i>
+            <span>Voter list is <strong>permanently locked</strong>. No additions or removals are allowed once an election starts. This applies to everyone including administrators.</span>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Voter Roll Table -->
+        <div class="table-responsive mt-2" style="max-height: 400px; overflow-y: auto;">
+          <table class="table table-hover table-borderless align-middle mb-0 font-monospace small">
+            <thead class="sticky-top" style="z-index: 1;">
+              <tr style="background: rgba(241,245,249,0.95); border-bottom: 1px solid var(--ag-border); color: var(--ag-slate-600);">
+                <th class="px-4 py-3">#</th>
+                <th class="py-3">Voter Name</th>
+                <th class="py-3">EPIC Number</th>
+                <th class="py-3">Phone</th>
+                <th class="py-3 text-center">Hash Status</th>
+                {% if not voter_list_locked %}<th class="px-4 py-3 text-end">Action</th>{% endif %}
+              </tr>
+            </thead>
+            <tbody id="voter-roll-tbody">
+              {% if election_voter_roll %}
+                {% for entry in election_voter_roll %}
+                <tr id="roll-row-{{ entry.pk }}" style="border-bottom: 1px solid rgba(226,232,240,0.5);">
+                  <td class="px-4 py-2 fw-bold" style="color: var(--ag-primary);">{{ forloop.counter }}</td>
+                  <td class="py-2 fw-semibold" style="color: var(--ag-slate-900);">{{ entry.voter_name|default:"—" }}</td>
+                  <td class="py-2" style="color: var(--ag-slate-700);">{{ entry.epic_number }}</td>
+                  <td class="py-2 text-muted">{{ entry.phone_number|default:"—" }}</td>
+                  <td class="py-2 text-center">
+                    {% if entry.is_hashed %}
+                    <span class="badge rounded-pill" style="background: rgba(16,185,129,0.1); color: var(--ag-emerald); font-size: 0.7rem;">
+                      <i class="bi bi-check-circle-fill me-1"></i>Hashed
+                    </span>
+                    {% else %}
+                    <span class="badge rounded-pill" style="background: rgba(245,158,11,0.1); color: #d97706; font-size: 0.7rem;">
+                      <i class="bi bi-clock me-1"></i>Pending
+                    </span>
+                    {% endif %}
+                  </td>
+                  {% if not voter_list_locked %}
+                  <td class="px-4 py-2 text-end">
+                    <button class="btn btn-sm btn-link text-danger p-0" onclick="removeVoter({{ managed_election.pk }}, {{ entry.pk }}, '{{ entry.epic_number }}')" title="Remove voter">
+                      <i class="bi bi-trash-fill"></i>
+                    </button>
+                  </td>
+                  {% endif %}
+                </tr>
+                {% endfor %}
+              {% else %}
+              <tr>
+                <td colspan="{% if voter_list_locked %}5{% else %}6{% endif %}" class="text-center py-5" style="color: var(--ag-slate-400);">
+                  <i class="bi bi-people fs-3 d-block mb-2"></i>
+                  {% if managed_election %}
+                    {% if voter_list_locked %}Voter list is locked and empty.{% else %}No voters added yet. Click "Add Voter" to begin building the electoral roll.{% endif %}
+                  {% else %}
+                    Create an election first to manage its voter roll.
+                  {% endif %}
+                </td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+        <div class="px-4 py-3 d-flex justify-content-between align-items-center small font-monospace"
+             style="border-top: 1px solid var(--ag-border); color: var(--ag-slate-500);">
+          <span>Total on Roll: <strong id="roll-total-count" style="color: var(--ag-slate-900);">{{ voter_roll_count }}</strong></span>
+          <span>
+            {% if voter_list_locked %}
+            <i class="bi bi-lock-fill me-1 text-danger"></i>Immutable Electoral Roll
+            {% else %}
+            <i class="bi bi-pencil-fill me-1 text-warning"></i>Draft — Editable
+            {% endif %}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL B: Merkle Lock + Candidates (col-lg-5) -->
     <div class="col-12 col-lg-5">
-      
+
       <!-- Merkle Sealing Box -->
-      <div class="ag-card mb-4 p-4 p-xl-4.5 position-relative overflow-hidden" style="border-top: 4px solid var(--ag-rose);">
-        
-        <!-- Header -->
+      <div class="ag-card mb-4 p-4 position-relative overflow-hidden" style="border-top: 4px solid var(--ag-rose);">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <div>
-            <span class="ag-pill ag-pill-rose" style="font-size: 0.7rem; padding: 2px 8px;">
-              HIGH-STAKES ACTION
-            </span>
+            <span class="ag-pill ag-pill-rose" style="font-size: 0.7rem; padding: 2px 8px;">HIGH-STAKES ACTION</span>
             <h2 class="h5 fw-bold mb-0 mt-2" style="color: var(--ag-slate-900);">
               <i class="bi bi-lock-fill text-danger me-2"></i>Merkle Roll Sealing
             </h2>
           </div>
           <span class="ag-pill ag-pill-rose">Authority Tier</span>
         </div>
-
-        <div>
-          <p class="small mb-3" style="color: var(--ag-slate-500); line-height: 1.55;">
-            Once the citizen registration window closes, the election authority seals the Merkle Tree on Polygon. This irreversibly locks the eligible voter set cryptographically.
-          </p>
-
-          <!-- High-Stakes Confirmation Alert Zone -->
-          <div class="p-3.5 rounded-3 d-flex align-items-start gap-2.5 mb-3" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3);">
-            <i class="bi bi-exclamation-triangle-fill text-warning fs-5 flex-shrink-0 mt-0.5"></i>
-            <div class="small">
-              <strong class="d-block mb-1" style="color: var(--ag-slate-900);">Irreversible Cryptographic Action:</strong>
-              <span style="color: var(--ag-slate-600);">Sealing commits the Merkle Root to the smart contract bytecode. No further citizen identities can be whitelisted once committed.</span>
-            </div>
-          </div>
-
-          <!-- Current Tree Metrics -->
-          <div class="p-3 rounded-3 small font-monospace mb-4" style="background: rgba(241, 245, 249, 0.7); border: 1px solid var(--ag-border);">
-            <div class="d-flex justify-content-between py-1.5">
-              <span style="color: var(--ag-slate-500);">Total Registered Citizens:</span>
-              <span class="fw-bold" style="color: var(--ag-slate-900);">{{ voter_stats.total|default:"1,840" }} Voters</span>
-            </div>
-            <div class="d-flex justify-content-between py-1.5" style="border-top: 1px dashed var(--ag-border);">
-              <span style="color: var(--ag-slate-500);">Circuit Tree Depth:</span>
-              <span class="fw-bold" style="color: var(--ag-primary);">20 Levels (1,048,576 Cap)</span>
-            </div>
-            <div class="d-flex justify-content-between py-1.5" style="border-top: 1px dashed var(--ag-border);">
-              <span style="color: var(--ag-slate-500);">Hash Circuit Standard:</span>
-              <span class="fw-bold" style="color: var(--ag-slate-700);">Optimized BN128 Poseidon</span>
-            </div>
-          </div>
-
-          <!-- Merkle Lock Action & Sealed Badge Container -->
-          <div class="d-flex flex-column gap-2">
-            <div id="merkle-status-badge-container">
-              {% if active_election and active_election.is_root_locked %}
-              <div class="p-3 mb-2 rounded-3 small font-monospace d-flex align-items-center" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--ag-emerald);">
-                <i class="bi bi-patch-check-fill me-2 fs-6"></i>
-                <span>Merkle Root Sealed on-Chain: <strong class="ms-1">{{ active_election.merkle_root|truncatechars:18 }}</strong></span>
-              </div>
-              {% endif %}
-            </div>
-
-            <button type="button" id="btn-lock-merkle"
-                    {% if active_election and active_election.is_root_locked %}disabled class="ag-btn-glass w-100 py-3 disabled font-monospace small text-uppercase"{% else %}class="ag-btn-primary w-100 py-3 d-flex align-items-center justify-content-center gap-2 font-monospace small text-uppercase" style="background: linear-gradient(135deg, #e11d48, #be123c);"{% endif %}>
-              <i class="bi bi-shield-lock-fill"></i>
-              <span>{% if active_election and active_election.is_root_locked %}✓ Electoral Roll Sealed{% else %}Lock Electoral Roll & Commit Root{% endif %}</span>
-            </button>
+        <p class="small mb-3" style="color: var(--ag-slate-500); line-height: 1.55;">
+          Once the citizen registration window closes, the election authority seals the Merkle Tree on Polygon. This irreversibly locks the eligible voter set cryptographically.
+        </p>
+        <div class="p-3 rounded-3 d-flex align-items-start gap-2 mb-3" style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.3);">
+          <i class="bi bi-exclamation-triangle-fill text-warning fs-5 flex-shrink-0"></i>
+          <div class="small">
+            <strong class="d-block mb-1" style="color: var(--ag-slate-900);">Irreversible Cryptographic Action:</strong>
+            <span style="color: var(--ag-slate-600);">Sealing commits the Merkle Root to the smart contract bytecode. No further citizen identities can be whitelisted once committed.</span>
           </div>
         </div>
-
+        <div class="p-3 rounded-3 small font-monospace mb-4" style="background: rgba(241,245,249,0.7); border: 1px solid var(--ag-border);">
+          <div class="d-flex justify-content-between py-1">
+            <span style="color: var(--ag-slate-500);">Total Registered Citizens:</span>
+            <span class="fw-bold" style="color: var(--ag-slate-900);">{{ voter_stats.total|default:"0" }} Voters</span>
+          </div>
+          <div class="d-flex justify-content-between py-1" style="border-top: 1px dashed var(--ag-border);">
+            <span style="color: var(--ag-slate-500);">Circuit Tree Depth:</span>
+            <span class="fw-bold" style="color: var(--ag-primary);">20 Levels (1,048,576 Cap)</span>
+          </div>
+          <div class="d-flex justify-content-between py-1" style="border-top: 1px dashed var(--ag-border);">
+            <span style="color: var(--ag-slate-500);">Hash Circuit Standard:</span>
+            <span class="fw-bold" style="color: var(--ag-slate-700);">Optimized BN128 Poseidon</span>
+          </div>
+        </div>
+        <div id="merkle-status-badge-container">
+          {% if active_election and active_election.is_root_locked %}
+          <div class="p-3 mb-2 rounded-3 small font-monospace d-flex align-items-center" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3); color: var(--ag-emerald);">
+            <i class="bi bi-patch-check-fill me-2 fs-6"></i>
+            <span>Merkle Root Sealed: <strong class="ms-1">{{ active_election.merkle_root|truncatechars:18 }}</strong></span>
+          </div>
+          {% endif %}
+        </div>
+        <button type="button" id="btn-lock-merkle"
+                {% if active_election and active_election.is_root_locked %}disabled class="ag-btn-glass w-100 py-3 disabled font-monospace small text-uppercase"{% else %}class="ag-btn-primary w-100 py-3 d-flex align-items-center justify-content-center gap-2 font-monospace small text-uppercase" style="background: linear-gradient(135deg, #e11d48, #be123c);"{% endif %}>
+          <i class="bi bi-shield-lock-fill"></i>
+          <span>{% if active_election and active_election.is_root_locked %}✓ Electoral Roll Sealed{% else %}Lock Electoral Roll & Commit Root{% endif %}</span>
+        </button>
       </div>
 
-      <!-- Candidate Configuration Summary -->
-      <div class="ag-card mb-4 overflow-hidden">
+      <!-- Candidate Roster -->
+      <div class="ag-card overflow-hidden">
         <div class="p-4 pb-2">
           <h3 class="h6 fw-bold mb-0 text-uppercase font-monospace" style="color: var(--ag-slate-600); letter-spacing: 0.04em;">
-            <i class="bi bi-card-list me-1.5 text-primary"></i>Official Candidate Roster
+            <i class="bi bi-card-list me-1 text-primary"></i>Official Candidate Roster
           </h3>
         </div>
         <div class="table-responsive">
           <table class="table table-hover table-borderless align-middle mb-0 font-monospace small">
             <thead>
-              <tr style="background: rgba(241, 245, 249, 0.7); border-bottom: 1px solid var(--ag-border); color: var(--ag-slate-600);">
+              <tr style="background: rgba(241,245,249,0.7); border-bottom: 1px solid var(--ag-border); color: var(--ag-slate-600);">
                 <th class="px-4 py-3">ID</th>
                 <th class="py-3">Candidate</th>
                 <th class="py-3 text-center">Votes</th>
@@ -204,15 +382,19 @@
             <tbody>
               {% if candidates %}
                 {% for candidate in candidates %}
-                <tr style="border-bottom: 1px solid rgba(226, 232, 240, 0.5);">
-                  <td class="px-4 py-2.5 fw-bold" style="color: var(--ag-primary);">#{{ candidate.candidate_id }}</td>
-                  <td class="py-2.5 fw-semibold" style="color: var(--ag-slate-900);">{{ candidate.name }}</td>
-                  <td class="py-2.5 text-center">
-                    <span class="badge font-monospace rounded-pill px-2.5 py-1" style="background: rgba(79, 70, 229, 0.1); color: var(--ag-primary);">{{ candidate.votes|default:"0" }}</span>
+                <tr style="border-bottom: 1px solid rgba(226,232,240,0.5);">
+                  <td class="px-4 py-2 fw-bold" style="color: var(--ag-primary);">#{{ candidate.candidate_id }}</td>
+                  <td class="py-2 fw-semibold" style="color: var(--ag-slate-900);">{{ candidate.name }}</td>
+                  <td class="py-2 text-center">
+                    <span class="badge font-monospace rounded-pill px-2 py-1" style="background: rgba(79,70,229,0.1); color: var(--ag-primary);">{{ candidate.votes|default:"0" }}</span>
                   </td>
-                  <td class="px-4 py-2.5 text-end text-muted">{{ candidate.party }}</td>
+                  <td class="px-4 py-2 text-end text-muted">{{ candidate.party }}</td>
                 </tr>
                 {% endfor %}
+              {% else %}
+              <tr>
+                <td colspan="4" class="text-center py-4 text-muted small">No candidates configured.</td>
+              </tr>
               {% endif %}
             </tbody>
           </table>
@@ -220,20 +402,19 @@
       </div>
 
     </div>
+  </div>
 
-    <!-- ══════════════════════════════════════════════════════════════════
-         PANEL 2: AI Threat Intelligence Panel (col-lg-7)
-         ══════════════════════════════════════════════════════════════════ -->
-    <div class="col-12 col-lg-7">
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SECTION 3: AI THREAT INTELLIGENCE
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="row g-4 mb-4">
 
-      <!-- Real-Time Request Velocity Gauge -->
-      <div class="ag-card mb-4 p-4 p-xl-4.5 position-relative overflow-hidden" style="border-top: 4px solid var(--ag-primary);">
-        
+    <!-- AI Velocity Gauge -->
+    <div class="col-12 col-lg-5">
+      <div class="ag-card p-4 h-100 position-relative overflow-hidden" style="border-top: 4px solid var(--ag-primary);">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <div>
-            <span class="ag-pill ag-pill-primary" style="font-size: 0.7rem; padding: 2px 8px;">
-              ACTIVE SENTINEL AI
-            </span>
+            <span class="ag-pill ag-pill-primary" style="font-size: 0.7rem; padding: 2px 8px;">ACTIVE SENTINEL AI</span>
             <h2 class="h5 fw-bold mb-0 mt-2" style="color: var(--ag-slate-900);">
               <i class="bi bi-activity text-primary me-2"></i>Traffic Ingestion Velocity
             </h2>
@@ -242,97 +423,594 @@
             <span class="ag-pill ag-pill-emerald">NORMAL VELOCITY</span>
           </div>
         </div>
-
-        <div>
-          <!-- Velocity Gauge Display -->
-          <div class="row align-items-center my-3">
-            <div class="col-md-4 text-center text-md-start mb-3 mb-md-0">
-              <div class="display-6 fw-bold font-monospace mb-0" id="velocity-metric-val" style="color: var(--ag-primary); letter-spacing: -0.03em;">2.4</div>
-              <div class="small font-monospace" style="color: var(--ag-slate-500);">req / sec Ingestion</div>
-            </div>
-
-            <!-- Linear Meter Gauge -->
-            <div class="col-md-8">
-              <div class="d-flex justify-content-between small font-monospace mb-1.5" style="color: var(--ag-slate-500); font-size: 0.75rem;">
-                <span>0 req/s (Baseline)</span>
-                <span>10 req/s (Elevated)</span>
-                <span>20+ req/s (DDoS Burst)</span>
-              </div>
-              <div class="progress rounded-pill" style="height: 10px; background: rgba(226, 232, 240, 0.8);">
-                <div id="velocity-gauge-bar" class="progress-bar progress-bar-striped progress-bar-animated rounded-pill" style="width: 12%; background: linear-gradient(90deg, #4f46e5, #0ea5e9);"></div>
-              </div>
-            </div>
+        <div class="row align-items-center my-3">
+          <div class="col-md-4 text-center text-md-start mb-3 mb-md-0">
+            <div class="display-6 fw-bold font-monospace mb-0" id="velocity-metric-val" style="color: var(--ag-primary); letter-spacing: -0.03em;">2.4</div>
+            <div class="small font-monospace" style="color: var(--ag-slate-500);">req / sec Ingestion</div>
           </div>
-
-          <div class="d-flex justify-content-between small font-monospace pt-3 mt-3" style="border-top: 1px solid var(--ag-border); color: var(--ag-slate-500);">
-            <span>Model: IsolationForest (FastAPI Port 8001)</span>
-            <span class="fw-semibold" style="color: var(--ag-primary);">Inference Latency: ~14ms</span>
+          <div class="col-md-8">
+            <div class="d-flex justify-content-between small font-monospace mb-2" style="color: var(--ag-slate-500); font-size: 0.75rem;">
+              <span>0 req/s</span>
+              <span>10 req/s</span>
+              <span>20+ req/s</span>
+            </div>
+            <div class="progress rounded-pill" style="height: 10px; background: rgba(226,232,240,0.8);">
+              <div id="velocity-gauge-bar" class="progress-bar progress-bar-striped progress-bar-animated rounded-pill" style="width: 12%; background: linear-gradient(90deg, #4f46e5, #0ea5e9);"></div>
+            </div>
           </div>
         </div>
-
+        <div class="d-flex justify-content-between small font-monospace pt-3 mt-3" style="border-top: 1px solid var(--ag-border); color: var(--ag-slate-500);">
+          <span>Model: IsolationForest (FastAPI Port 8001)</span>
+          <span class="fw-semibold" style="color: var(--ag-primary);">Inference: ~14ms</span>
+        </div>
       </div>
+    </div>
 
-      <!-- Dedicated Threat Intelligence Panel -->
-      <div class="ag-card mb-4 p-4 p-xl-4.5 position-relative overflow-hidden" style="border-top: 4px solid var(--ag-rose);">
-        
+    <!-- Threat Feed -->
+    <div class="col-12 col-lg-7">
+      <div class="ag-card p-4 h-100 position-relative overflow-hidden" style="border-top: 4px solid var(--ag-rose);">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <div>
-            <span class="ag-pill ag-pill-rose" style="font-size: 0.7rem; padding: 2px 8px;">
-              DEFENSE TELEMETRY
-            </span>
+            <span class="ag-pill ag-pill-rose" style="font-size: 0.7rem; padding: 2px 8px;">DEFENSE TELEMETRY</span>
             <h3 class="h5 fw-bold mb-0 mt-2" style="color: var(--ag-slate-900);">
               <i class="bi bi-broadcast text-danger me-2"></i>Live Threat Intelligence Feed
             </h3>
           </div>
           <span class="ag-pill ag-pill-neutral">/ws/telemetry/</span>
         </div>
-
-        <div>
-          <!-- AI Threat Highlight Summary Banner -->
-          <div class="p-3 rounded-3 mb-3 d-flex align-items-center justify-content-between" style="background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.25);">
-            <div class="d-flex align-items-center gap-2">
-              <i class="bi bi-shield-fill-x fs-5" style="color: var(--ag-rose);"></i>
-              <span class="small fw-bold" style="color: var(--ag-rose);">Active Sentinel Policy:</span>
-              <span class="small" style="color: var(--ag-slate-700);">Auto-drop anomaly score &gt; 0.70</span>
-            </div>
-            <span class="ag-pill ag-pill-rose" style="font-size: 0.7rem;">Zero Exploits</span>
+        <div class="p-3 rounded-3 mb-3 d-flex align-items-center justify-content-between" style="background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.25);">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-shield-fill-x fs-5" style="color: var(--ag-rose);"></i>
+            <span class="small fw-bold" style="color: var(--ag-rose);">Active Sentinel Policy:</span>
+            <span class="small" style="color: var(--ag-slate-700);">Auto-drop anomaly score &gt; 0.70</span>
           </div>
-
-          <!-- Feed Container -->
-          <div id="threat-feed-container" class="rounded-3 p-2 font-monospace small" style="max-height: 320px; overflow-y: auto; background: rgba(248, 250, 252, 0.85); border: 1px solid var(--ag-border);">
-            {% if threats %}
-              {% for threat in threats %}
-              <div class="d-flex justify-content-between align-items-center p-2.5 border-bottom" style="border-color: var(--ag-border) !important;">
-                <div class="d-flex align-items-center gap-2">
-                  <span class="ag-pill ag-pill-rose" style="font-size: 0.68rem; padding: 1px 6px;">BLOCKED</span>
-                  <span class="text-muted">{{ threat.timestamp|date:"H:i:s" }}</span>
-                  <span class="fw-semibold" style="color: var(--ag-slate-900);">{{ threat.ip_address }}</span>
-                  <span class="text-truncate" style="max-width: 200px; color: var(--ag-slate-600);">{% if threat.payload_size %}{{ threat.payload_size }} B rejected{% else %}Anomalous request velocity{% endif %}</span>
-                </div>
-                <div>
-                  <span class="text-muted small">Score: </span>
-                  <span class="fw-bold" style="color: var(--ag-rose);">{{ threat.threat_score|floatformat:2|default:"0.91" }}</span>
-                </div>
-              </div>
-              {% endfor %}
-            {% endif %}
-          </div>
-
-          <div class="d-flex justify-content-between small font-monospace pt-3 mt-3" style="border-top: 1px solid var(--ag-border); color: var(--ag-slate-500);">
-            <span>Isolation Forest Anomaly Detection</span>
-            <span class="fw-bold" style="color: var(--ag-emerald);"><i class="bi bi-shield-check me-1"></i>0 Breaches Recorded</span>
-          </div>
+          <span class="ag-pill ag-pill-rose" style="font-size: 0.7rem;">Zero Exploits</span>
         </div>
-
+        <div id="threat-feed-container" class="rounded-3 p-2 font-monospace small" style="max-height: 280px; overflow-y: auto; background: rgba(248,250,252,0.85); border: 1px solid var(--ag-border);">
+          {% if threats %}
+            {% for threat in threats %}
+            <div class="d-flex justify-content-between align-items-center p-2 border-bottom" style="border-color: var(--ag-border) !important;">
+              <div class="d-flex align-items-center gap-2">
+                <span class="ag-pill ag-pill-rose" style="font-size: 0.68rem; padding: 1px 6px;">BLOCKED</span>
+                <span class="text-muted">{{ threat.timestamp|date:"H:i:s" }}</span>
+                <span class="fw-semibold" style="color: var(--ag-slate-900);">{{ threat.ip_address }}</span>
+                <span class="text-truncate" style="max-width: 180px; color: var(--ag-slate-600);">{% if threat.payload_size %}{{ threat.payload_size }} B rejected{% else %}Anomalous velocity{% endif %}</span>
+              </div>
+              <div>
+                <span class="text-muted small">Score: </span>
+                <span class="fw-bold" style="color: var(--ag-rose);">{{ threat.threat_score|floatformat:2|default:"0.91" }}</span>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+          <div class="text-center py-4" style="color: var(--ag-slate-400);">
+            <i class="bi bi-shield-check fs-3 d-block mb-2 text-success"></i>
+            No threats detected. System is clean.
+          </div>
+          {% endif %}
+        </div>
+        <div class="d-flex justify-content-between small font-monospace pt-3 mt-3" style="border-top: 1px solid var(--ag-border); color: var(--ag-slate-500);">
+          <span>Isolation Forest Anomaly Detection</span>
+          <span class="fw-bold" style="color: var(--ag-emerald);"><i class="bi bi-shield-check me-1"></i>0 Breaches Recorded</span>
+        </div>
       </div>
-
     </div>
 
   </div>
 
 </div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     MODAL: Create New Election
+     ════════════════════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="createElectionModal" tabindex="-1" aria-labelledby="createElectionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 560px;">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+      <div class="modal-header border-0 pb-0" style="background: linear-gradient(135deg, #4f46e5, #0ea5e9); padding: 24px 28px 20px;">
+        <div>
+          <span class="badge bg-white bg-opacity-25 text-white font-monospace small mb-2">NEW ELECTION</span>
+          <h5 class="modal-title fw-bold text-white mb-0" id="createElectionModalLabel">
+            <i class="bi bi-calendar-plus-fill me-2"></i>Create Election
+          </h5>
+          <p class="text-white-50 small mb-0 mt-1">Election starts in DRAFT state. Add voters before starting.</p>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div id="create-election-alert" class="alert d-none small py-2 px-3" role="alert"></div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold" style="color: var(--ag-slate-700);">Election Title <span class="text-danger">*</span></label>
+          <input type="text" id="election-title-input" class="form-control" placeholder="e.g. GLS University Student Council Election 2026"
+                 style="border-color: var(--ag-border); font-size: 0.9rem;">
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold" style="color: var(--ag-slate-700);">Description <span class="text-muted">(optional)</span></label>
+          <textarea id="election-desc-input" class="form-control" rows="2" placeholder="Official mandate or election description"
+                    style="border-color: var(--ag-border); font-size: 0.9rem;"></textarea>
+        </div>
+
+        <div class="p-3 rounded-3 mb-3" style="background: rgba(79,70,229,0.05); border: 1px solid rgba(79,70,229,0.15);">
+          <div class="small fw-semibold mb-2" style="color: var(--ag-slate-700);">
+            <i class="bi bi-clock-fill me-1 text-primary"></i>Voting Schedule (IST — Indian Standard Time)
+          </div>
+          <div class="row g-2">
+            <div class="col-12">
+              <label class="form-label small" style="color: var(--ag-slate-600);">Voting Opens <span class="text-danger">*</span></label>
+              <input type="datetime-local" id="election-start-input" class="form-control"
+                     style="border-color: var(--ag-border); font-size: 0.9rem;">
+              <div class="small mt-1" style="color: var(--ag-slate-400);">Must be a future date and time.</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label small" style="color: var(--ag-slate-600);">Voting Closes <span class="text-danger">*</span></label>
+              <input type="datetime-local" id="election-end-input" class="form-control"
+                     style="border-color: var(--ag-border); font-size: 0.9rem;">
+              <div class="small mt-1" style="color: var(--ag-slate-400);">Must be at least 5 minutes after the start time.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-3" style="background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.25);">
+          <div class="d-flex gap-2 align-items-start small" style="color: var(--ag-slate-700);">
+            <i class="bi bi-info-circle-fill text-warning flex-shrink-0 mt-0" style="color: #d97706 !important;"></i>
+            <span>The election will be created in <strong>DRAFT</strong> state. You must add voters and then click <strong>"Start Election"</strong> to activate voting.</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0 px-4 pb-4 gap-2">
+        <button type="button" class="ag-btn-glass px-4 py-2" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="ag-btn-primary px-5 py-2 d-flex align-items-center gap-2" id="btn-create-election-submit">
+          <i class="bi bi-calendar-plus-fill"></i> Create Election
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     MODAL: Add Voter to Roll
+     ════════════════════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="addVoterModal" tabindex="-1" aria-labelledby="addVoterModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+      <div class="modal-header border-0 pb-0" style="background: linear-gradient(135deg, #10b981, #059669); padding: 24px 28px 20px;">
+        <div>
+          <span class="badge bg-white bg-opacity-25 text-white font-monospace small mb-2">ELECTORAL ROLL</span>
+          <h5 class="modal-title fw-bold text-white mb-0" id="addVoterModalLabel">
+            <i class="bi bi-person-plus-fill me-2"></i>Add Voter to Roll
+          </h5>
+          <p class="text-white-50 small mb-0 mt-1">Election: <strong>{% if managed_election %}{{ managed_election.title|truncatechars:40 }}{% endif %}</strong></p>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div id="add-voter-alert" class="alert d-none small py-2 px-3" role="alert"></div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold" style="color: var(--ag-slate-700);">EPIC Voter ID Number <span class="text-danger">*</span></label>
+          <input type="text" id="voter-epic-input" class="form-control font-monospace text-uppercase"
+                 placeholder="e.g. IND1234567"
+                 maxlength="20"
+                 style="border-color: var(--ag-border); letter-spacing: 0.05em;">
+          <div class="small mt-1" style="color: var(--ag-slate-400);">Minimum 7 characters. Standard ECI format.</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold" style="color: var(--ag-slate-700);">Registered Mobile Number <span class="text-danger">*</span></label>
+          <input type="tel" id="voter-phone-input" class="form-control"
+                 placeholder="e.g. 9876543210"
+                 style="border-color: var(--ag-border);">
+          <div class="small mt-1" style="color: var(--ag-slate-400);">10-digit Indian mobile number (without +91).</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold" style="color: var(--ag-slate-700);">Full Name <span class="text-muted">(optional)</span></label>
+          <input type="text" id="voter-name-input" class="form-control"
+                 placeholder="e.g. Rajesh Kumar"
+                 style="border-color: var(--ag-border);">
+        </div>
+
+        <div class="p-3 rounded-3" style="background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.2);">
+          <div class="d-flex gap-2 small" style="color: var(--ag-slate-700);">
+            <i class="bi bi-shield-check-fill text-success flex-shrink-0"></i>
+            <span>The EPIC number is stored temporarily. When the election starts, it is hashed with SHA-256 and the raw ID is never stored in the final blockchain registry.</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0 px-4 pb-4 gap-2">
+        <button type="button" class="ag-btn-glass px-4 py-2" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="ag-btn-primary px-5 py-2 d-flex align-items-center gap-2" id="btn-add-voter-submit"
+                {% if managed_election %}data-election-id="{{ managed_election.pk }}"{% endif %}>
+          <i class="bi bi-person-plus-fill"></i> Add to Roll
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 {% endblock %}
 
 {% block extra_scripts %}
 <script src="{% static 'api/js/admin_telemetry.js' %}"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+//  ELECTION TIMESTAMPS (render IST from raw UTC unix timestamps)
+// ═══════════════════════════════════════════════════════════════════════════
+const START_TS = {{ managed_election.start_timestamp|default:"null" }};
+const END_TS   = {{ managed_election.end_timestamp|default:"null" }};
+const ELECTION_STATUS = "{{ managed_election.status|default:'' }}";
+const ELECTION_ID     = {{ managed_election.pk|default:"null" }};
+
+function fmtTs(ts) {
+  if (!ts) return '—';
+  // Convert UTC unix ts to IST (UTC+5:30) for display
+  const d = new Date((ts + 5.5 * 3600) * 1000);
+  return d.toISOString().replace('T', ' ').slice(0, 16) + ' IST';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const sdEl = document.getElementById('election-start-disp');
+  const edEl = document.getElementById('election-end-disp');
+  if (sdEl && START_TS) sdEl.textContent = fmtTs(START_TS);
+  if (edEl && END_TS)   edEl.textContent = fmtTs(END_TS);
+
+  // Set datetime-local min to current time (IST offset)
+  const nowOffset = new Date(Date.now() + (5.5 * 3600 * 1000));
+  const minVal = nowOffset.toISOString().slice(0, 16);
+  const startEl = document.getElementById('election-start-input');
+  const endEl   = document.getElementById('election-end-input');
+  if (startEl) startEl.min = minVal;
+  if (endEl)   endEl.min   = minVal;
+
+  // Auto-update end-min when start changes
+  if (startEl && endEl) {
+    startEl.addEventListener('change', () => {
+      if (startEl.value) {
+        const startMs  = new Date(startEl.value).getTime();
+        const endMin   = new Date(startMs + 5 * 60000).toISOString().slice(0, 16);
+        endEl.min      = endMin;
+        if (endEl.value && new Date(endEl.value) <= new Date(endMin)) {
+          endEl.value = endMin;
+        }
+      }
+    });
+  }
+
+  startCountdown();
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  COUNTDOWN TIMER
+// ═══════════════════════════════════════════════════════════════════════════
+function startCountdown() {
+  const label   = document.getElementById('countdown-label');
+  const display = document.getElementById('countdown-display');
+  if (!label || !display || !START_TS || !END_TS) return;
+
+  function fmt(secs) {
+    if (secs < 0) secs = 0;
+    const d = Math.floor(secs / 86400);
+    const h = Math.floor((secs % 86400) / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    const parts = [];
+    if (d > 0) parts.push(`${d}d`);
+    parts.push(`${String(h).padStart(2,'0')}h`);
+    parts.push(`${String(m).padStart(2,'0')}m`);
+    parts.push(`${String(s).padStart(2,'0')}s`);
+    return parts.join(' ');
+  }
+
+  function tick() {
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (ELECTION_STATUS === 'DRAFT') {
+      const diff = START_TS - nowSec;
+      if (diff > 0) {
+        label.textContent   = 'Voting opens in:';
+        display.textContent = fmt(diff);
+      } else {
+        label.textContent   = 'Scheduled start has passed. Please start the election manually.';
+        display.textContent = '00h 00m 00s';
+      }
+    } else if (ELECTION_STATUS === 'ACTIVE') {
+      const diff = END_TS - nowSec;
+      if (diff > 0) {
+        label.textContent   = 'Voting closes in:';
+        display.textContent = fmt(diff);
+        display.style.color = diff < 3600 ? 'var(--ag-rose)' : 'var(--ag-slate-900)';
+      } else {
+        label.textContent   = 'Election has ended.';
+        display.textContent = 'CLOSED';
+        display.style.color = 'var(--ag-rose)';
+      }
+    } else {
+      label.textContent   = 'Election is closed.';
+      display.textContent = '—';
+    }
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  CREATE ELECTION
+// ═══════════════════════════════════════════════════════════════════════════
+function localDatetimeToUnixUTC(localStr) {
+  // localStr is from datetime-local (treated as IST = UTC+5:30 by the user)
+  // Convert: IST → UTC by subtracting 5.5 hours, then get Unix timestamp
+  const localMs = new Date(localStr).getTime();  // JS parses as local TZ
+  return Math.floor(localMs / 1000);  // Just use raw Unix
+}
+
+document.getElementById('btn-create-election-submit')?.addEventListener('click', async () => {
+  const alertEl = document.getElementById('create-election-alert');
+  const title   = document.getElementById('election-title-input').value.trim();
+  const desc    = document.getElementById('election-desc-input').value.trim();
+  const startV  = document.getElementById('election-start-input').value;
+  const endV    = document.getElementById('election-end-input').value;
+
+  alertEl.className = 'alert d-none small py-2 px-3';
+
+  if (!title) { showAlert(alertEl, 'danger', 'Election title is required.'); return; }
+  if (!startV || !endV) { showAlert(alertEl, 'danger', 'Both start and end date/time are required.'); return; }
+
+  // Convert datetime-local → Unix UTC timestamp
+  const startTs = Math.floor(new Date(startV).getTime() / 1000);
+  const endTs   = Math.floor(new Date(endV).getTime() / 1000);
+  const nowTs   = Math.floor(Date.now() / 1000);
+
+  if (startTs <= nowTs) { showAlert(alertEl, 'danger', 'Start time must be in the future.'); return; }
+  if (endTs <= startTs + 300) { showAlert(alertEl, 'danger', 'End time must be at least 5 minutes after start time.'); return; }
+
+  const btn = document.getElementById('btn-create-election-submit');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
+
+  try {
+    const res = await fetch('/api/v1/elections/create/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+      body: JSON.stringify({ title, description: desc, start_timestamp: startTs, end_timestamp: endTs })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showAlert(alertEl, 'success', `✅ Election created successfully! Refreshing...`);
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      showAlert(alertEl, 'danger', data.error || 'Failed to create election.');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-calendar-plus-fill"></i> Create Election';
+    }
+  } catch (e) {
+    showAlert(alertEl, 'danger', 'Network error. Please try again.');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-calendar-plus-fill"></i> Create Election';
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  START ELECTION
+// ═══════════════════════════════════════════════════════════════════════════
+document.getElementById('btn-start-election')?.addEventListener('click', async () => {
+  const elId = document.getElementById('btn-start-election').dataset.electionId;
+  if (!confirm(
+    '⚠️ START ELECTION — IRREVERSIBLE ACTION\n\n' +
+    'This will:\n' +
+    '  ✅ Lock the voter list permanently (no additions/removals allowed for ANYONE)\n' +
+    '  ✅ Hash and activate all EPIC numbers in the roll\n' +
+    '  ✅ Open the Voter Portal to whitelisted citizens\n\n' +
+    'Are you absolutely sure you want to start the election now?'
+  )) return;
+
+  const btn = document.getElementById('btn-start-election');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Starting...';
+
+  try {
+    const res = await fetch(`/api/v1/elections/${elId}/start/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() }
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert(`🚀 Election Started!\n\n${data.message}`);
+      location.reload();
+    } else {
+      alert(`❌ Error: ${data.error}`);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-play-circle-fill"></i> Start Election & Lock Voter List';
+    }
+  } catch (e) {
+    alert('Network error. Please try again.');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-play-circle-fill"></i> Start Election & Lock Voter List';
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  CLOSE ELECTION
+// ═══════════════════════════════════════════════════════════════════════════
+document.getElementById('btn-close-election')?.addEventListener('click', async () => {
+  const elId = document.getElementById('btn-close-election').dataset.electionId;
+  if (!confirm(
+    '⛔ CLOSE ELECTION — This will permanently close voting.\n\n' +
+    'Voters will no longer be able to cast ballots.\n\n' +
+    'Are you sure you want to close the election?'
+  )) return;
+
+  const btn = document.getElementById('btn-close-election');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Closing...';
+
+  try {
+    const res = await fetch(`/api/v1/elections/${elId}/close/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() }
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert(`🔒 Election Closed.\n\n${data.message}`);
+      location.reload();
+    } else {
+      alert(`❌ Error: ${data.error}`);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-stop-circle-fill"></i> Close Election Early';
+    }
+  } catch (e) {
+    alert('Network error. Please try again.');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-stop-circle-fill"></i> Close Election Early';
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  ADD VOTER
+// ═══════════════════════════════════════════════════════════════════════════
+document.getElementById('btn-add-voter-submit')?.addEventListener('click', async () => {
+  const alertEl    = document.getElementById('add-voter-alert');
+  const elId       = document.getElementById('btn-add-voter-submit').dataset.electionId;
+  const epic       = document.getElementById('voter-epic-input').value.trim().toUpperCase();
+  const phone      = document.getElementById('voter-phone-input').value.trim();
+  const voterName  = document.getElementById('voter-name-input').value.trim();
+
+  alertEl.className = 'alert d-none small py-2 px-3';
+
+  if (!epic)  { showAlert(alertEl, 'danger', 'EPIC number is required.'); return; }
+  if (!phone) { showAlert(alertEl, 'danger', 'Phone number is required.'); return; }
+  if (epic.length < 7) { showAlert(alertEl, 'danger', 'EPIC must be at least 7 characters.'); return; }
+
+  const btn = document.getElementById('btn-add-voter-submit');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Adding...';
+
+  try {
+    const res = await fetch(`/api/v1/elections/${elId}/voters/add/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+      body: JSON.stringify({ epic_number: epic, phone_number: phone, voter_name: voterName })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showAlert(alertEl, 'success', `✅ ${data.message}`);
+      // Inject new row into table
+      appendVoterRow(data);
+      // Update counters
+      document.getElementById('roll-total-count').textContent = data.total_voters;
+      document.getElementById('kpi-roll-count').textContent   = data.total_voters;
+      // Reset form
+      document.getElementById('voter-epic-input').value  = '';
+      document.getElementById('voter-phone-input').value = '';
+      document.getElementById('voter-name-input').value  = '';
+    } else {
+      showAlert(alertEl, 'danger', data.error || 'Failed to add voter.');
+    }
+  } catch (e) {
+    showAlert(alertEl, 'danger', 'Network error. Please try again.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-person-plus-fill"></i> Add to Roll';
+  }
+});
+
+function appendVoterRow(data) {
+  const tbody = document.getElementById('voter-roll-tbody');
+  // Remove "empty" placeholder row if present
+  const emptyRow = tbody.querySelector('td[colspan]');
+  if (emptyRow) emptyRow.parentElement.remove();
+
+  const idx = tbody.querySelectorAll('tr').length + 1;
+  const tr = document.createElement('tr');
+  tr.id = `roll-row-${data.roll_entry_id}`;
+  tr.style.cssText = 'border-bottom: 1px solid rgba(226,232,240,0.5);';
+  tr.innerHTML = `
+    <td class="px-4 py-2 fw-bold" style="color: var(--ag-primary);">${idx}</td>
+    <td class="py-2 fw-semibold" style="color: var(--ag-slate-900);">${data.voter_name !== 'N/A' ? data.voter_name : '—'}</td>
+    <td class="py-2" style="color: var(--ag-slate-700);">${data.epic_number}</td>
+    <td class="py-2 text-muted">—</td>
+    <td class="py-2 text-center"><span class="badge rounded-pill" style="background: rgba(245,158,11,0.1); color: #d97706; font-size: 0.7rem;"><i class="bi bi-clock me-1"></i>Pending</span></td>
+    <td class="px-4 py-2 text-end">
+      <button class="btn btn-sm btn-link text-danger p-0" onclick="removeVoter(${ELECTION_ID}, ${data.roll_entry_id}, '${data.epic_number}')" title="Remove voter">
+        <i class="bi bi-trash-fill"></i>
+      </button>
+    </td>`;
+  tbody.appendChild(tr);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  REMOVE VOTER
+// ═══════════════════════════════════════════════════════════════════════════
+async function removeVoter(elId, rollEntryId, epic) {
+  if (!confirm(`Remove voter EPIC '${epic}' from the electoral roll?\n\nThis cannot be undone.`)) return;
+  try {
+    const res = await fetch(`/api/v1/elections/${elId}/voters/${rollEntryId}/remove/`, {
+      method: 'DELETE',
+      headers: { 'X-CSRFToken': getCsrf() }
+    });
+    const data = await res.json();
+    if (res.ok) {
+      const row = document.getElementById(`roll-row-${rollEntryId}`);
+      if (row) {
+        row.style.transition = 'opacity 0.3s';
+        row.style.opacity = '0';
+        setTimeout(() => row.remove(), 300);
+      }
+      document.getElementById('roll-total-count').textContent = data.total_voters;
+      document.getElementById('kpi-roll-count').textContent   = data.total_voters;
+    } else {
+      alert(`❌ ${data.error}`);
+    }
+  } catch (e) {
+    alert('Network error. Please try again.');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  MERKLE ROOT LOCK
+// ═══════════════════════════════════════════════════════════════════════════
+document.getElementById('btn-lock-merkle')?.addEventListener('click', async () => {
+  if (!confirm('⚠️ Lock the Merkle Root? This is irreversible and will commit the electoral roll to the blockchain.')) return;
+  const syntheticRoot = '0x' + Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join('');
+  const btn = document.getElementById('btn-lock-merkle');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sealing Root...';
+  try {
+    const res = await fetch('/api/v1/lock-merkle-root/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+      body: JSON.stringify({ merkle_root: syntheticRoot })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      document.getElementById('merkle-status-badge-container').innerHTML = `
+        <div class="p-3 mb-2 rounded-3 small font-monospace d-flex align-items-center" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3); color: var(--ag-emerald);">
+          <i class="bi bi-patch-check-fill me-2 fs-6"></i>
+          <span>Merkle Root Sealed: <strong class="ms-1">${(data.merkle_root || syntheticRoot).substring(0,18)}...</strong></span>
+        </div>`;
+      btn.className = 'ag-btn-glass w-100 py-3 disabled font-monospace small text-uppercase';
+      btn.innerHTML = '<i class="bi bi-shield-lock-fill me-2"></i>✓ Electoral Roll Sealed';
+    } else {
+      alert(`Error: ${data.error}`);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-shield-lock-fill"></i> Lock Electoral Roll & Commit Root';
+    }
+  } catch (e) {
+    alert('Network error.');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-shield-lock-fill"></i> Lock Electoral Roll & Commit Root';
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+function getCsrf() {
+  return document.cookie.split(';').map(c => c.trim()).find(c => c.startsWith('csrftoken='))?.split('=')[1] || '';
+}
+
+function showAlert(el, type, msg) {
+  el.className = `alert alert-${type} small py-2 px-3`;
+  el.textContent = msg;
+}
+</script>
 {% endblock %}

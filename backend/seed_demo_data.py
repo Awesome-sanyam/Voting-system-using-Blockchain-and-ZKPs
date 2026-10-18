@@ -14,7 +14,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
 from django.contrib.auth.models import User
-from api.models import Election, Candidate, VoterIdentity, ThreatLog, AuditorProfile, BallotRecord
+from api.models import Election, Candidate, VoterIdentity, ThreatLog, AuditorProfile, BallotRecord, ElectionVoterRoll
 from api.views import derive_voter_identity_hash
 
 
@@ -26,16 +26,16 @@ def seed():
     admin.is_staff = True
     admin.is_superuser = True
     admin.email = 'admin@eci.gov.in'
-    admin.set_password('admin123')
+    admin.set_password('BlockVote@Admin2026')
     admin.save()
-    print(f"  [+] Superuser: admin (password: admin123)")
+    print(f"  [+] Superuser: admin (password: BlockVote@Admin2026)")
 
     # 2. Institutional Auditor
     auditor_user, created = User.objects.get_or_create(username='adr_official_auditor')
     auditor_user.is_staff = False
     auditor_user.is_superuser = False
     auditor_user.email = 'audit@adrindia.org'
-    auditor_user.set_password('ObserverSecurePass2026!')
+    auditor_user.set_password('ADR@Auditor2026')
     auditor_user.save()
 
     auditor_profile, _ = AuditorProfile.objects.get_or_create(
@@ -48,7 +48,7 @@ def seed():
     )
     auditor_profile.is_approved = True
     auditor_profile.save()
-    print(f"  [+] Certified Auditor: adr_official_auditor (password: ObserverSecurePass2026!)")
+    print(f"  [+] Certified Auditor: adr_official_auditor (password: ADR@Auditor2026)")
 
     # 3. Active Election
     now = int(time.time())
@@ -57,6 +57,7 @@ def seed():
         id=1,
         defaults={
             'title': 'General Parliamentary Elections 2026 — New Delhi Central (AC-047)',
+            'status': Election.STATUS_ACTIVE,
             'start_timestamp': now - 86400,
             'end_timestamp': now + (86400 * 7),
             'merkle_root': merkle_root,
@@ -64,10 +65,11 @@ def seed():
         }
     )
     election.title = 'General Parliamentary Elections 2026 — New Delhi Central (AC-047)'
+    election.status = Election.STATUS_ACTIVE
     election.merkle_root = merkle_root
     election.is_root_locked = True
     election.save()
-    print(f"  [+] Active Election: '{election.title}' (Root Locked: {election.is_root_locked})")
+    print(f"  [+] Active Election: '{election.title}' (Status: {election.status}, Root Locked: {election.is_root_locked})")
 
     # 4. Candidates Roster
     candidates_data = [
@@ -99,19 +101,30 @@ def seed():
     primary_voter.is_verified = True
     primary_voter.has_voted = False
     primary_voter.save()
+    # Also populate ElectionVoterRoll
+    ElectionVoterRoll.objects.update_or_create(
+        election=election,
+        epic_number='IND5566778',
+        defaults={
+            'phone_number': '9811223344',
+            'voter_name': 'Aarav Sharma (Primary Test)',
+            'voter_hash': primary_hash,
+            'is_hashed': True
+        }
+    )
     print(f"  [+] Primary test voter: EPIC IND5566778 (Phone: 9811223344, Ready to vote)")
 
     # Additional sample voters
     sample_voters = [
-        ("IND1234567", "9876543210", False),
-        ("IND9876543", "9876543210", False),
-        ("IND1002001", "9800000001", True),
-        ("IND1002002", "9800000002", True),
-        ("IND1002003", "9800000003", False),
-        ("IND1002004", "9800000004", False),
-        ("IND1002005", "9800000005", False),
+        ("IND1234567", "9876543210", "Priya Patel", False),
+        ("IND9876543", "9876543210", "Rajesh Kumar", False),
+        ("IND1002001", "9800000001", "Vikram Singh", True),
+        ("IND1002002", "9800000002", "Sunita Rao", True),
+        ("IND1002003", "9800000003", "Ananya Sen", False),
+        ("IND1002004", "9800000004", "Kavita Nair", False),
+        ("IND1002005", "9800000005", "Rohan Mehta", False),
     ]
-    for epic, phone, voted in sample_voters:
+    for epic, phone, v_name, voted in sample_voters:
         v_hash = derive_voter_identity_hash(epic, phone)
         v, _ = VoterIdentity.objects.get_or_create(
             voter_hash=v_hash,
@@ -120,6 +133,18 @@ def seed():
         v.is_verified = True
         v.has_voted = voted
         v.save()
+
+        ElectionVoterRoll.objects.update_or_create(
+            election=election,
+            epic_number=epic,
+            defaults={
+                'phone_number': phone,
+                'voter_name': v_name,
+                'voter_hash': v_hash,
+                'is_hashed': True
+            }
+        )
+    print(f"  [+] Seeded {len(sample_voters) + 1} voters into ElectionVoterRoll")
 
     # 6. Seed Sample Threat Logs
     if ThreatLog.objects.count() == 0:

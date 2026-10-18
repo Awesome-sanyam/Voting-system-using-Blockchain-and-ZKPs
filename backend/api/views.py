@@ -19,7 +19,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.utils import timezone
-from .models import Election, Candidate, VoterIdentity, ThreatLog, AuditorProfile, BallotRecord
+from .models import Election, Candidate, VoterIdentity, ThreatLog, AuditorProfile, BallotRecord, ElectionVoterRoll
 
 # Institutional invite secret for gated auditor access
 AUDITOR_TRUST_SECRET = os.getenv("AUDITOR_TRUST_SECRET", "ECI-AUDIT-2026-SECURE")
@@ -398,6 +398,335 @@ def lock_merkle_root(request):
     })
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+#  ELECTION LIFECYCLE MANAGEMENT (ADMIN-ONLY APIs)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@api_view(['POST'])
+def create_election(request):
+    """
+    Admin-only: Create a new election in DRAFT status.
+
+    Body:
+        title           (str, required)  – Official election title
+        description     (str, optional)  – Mandate or description
+        start_timestamp (int, required)  – Unix UTC timestamp for voting start
+        end_timestamp   (int, required)  – Unix UTC timestamp for voting end
+
+    Constraints:
+        - start_timestamp must be in the future
+        - end_timestamp must be > start_timestamp by at least 5 minutes
+        - Only one DRAFT or ACTIVE election can exist at a time
+    """
+    if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+        return Response({"error": "Admin credentials required."}, status=403)
+
+    title       = request.data.get('title', '').strip()
+    description = request.data.get('description', '').strip()
+    start_ts    = request.data.get('start_timestamp')
+    end_ts      = request.data.get('end_timestamp')
+
+    if not title:
+        return Response({"error": "Election title is required."}, status=400)
+    if not start_ts or not end_ts:
+        return Response({"error": "Both start_timestamp and end_timestamp are required."}, status=400)
+
+    try:
+        start_ts = int(start_ts)
+        end_ts   = int(end_ts)
+    except (ValueError, TypeError):
+        return Response({"error": "start_timestamp and end_timestamp must be valid Unix timestamps (integers)."}, status=400)
+
+    now_ts = int(time.time())
+
+    # Validation: start must be in the future
+    if start_ts <= now_ts:
+        return Response({"error": "start_timestamp must be a future date/time. Elections cannot be scheduled in the past."}, status=400)
+
+    # Validation: end must be after start by at least 5 minutes
+    if end_ts <= start_ts + 300:
+        return Response({"error": "end_timestamp must be at least 5 minutes after start_timestamp."}, status=400)
+
+    # Validation: no overlapping DRAFT/ACTIVE elections
+    existing = Election.objects.filter(status__in=[Election.STATUS_DRAFT, Election.STATUS_ACTIVE]).first()
+    if existing:
+        return Response({
+            "error": f"An election is already in progress or draft state: '{existing.title}' [{existing.status}]. "
+                     f"Please close or finalise it before creating a new one."
+        }, status=409)
+
+    election = Election.objects.create(
+        title=title,
+        description=description,
+        start_timestamp=start_ts,
+        end_timestamp=end_ts,
+        status=Election.STATUS_DRAFT
+    )
+
+    logger.info(f"[ELECTION] Admin '{request.user.username}' created Election #{election.pk}: '{title}' [DRAFT]")
+
+    return Response({
+        "status": "created",
+        "election_id": election.pk,
+        "title": election.title,
+        "lifecycle": election.status,
+        "start_timestamp": start_ts,
+        "end_timestamp": end_ts,
+        "message": f"Election '{title}' created in DRAFT state. Add voters, then start the election when ready."
+    }, status=201)
+
+
+@api_view(['POST'])
+def start_election(request, election_id):
+    """
+    Admin-only: Transition an election from DRAFT → ACTIVE.
+
+    This is the IRREVERSIBLE action that:
+      1. Locks the voter list permanently (no more add/remove).
+      2. Hashes all EPIC numbers in ElectionVoterRoll → creates VoterIdentity records.
+      3. Sets election.status = ACTIVE and election.started_at = now.
+      4. Makes the Voter Portal accessible to whitelisted citizens.
+
+    The voter list is LOCKED for EVERYONE (including admin) after this action.
+    """
+    if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+        return Response({"error": "Admin credentials required."}, status=403)
+
+    try:
+        election = Election.objects.get(pk=election_id)
+    except Election.DoesNotExist:
+        return Response({"error": f"Election #{election_id} not found."}, status=404)
+
+    if election.status != Election.STATUS_DRAFT:
+        return Response({
+            "error": f"Election is already in '{election.status}' state. Can only start DRAFT elections."
+        }, status=409)
+
+    # Check there is at least one voter in the roll
+    voter_roll = ElectionVoterRoll.objects.filter(election=election)
+    if voter_roll.count() == 0:
+        return Response({"error": "Cannot start election with an empty voter roll. Add at least one voter first."}, status=400)
+
+    # Check there is at least one candidate
+    if not Candidate.objects.filter(election=election).exists():
+        return Response({"error": "Cannot start election with no candidates. Add candidates first."}, status=400)
+
+    # Hash all EPIC numbers in voter roll → create VoterIdentity records
+    secret_salt = getattr(settings, 'SECRET_KEY', 'default-salt').encode('utf-8')
+    hashed_count = 0
+    for roll_entry in voter_roll:
+        raw_identity = f"{roll_entry.epic_number.strip().upper()}:{roll_entry.phone_number.strip()}".encode('utf-8')
+        voter_hash = "0x" + hashlib.sha256(raw_identity + secret_salt).hexdigest()
+
+        voter, created = VoterIdentity.objects.get_or_create(voter_hash=voter_hash)
+        if created or not voter.is_verified:
+            voter.is_verified = True
+            voter.save()
+
+        roll_entry.voter_hash = voter_hash
+        roll_entry.is_hashed  = True
+        roll_entry.save()
+        hashed_count += 1
+
+    # Activate election
+    election.status     = Election.STATUS_ACTIVE
+    election.started_at = timezone.now()
+    now_ts = int(time.time())
+    if election.start_timestamp > now_ts:
+        election.start_timestamp = now_ts
+    election.save()
+
+    logger.info(
+        f"[ELECTION] Admin '{request.user.username}' STARTED Election #{election.pk}: '{election.title}'. "
+        f"Voter roll locked with {hashed_count} whitelisted voters."
+    )
+
+    return Response({
+        "status": "started",
+        "election_id": election.pk,
+        "title": election.title,
+        "voters_activated": hashed_count,
+        "voter_list_locked": True,
+        "message": (
+            f"Election '{election.title}' is now ACTIVE. "
+            f"{hashed_count} voters have been whitelisted. "
+            f"Voter portal is now accessible. Voter list is LOCKED — no further changes are permitted."
+        )
+    })
+
+
+@api_view(['POST'])
+def close_election(request, election_id):
+    """
+    Admin-only: Manually close an ACTIVE election before its scheduled end time.
+    This transitions the election to CLOSED state and locks the Voter Portal permanently.
+    """
+    if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+        return Response({"error": "Admin credentials required."}, status=403)
+
+    try:
+        election = Election.objects.get(pk=election_id)
+    except Election.DoesNotExist:
+        return Response({"error": f"Election #{election_id} not found."}, status=404)
+
+    if election.status == Election.STATUS_CLOSED:
+        return Response({"error": "Election is already closed."}, status=409)
+
+    election.status = Election.STATUS_CLOSED
+    election.save()
+
+    logger.info(f"[ELECTION] Admin '{request.user.username}' manually CLOSED Election #{election.pk}: '{election.title}'.")
+
+    return Response({
+        "status": "closed",
+        "election_id": election.pk,
+        "title": election.title,
+        "message": f"Election '{election.title}' has been closed. Voter portal is locked."
+    })
+
+
+@api_view(['POST'])
+def add_voter_to_roll(request, election_id):
+    """
+    Admin-only: Add a voter to an election's voter roll.
+    Only allowed while election is in DRAFT state.
+    Once the election is STARTED (ACTIVE), this endpoint is permanently blocked.
+
+    Body:
+        epic_number  (str, required)  – Voter's EPIC ID number
+        phone_number (str, required)  – Voter's registered mobile (for OTP)
+        voter_name   (str, optional)  – Display name
+    """
+    if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+        return Response({"error": "Admin credentials required."}, status=403)
+
+    try:
+        election = Election.objects.get(pk=election_id)
+    except Election.DoesNotExist:
+        return Response({"error": f"Election #{election_id} not found."}, status=404)
+
+    # ── LOCK CHECK: Voter list cannot be modified after election starts ──────
+    if election.is_voter_list_locked:
+        return Response({
+            "error": (
+                f"Voter list is LOCKED. Election '{election.title}' has already started. "
+                f"No voter additions or removals are permitted once voting is active."
+            )
+        }, status=403)
+
+    epic_number  = request.data.get('epic_number', '').strip().upper()
+    phone_number = request.data.get('phone_number', '').strip()
+    voter_name   = request.data.get('voter_name', '').strip()
+
+    if not epic_number:
+        return Response({"error": "EPIC number is required."}, status=400)
+    if not phone_number:
+        return Response({"error": "Phone number is required for OTP delivery."}, status=400)
+    if len(epic_number) < 7:
+        return Response({"error": "Invalid EPIC format. Must be at least 7 characters (e.g. IND1234567)."}, status=400)
+
+    # Check duplicate in this election's roll
+    if ElectionVoterRoll.objects.filter(election=election, epic_number=epic_number).exists():
+        return Response({"error": f"EPIC '{epic_number}' is already on the voter roll for this election."}, status=409)
+
+    roll_entry = ElectionVoterRoll.objects.create(
+        election=election,
+        epic_number=epic_number,
+        phone_number=phone_number,
+        voter_name=voter_name,
+        added_by=request.user.username
+    )
+
+    logger.info(f"[VOTER ROLL] Admin '{request.user.username}' added EPIC {epic_number} to Election #{election.pk} roll.")
+
+    return Response({
+        "status": "added",
+        "roll_entry_id": roll_entry.pk,
+        "epic_number": epic_number,
+        "voter_name": voter_name or "N/A",
+        "election_id": election.pk,
+        "total_voters": ElectionVoterRoll.objects.filter(election=election).count(),
+        "message": f"EPIC '{epic_number}' added to electoral roll for '{election.title}'."
+    }, status=201)
+
+
+@api_view(['DELETE'])
+def remove_voter_from_roll(request, election_id, roll_entry_id):
+    """
+    Admin-only: Remove a voter from an election's voter roll.
+    Only allowed while election is in DRAFT state.
+    """
+    if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+        return Response({"error": "Admin credentials required."}, status=403)
+
+    try:
+        election = Election.objects.get(pk=election_id)
+    except Election.DoesNotExist:
+        return Response({"error": f"Election #{election_id} not found."}, status=404)
+
+    # ── LOCK CHECK ──────────────────────────────────────────────────────────
+    if election.is_voter_list_locked:
+        return Response({
+            "error": (
+                f"Voter list is LOCKED. Election '{election.title}' has already started. "
+                f"Voter removals are not permitted."
+            )
+        }, status=403)
+
+    try:
+        roll_entry = ElectionVoterRoll.objects.get(pk=roll_entry_id, election=election)
+    except ElectionVoterRoll.DoesNotExist:
+        return Response({"error": "Voter roll entry not found."}, status=404)
+
+    epic_number = roll_entry.epic_number
+    roll_entry.delete()
+
+    logger.info(f"[VOTER ROLL] Admin '{request.user.username}' removed EPIC {epic_number} from Election #{election.pk} roll.")
+
+    return Response({
+        "status": "removed",
+        "epic_number": epic_number,
+        "election_id": election.pk,
+        "total_voters": ElectionVoterRoll.objects.filter(election=election).count(),
+        "message": f"EPIC '{epic_number}' removed from electoral roll."
+    })
+
+
+@api_view(['GET'])
+def get_election_status(request, election_id):
+    """
+    Admin: Returns the full status of an election including voter roll count
+    and lifecycle phase.
+    """
+    if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+        return Response({"error": "Admin credentials required."}, status=403)
+
+    try:
+        election = Election.objects.get(pk=election_id)
+    except Election.DoesNotExist:
+        return Response({"error": f"Election #{election_id} not found."}, status=404)
+
+    voter_roll = ElectionVoterRoll.objects.filter(election=election)
+    candidates = Candidate.objects.filter(election=election)
+
+    return Response({
+        "election_id":      election.pk,
+        "title":            election.title,
+        "status":           election.status,
+        "start_timestamp":  election.start_timestamp,
+        "end_timestamp":    election.end_timestamp,
+        "is_root_locked":   election.is_root_locked,
+        "is_active_now":    election.is_active,
+        "is_closed":        election.is_closed,
+        "voter_list_locked": election.is_voter_list_locked,
+        "voter_roll_count": voter_roll.count(),
+        "candidate_count":  candidates.count(),
+        "time_remaining_s": election.time_remaining_seconds,
+        "time_to_start_s":  election.time_to_start_seconds,
+        "started_at":       election.started_at.isoformat() if election.started_at else None,
+    })
+
+
 @api_view(['GET'])
 def get_election_state(request):
     """
@@ -405,16 +734,20 @@ def get_election_state(request):
     Used by zkp_prover.js to fetch the real on-chain Merkle root
     for inclusion proof generation before calling snarkjs.groth16.fullProve().
     """
-    election = Election.objects.order_by('-created_at').first()
+    election = Election.objects.filter(status=Election.STATUS_ACTIVE).order_by('-created_at').first() \
+               or Election.objects.order_by('-created_at').first()
     if not election:
         return Response({"error": "No active election found."}, status=404)
 
     return Response({
         "election_id":   election.pk,
         "election_name": election.title,
+        "status":        election.status,
         "merkle_root":   election.merkle_root or "0x0",
         "is_locked":     election.is_root_locked,
+        "is_active":     election.is_active,
     })
+
 
 
 @api_view(['POST', 'GET'])
@@ -883,17 +1216,57 @@ def derive_voter_identity_hash(epic_number: str, phone_number: str) -> str:
 def voter_required(view_func):
     """
     Restricts access strictly to citizens with an active, verified session voter_hash.
+    ALSO enforces that the Election must be in ACTIVE state and within voting window.
+    If no election is active, voter portal is locked entirely.
     """
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
+        # ── Gate 1: Election must be ACTIVE and within window ─────────────
+        active_election = Election.objects.filter(status=Election.STATUS_ACTIVE).order_by('-created_at').first()
+        if not active_election:
+            # Check if there's a draft election to give a better message
+            draft = Election.objects.filter(status=Election.STATUS_DRAFT).order_by('-created_at').first()
+            if draft:
+                messages.warning(
+                    request,
+                    f"Voter portal is not yet open. The election '{draft.title}' has been created but voting has not started. Please wait for the Election Authority to start the election."
+                )
+            else:
+                messages.warning(
+                    request,
+                    "No active election is currently in progress. The Voter Portal is locked. Please check back when voting opens."
+                )
+            return redirect('/')
+
+        # ── Gate 2: Within the scheduled voting window ─────────────────────
+        now_ts = time.time()
+        if now_ts < active_election.start_timestamp:
+            import datetime
+            opens_at = datetime.datetime.utcfromtimestamp(active_election.start_timestamp).strftime('%d %b %Y at %H:%M UTC')
+            messages.warning(
+                request,
+                f"Voting has not yet begun. The election '{active_election.title}' opens on {opens_at}. Please return at that time."
+            )
+            return redirect('/')
+
+        if now_ts > active_election.end_timestamp:
+            messages.error(
+                request,
+                f"The election '{active_election.title}' has closed. Voting is no longer permitted."
+            )
+            return redirect('/')
+
+        # ── Gate 3: Voter must have a valid authenticated session ──────────
         voter_hash = request.session.get('voter_hash')
         if not voter_hash:
-            messages.warning(request, "Voter authentication required. Please register or verify with your EPIC/OTP.")
+            messages.warning(request, "Voter authentication required. Please log in with your EPIC number and OTP.")
             return redirect(f"/auth/voter/?next={request.path}")
+
         if not VoterIdentity.objects.filter(voter_hash=voter_hash, is_verified=True).exists():
             request.session.pop('voter_hash', None)
-            messages.error(request, "Voter identity not found on the registry. Please register via API Setu.")
+            messages.error(request, "Voter identity not found on the electoral roll. Ensure you are registered with the correct EPIC number.")
             return redirect(f"/auth/voter/?next={request.path}")
+
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
@@ -937,6 +1310,8 @@ def auditor_required(view_func):
 def portal_select(request):
     """
     Enterprise Hub for selecting between Voter Portal, Admin Console, and Public Auditor.
+    Passes the current election lifecycle state to the template to conditionally
+    display the Voter Portal status (locked/open).
     """
     has_voter_session = bool(request.session.get('voter_hash'))
     is_admin = bool(request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser))
@@ -947,12 +1322,31 @@ def portal_select(request):
         )
     )
 
+    # Election state for voter portal gate
+    active_election = Election.objects.filter(status=Election.STATUS_ACTIVE).order_by('-created_at').first()
+    draft_election  = Election.objects.filter(status=Election.STATUS_DRAFT).order_by('-created_at').first()
+    any_election    = active_election or draft_election or Election.objects.order_by('-created_at').first()
+
+    voter_portal_open   = bool(active_election and active_election.is_active)
+    voter_portal_reason = None
+    if not any_election:
+        voter_portal_reason = "No election has been created yet."
+    elif draft_election and not active_election:
+        voter_portal_reason = f"Election '{draft_election.title}' is in DRAFT. Voting has not started yet."
+    elif active_election and not active_election.is_active:
+        import datetime
+        opens_at = datetime.datetime.utcfromtimestamp(active_election.start_timestamp).strftime('%d %b %Y at %H:%M UTC')
+        voter_portal_reason = f"Voting opens on {opens_at}."
+
     context = {
-        'has_voter_session': has_voter_session,
-        'voter_hash': request.session.get('voter_hash'),
-        'voter_epic': request.session.get('voter_epic'),
-        'is_admin': is_admin,
-        'is_auditor': is_auditor,
+        'has_voter_session':   has_voter_session,
+        'voter_hash':          request.session.get('voter_hash'),
+        'voter_epic':          request.session.get('voter_epic'),
+        'is_admin':            is_admin,
+        'is_auditor':          is_auditor,
+        'voter_portal_open':   voter_portal_open,
+        'voter_portal_reason': voter_portal_reason,
+        'active_election':     active_election or draft_election,
     }
     return render(request, 'api/portal_select.html', context)
 
@@ -1208,8 +1602,9 @@ def logout_view(request):
 def voter_portal(request):
     """
     Renders the voter dashboard. Protected by @voter_required.
+    Only accessible when a ACTIVE election is running within its scheduled window.
     """
-    active_election = Election.objects.order_by('-created_at').first()
+    active_election = Election.objects.filter(status=Election.STATUS_ACTIVE).order_by('-created_at').first()
     candidates = []
     if active_election:
         candidates = Candidate.objects.filter(election=active_election).order_by('candidate_id')
@@ -1234,33 +1629,67 @@ def voter_portal(request):
 @admin_required
 def admin_portal(request):
     """
-    Renders the admin dashboard. Protected by @admin_required.
+    Renders the admin dashboard with full Election Lifecycle Management panel.
+    Protected by @admin_required.
     """
-    active_election = Election.objects.order_by('-created_at').first()
-    candidates      = Candidate.objects.select_related('election').all().order_by('candidate_id')
-    voters          = VoterIdentity.objects.all().order_by('-registered_at')[:50]
-    threats         = ThreatLog.objects.filter(resolved=False).order_by('-timestamp')[:20]
+    # Fetch all elections ordered newest first
+    all_elections = Election.objects.prefetch_related('voter_roll', 'candidates').order_by('-created_at')
+    active_election = all_elections.filter(status=Election.STATUS_ACTIVE).first() \
+                      or all_elections.first()
 
-    total_voters  = VoterIdentity.objects.count()
-    voted_count   = max(BallotRecord.objects.count(), VoterIdentity.objects.filter(has_voted=True).count())
-    turnout_pct   = round((voted_count / total_voters * 100), 1) if total_voters > 0 else 0
+    candidates = Candidate.objects.select_related('election').all().order_by('candidate_id')
+    voters     = VoterIdentity.objects.all().order_by('-registered_at')[:50]
+    threats    = ThreatLog.objects.filter(resolved=False).order_by('-timestamp')[:20]
+
+    total_voters = VoterIdentity.objects.count()
+    voted_count  = max(BallotRecord.objects.count(), VoterIdentity.objects.filter(has_voted=True).count())
+    turnout_pct  = round((voted_count / total_voters * 100), 1) if total_voters > 0 else 0
 
     candidate_list = []
     for c in candidates:
         votes = BallotRecord.objects.filter(candidate=c).count()
         candidate_list.append({
             'candidate_id': c.candidate_id,
-            'name': c.name,
-            'party': c.party,
-            'election': c.election,
-            'votes': votes
+            'name':         c.name,
+            'party':        c.party,
+            'election':     c.election,
+            'votes':        votes
         })
 
+    # Build election summary list for management panel
+    elections_summary = []
+    for el in all_elections:
+        roll_count = el.voter_roll.count()
+        elections_summary.append({
+            'id':            el.pk,
+            'title':         el.title,
+            'status':        el.status,
+            'start_ts':      el.start_timestamp,
+            'end_ts':        el.end_timestamp,
+            'is_locked':     el.is_root_locked,
+            'voter_count':   roll_count,
+            'is_active_now': el.is_active,
+            'is_closed_now': el.is_closed,
+        })
+
+    # Voter roll for the selected / active election
+    election_voter_roll = []
+    managed_election = active_election
+    if managed_election:
+        election_voter_roll = list(
+            ElectionVoterRoll.objects.filter(election=managed_election).order_by('added_at')
+        )
+
     context = {
-        'active_election': active_election,
-        'candidates':      candidate_list,
-        'voters':          voters,
-        'threats':         threats,
+        'active_election':    active_election,
+        'managed_election':   managed_election,
+        'elections_summary':  elections_summary,
+        'election_voter_roll': election_voter_roll,
+        'voter_roll_count':   len(election_voter_roll),
+        'voter_list_locked':  managed_election.is_voter_list_locked if managed_election else False,
+        'candidates':         candidate_list,
+        'voters':             voters,
+        'threats':            threats,
         'voter_stats': {
             'total':       total_voters,
             'voted':       voted_count,
@@ -1268,20 +1697,11 @@ def admin_portal(request):
             'turnout_pct': turnout_pct,
         },
         'stats': [
-            {'icon': '🗳️', 'label': 'Total Ballots',   'value': voted_count},
-            {'icon': '🚫', 'label': 'IPs Blocked',     'value': threats.count()},
-            {'icon': '👥', 'label': 'Registered ECI',  'value': total_voters},
-            {'icon': '🧠', 'label': 'ML Sentinel',     'value': 'Active (0.70)'},
+            {'icon': '🗳️', 'label': 'Total Ballots',  'value': voted_count},
+            {'icon': '🚫', 'label': 'IPs Blocked',    'value': threats.count()},
+            {'icon': '👥', 'label': 'Registered ECI', 'value': total_voters},
+            {'icon': '🧠', 'label': 'ML Sentinel',    'value': 'Active (0.70)'},
         ],
-        'nav_items': [
-            {'icon': '🏠', 'label': 'Overview',     'anchor': 'overview'},
-            {'icon': '🗳️', 'label': 'Elections',    'anchor': 'elections'},
-            {'icon': '👥', 'label': 'Voters',        'anchor': 'voters'},
-            {'icon': '🛡️', 'label': 'Threat AI',    'anchor': 'threat-ai'},
-            {'icon': '🌳', 'label': 'Merkle Root',   'anchor': 'merkle'},
-            {'icon': '📊', 'label': 'Candidates',    'anchor': 'candidates'},
-        ],
-        'table_headers': ['ID', 'Name', 'Election', 'Status'],
     }
     return render(request, 'api/admin_dashboard.html', context)
 
