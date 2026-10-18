@@ -692,6 +692,129 @@ def remove_voter_from_roll(request, election_id, roll_entry_id):
     })
 
 
+@api_view(['POST'])
+def add_candidate_to_election(request, election_id):
+    """
+    Admin-only: Add a candidate to an election's roster.
+    Only permitted while election is in DRAFT state.
+    Once started, the candidate list is permanently locked.
+    """
+    if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+        return Response({"error": "Admin credentials required."}, status=403)
+
+    try:
+        election = Election.objects.get(pk=election_id)
+    except Election.DoesNotExist:
+        return Response({"error": f"Election #{election_id} not found."}, status=404)
+
+    # ── LOCK CHECK ──────────────────────────────────────────────────────────
+    if election.is_voter_list_locked:
+        return Response({
+            "error": (
+                f"Candidate roster is LOCKED. Election '{election.title}' has already started. "
+                f"No candidates can be added or modified after election activation."
+            )
+        }, status=403)
+
+    name = request.data.get('name', '').strip()
+    party = request.data.get('party', '').strip() or 'Independent'
+    candidate_id_input = request.data.get('candidate_id')
+    party_symbol_url = request.data.get('party_symbol_url', '').strip()
+
+    if not name:
+        return Response({"error": "Candidate name is required."}, status=400)
+
+    # Determine or validate candidate_id
+    if candidate_id_input is not None and str(candidate_id_input).strip() != '':
+        try:
+            cid = int(candidate_id_input)
+            if cid <= 0:
+                return Response({"error": "Candidate ID must be a positive integer."}, status=400)
+        except (ValueError, TypeError):
+            return Response({"error": "Candidate ID must be a valid integer."}, status=400)
+
+        if Candidate.objects.filter(election=election, candidate_id=cid).exists():
+            return Response({
+                "error": f"Candidate ID #{cid} is already assigned in this election. Please choose another ID or leave blank to auto-assign."
+            }, status=409)
+    else:
+        existing_ids = list(Candidate.objects.filter(election=election).values_list('candidate_id', flat=True))
+        cid = (max(existing_ids) + 1) if existing_ids else 1
+
+    candidate = Candidate.objects.create(
+        election=election,
+        candidate_id=cid,
+        name=name,
+        party=party,
+        party_symbol_url=party_symbol_url or None
+    )
+
+    logger.info(f"[CANDIDATE] Admin '{request.user.username}' added Candidate #{cid} '{name}' ({party}) to Election #{election.pk}.")
+
+    return Response({
+        "status": "added",
+        "id": candidate.pk,
+        "candidate_id": candidate.candidate_id,
+        "name": candidate.name,
+        "party": candidate.party,
+        "party_symbol_url": candidate.party_symbol_url or "",
+        "votes": 0,
+        "election_id": election.pk,
+        "total_candidates": Candidate.objects.filter(election=election).count(),
+        "message": f"Candidate '{candidate.name}' (#{candidate.candidate_id}) added successfully to '{election.title}'."
+    }, status=201)
+
+
+@api_view(['DELETE'])
+def remove_candidate_from_election(request, election_id, candidate_id):
+    """
+    Admin-only: Remove a candidate from an election's roster.
+    Only permitted while election is in DRAFT state and candidate has zero votes.
+    """
+    if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+        return Response({"error": "Admin credentials required."}, status=403)
+
+    try:
+        election = Election.objects.get(pk=election_id)
+    except Election.DoesNotExist:
+        return Response({"error": f"Election #{election_id} not found."}, status=404)
+
+    # ── LOCK CHECK ──────────────────────────────────────────────────────────
+    if election.is_voter_list_locked:
+        return Response({
+            "error": (
+                f"Candidate roster is LOCKED. Election '{election.title}' has already started. "
+                f"No candidates can be removed after election activation."
+            )
+        }, status=403)
+
+    # Find candidate by candidate_id or by pk
+    candidate = Candidate.objects.filter(election=election, candidate_id=candidate_id).first()
+    if not candidate:
+        try:
+            candidate = Candidate.objects.get(pk=candidate_id, election=election)
+        except Candidate.DoesNotExist:
+            return Response({"error": f"Candidate #{candidate_id} not found in this election."}, status=404)
+
+    # Cannot delete if ballots are attached
+    if BallotRecord.objects.filter(candidate=candidate).exists():
+        return Response({"error": f"Cannot remove Candidate '{candidate.name}' because ballots have already been cast for them."}, status=400)
+
+    cand_name = candidate.name
+    cand_cid = candidate.candidate_id
+    candidate.delete()
+
+    logger.info(f"[CANDIDATE] Admin '{request.user.username}' removed Candidate #{cand_cid} '{cand_name}' from Election #{election.pk}.")
+
+    return Response({
+        "status": "removed",
+        "candidate_id": cand_cid,
+        "election_id": election.pk,
+        "total_candidates": Candidate.objects.filter(election=election).count(),
+        "message": f"Candidate '{cand_name}' (#{cand_cid}) removed from roster."
+    }, status=200)
+
+
 @api_view(['GET'])
 def get_election_status(request, election_id):
     """
@@ -1637,7 +1760,15 @@ def admin_portal(request):
     active_election = all_elections.filter(status=Election.STATUS_ACTIVE).first() \
                       or all_elections.first()
 
-    candidates = Candidate.objects.select_related('election').all().order_by('candidate_id')
+    # Allow query parameter ?election_id=... to view/manage a specific election
+    managed_election = active_election
+    requested_id = request.GET.get('election_id')
+    if requested_id:
+        custom_el = all_elections.filter(pk=requested_id).first()
+        if custom_el:
+            managed_election = custom_el
+
+    candidates = Candidate.objects.filter(election=managed_election).order_by('candidate_id') if managed_election else []
     voters     = VoterIdentity.objects.all().order_by('-registered_at')[:50]
     threats    = ThreatLog.objects.filter(resolved=False).order_by('-timestamp')[:20]
 
@@ -1649,32 +1780,35 @@ def admin_portal(request):
     for c in candidates:
         votes = BallotRecord.objects.filter(candidate=c).count()
         candidate_list.append({
-            'candidate_id': c.candidate_id,
-            'name':         c.name,
-            'party':        c.party,
-            'election':     c.election,
-            'votes':        votes
+            'id':               c.pk,
+            'candidate_id':     c.candidate_id,
+            'name':             c.name,
+            'party':            c.party,
+            'party_symbol_url': c.party_symbol_url or '',
+            'election':         c.election,
+            'votes':            votes
         })
 
     # Build election summary list for management panel
     elections_summary = []
     for el in all_elections:
         roll_count = el.voter_roll.count()
+        cand_count = el.candidates.count()
         elections_summary.append({
-            'id':            el.pk,
-            'title':         el.title,
-            'status':        el.status,
-            'start_ts':      el.start_timestamp,
-            'end_ts':        el.end_timestamp,
-            'is_locked':     el.is_root_locked,
-            'voter_count':   roll_count,
-            'is_active_now': el.is_active,
-            'is_closed_now': el.is_closed,
+            'id':              el.pk,
+            'title':           el.title,
+            'status':          el.status,
+            'start_ts':        el.start_timestamp,
+            'end_ts':          el.end_timestamp,
+            'is_locked':       el.is_root_locked,
+            'voter_count':     roll_count,
+            'candidate_count': cand_count,
+            'is_active_now':   el.is_active,
+            'is_closed_now':   el.is_closed,
         })
 
     # Voter roll for the selected / active election
     election_voter_roll = []
-    managed_election = active_election
     if managed_election:
         election_voter_roll = list(
             ElectionVoterRoll.objects.filter(election=managed_election).order_by('added_at')
@@ -1686,6 +1820,7 @@ def admin_portal(request):
         'elections_summary':  elections_summary,
         'election_voter_roll': election_voter_roll,
         'voter_roll_count':   len(election_voter_roll),
+        'candidate_count':    len(candidate_list),
         'voter_list_locked':  managed_election.is_voter_list_locked if managed_election else False,
         'candidates':         candidate_list,
         'voters':             voters,

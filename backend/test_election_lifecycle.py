@@ -98,17 +98,34 @@ def run_election_lifecycle_tests():
     assert res_vauth.status_code == 302, "Voter was able to access /voter/ during DRAFT!"
     print(f"✅ [PASS] 7. Voter portal access prevented during DRAFT status (HTTP 302 redirect)")
 
-    # Add candidates to election so it can be started
-    Candidate.objects.create(election=election, candidate_id=1, name="Candidate One", party="Democratic Front")
-    Candidate.objects.create(election=election, candidate_id=2, name="Candidate Two", party="Progressive Alliance")
+    # 6. Candidate Management Tests in DRAFT mode
+    cand1_data = {'name': 'Candidate One', 'party': 'Democratic Front', 'candidate_id': 1}
+    cand2_data = {'name': 'Candidate Two', 'party': 'Progressive Alliance', 'candidate_id': 2}
+    cand3_data = {'name': 'Temporary Candidate', 'party': 'Independent'}
 
-    # 6. Start Election (DRAFT -> ACTIVE)
+    res_c1 = client.post(f'/api/v1/elections/{election_id}/candidates/add/', json.dumps(cand1_data), content_type='application/json')
+    assert res_c1.status_code == 201, f"Failed to add candidate 1: {res_c1.content}"
+    res_c2 = client.post(f'/api/v1/elections/{election_id}/candidates/add/', json.dumps(cand2_data), content_type='application/json')
+    assert res_c2.status_code == 201, f"Failed to add candidate 2: {res_c2.content}"
+    res_c3 = client.post(f'/api/v1/elections/{election_id}/candidates/add/', json.dumps(cand3_data), content_type='application/json')
+    assert res_c3.status_code == 201, f"Failed to add candidate 3: {res_c3.content}"
+    c3_cid = res_c3.json()['candidate_id']
+    assert Candidate.objects.filter(election=election).count() == 3
+    print(f"✅ [PASS] 8. Added 3 candidates to election in DRAFT mode (API 201)")
+
+    # Test removing candidate in DRAFT mode
+    res_cdel = client.delete(f'/api/v1/elections/{election_id}/candidates/{c3_cid}/remove/')
+    assert res_cdel.status_code == 200, f"Failed to remove candidate 3: {res_cdel.content}"
+    assert Candidate.objects.filter(election=election).count() == 2
+    print(f"✅ [PASS] 9. Removed candidate in DRAFT mode (API 200)")
+
+    # 7. Start Election (DRAFT -> ACTIVE)
     res_start = client.post(f'/api/v1/elections/{election_id}/start/')
     assert res_start.status_code == 200, f"Failed to start election: {res_start.content}"
     election.refresh_from_db()
     assert election.status == Election.STATUS_ACTIVE
     assert election.is_voter_list_locked is True
-    print(f"✅ [PASS] 8. Election successfully started (Status: ACTIVE, Voter List: LOCKED)")
+    print(f"✅ [PASS] 10. Election successfully started (Status: ACTIVE, Voter & Candidate Roster: LOCKED)")
 
     # Check that entries in ElectionVoterRoll are now hashed into VoterIdentity
     roll_entries = ElectionVoterRoll.objects.filter(election=election)
@@ -116,18 +133,28 @@ def run_election_lifecycle_tests():
         assert entry.is_hashed is True, f"Entry {entry.epic_number} not marked as hashed!"
         assert entry.voter_hash != "", f"Entry {entry.epic_number} has empty voter_hash!"
         assert VoterIdentity.objects.filter(voter_hash=entry.voter_hash).exists(), f"VoterIdentity not found for {entry.voter_hash}"
-    print(f"✅ [PASS] 9. All voter roll entries hashed and whitelisted into VoterIdentity")
+    print(f"✅ [PASS] 11. All voter roll entries hashed and whitelisted into VoterIdentity")
 
-    # 7. CRITICAL TEST: Admin CANNOT add voters once election is started
+    # 8. CRITICAL TEST: Admin CANNOT add voters once election is started
     voter3 = {'epic_number': 'TESTVOTER003', 'phone_number': '9876543212', 'voter_name': 'Late Voter'}
     res_locked_add = client.post(f'/api/v1/elections/{election_id}/voters/add/', json.dumps(voter3), content_type='application/json')
     assert res_locked_add.status_code == 403, f"Admin was able to add voter after election started! Got {res_locked_add.status_code}"
-    print(f"✅ [PASS] 10. STRICT IMMUTABILITY: Adding voter blocked when election is ACTIVE (HTTP 403 Forbidden)")
+    print(f"✅ [PASS] 12. STRICT IMMUTABILITY: Adding voter blocked when election is ACTIVE (HTTP 403 Forbidden)")
 
-    # 8. CRITICAL TEST: Admin CANNOT remove voters once election is started
+    # 9. CRITICAL TEST: Admin CANNOT remove voters once election is started
     res_locked_del = client.delete(f'/api/v1/elections/{election_id}/voters/{voter1_entry_id}/remove/')
     assert res_locked_del.status_code == 403, f"Admin was able to remove voter after election started! Got {res_locked_del.status_code}"
-    print(f"✅ [PASS] 11. STRICT IMMUTABILITY: Removing voter blocked when election is ACTIVE (HTTP 403 Forbidden)")
+    print(f"✅ [PASS] 13. STRICT IMMUTABILITY: Removing voter blocked when election is ACTIVE (HTTP 403 Forbidden)")
+
+    # 10. CRITICAL TEST: Admin CANNOT add candidates once election is started
+    res_locked_cand_add = client.post(f'/api/v1/elections/{election_id}/candidates/add/', json.dumps(cand3_data), content_type='application/json')
+    assert res_locked_cand_add.status_code == 403, f"Admin was able to add candidate after election started! Got {res_locked_cand_add.status_code}"
+    print(f"✅ [PASS] 14. STRICT IMMUTABILITY: Adding candidate blocked when election is ACTIVE (HTTP 403 Forbidden)")
+
+    # 11. CRITICAL TEST: Admin CANNOT remove candidates once election is started
+    res_locked_cand_del = client.delete(f'/api/v1/elections/{election_id}/candidates/1/remove/')
+    assert res_locked_cand_del.status_code == 403, f"Admin was able to remove candidate after election started! Got {res_locked_cand_del.status_code}"
+    print(f"✅ [PASS] 15. STRICT IMMUTABILITY: Removing candidate blocked when election is ACTIVE (HTTP 403 Forbidden)")
 
     # 9. Whitelisted voter can authenticate and access Voter Portal now that election is ACTIVE
     otp_res = voter_client.post('/api/v1/send-otp/', json.dumps({
@@ -148,24 +175,24 @@ def run_election_lifecycle_tests():
     assert login_post.status_code == 200
     res_dash = voter_client.get('/voter/')
     assert res_dash.status_code == 200
-    print(f"✅ [PASS] 12. Whitelisted voter authenticated and accessed Voter Portal (HTTP 200)")
+    print(f"✅ [PASS] 16. Whitelisted voter authenticated and accessed Voter Portal (HTTP 200)")
 
     # 10. Close Election
     res_close = client.post(f'/api/v1/elections/{election_id}/close/')
     assert res_close.status_code == 200, f"Failed to close election: {res_close.content}"
     election.refresh_from_db()
     assert election.status == Election.STATUS_CLOSED
-    print(f"✅ [PASS] 13. Election closed successfully (Status: CLOSED)")
+    print(f"✅ [PASS] 17. Election closed successfully (Status: CLOSED)")
 
     # 11. Attempting to add voter to CLOSED election is also blocked
     res_closed_add = client.post(f'/api/v1/elections/{election_id}/voters/add/', json.dumps(voter3), content_type='application/json')
     assert res_closed_add.status_code == 403
-    print(f"✅ [PASS] 14. Adding voter blocked on CLOSED election (HTTP 403 Forbidden)")
+    print(f"✅ [PASS] 18. Adding voter blocked on CLOSED election (HTTP 403 Forbidden)")
 
     # Cleanup
     election.delete()
     print("=" * 70)
-    print("🎉 ALL 14 ELECTION LIFECYCLE & VOTER ROLL TESTS PASSED PERFECTLY!")
+    print("🎉 ALL 18 ELECTION LIFECYCLE, CANDIDATE & VOTER ROLL TESTS PASSED PERFECTLY!")
     print("=" * 70)
 
 if __name__ == '__main__':

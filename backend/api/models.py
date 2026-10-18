@@ -116,11 +116,15 @@ class Candidate(models.Model):
     Stores the candidates available for selection in the Voter Portal.
     """
     election       = models.ForeignKey(Election, on_delete=models.CASCADE, related_name='candidates')
-    candidate_id   = models.PositiveIntegerField(unique=True, help_text="Matches the ID on the smart contract")
+    candidate_id   = models.PositiveIntegerField(help_text="Matches the ID on the smart contract for this election")
     name           = models.CharField(max_length=150)
     party          = models.CharField(max_length=150, blank=True, default='Independent',
                                       help_text="Party or coalition name")
     party_symbol_url = models.URLField(blank=True, null=True)
+
+    class Meta:
+        unique_together = ('election', 'candidate_id')
+        ordering = ['candidate_id']
 
     def __str__(self):
         return f"[{self.candidate_id}] {self.name} ({self.party})"

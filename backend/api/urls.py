@@ -50,4 +50,11 @@ urlpatterns = [
 
     # Remove a voter from an election's official roll (roll_entry_id is the DB pk)
     path('v1/elections/<int:election_id>/voters/<int:roll_entry_id>/remove/',       views.remove_voter_from_roll, name='remove_voter_from_roll'),
+
+    # ── Candidate Management (Admin-Only, DRAFT state only) ─────────────────
+    # Add a candidate to an election
+    path('v1/elections/<int:election_id>/candidates/add/',                         views.add_candidate_to_election,       name='add_candidate_to_election'),
+
+    # Remove a candidate from an election (candidate_id is the contract ID or pk)
+    path('v1/elections/<int:election_id>/candidates/<int:candidate_id>/remove/',   views.remove_candidate_from_election,  name='remove_candidate_from_election'),
 ]

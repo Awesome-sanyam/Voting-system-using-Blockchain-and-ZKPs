@@ -120,12 +120,24 @@
           </h2>
           <p class="small mb-0" style="color: var(--ag-slate-500);">Create elections, manage voter rolls, then start voting. Once started, the voter list is permanently locked.</p>
         </div>
-        {% if not managed_election or managed_election.status == 'CLOSED' %}
-        <button type="button" class="ag-btn-primary px-4 py-2 d-flex align-items-center gap-2 font-monospace small text-uppercase"
-                data-bs-toggle="modal" data-bs-target="#createElectionModal">
-          <i class="bi bi-plus-circle-fill"></i> Create New Election
-        </button>
-        {% endif %}
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          {% if elections_summary|length > 1 %}
+          <div class="d-flex align-items-center gap-2">
+            <label class="small text-muted font-monospace mb-0" for="election-selector">Switch:</label>
+            <select id="election-selector" class="form-select form-select-sm font-monospace" style="width: auto; max-width: 280px; border-color: var(--ag-border);" onchange="window.location.href='?election_id=' + this.value">
+              {% for el in elections_summary %}
+              <option value="{{ el.id }}" {% if managed_election.pk == el.id %}selected{% endif %}>
+                [{{ el.status }}] {{ el.title|truncatechars:32 }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          {% endif %}
+          <button type="button" class="ag-btn-primary px-4 py-2 d-flex align-items-center gap-2 font-monospace small text-uppercase"
+                  data-bs-toggle="modal" data-bs-target="#createElectionModal">
+            <i class="bi bi-plus-circle-fill"></i> Create New Election
+          </button>
+        </div>
       </div>
     </div>
 
@@ -144,6 +156,7 @@
             <span><i class="bi bi-play-fill me-1"></i>Opens: <strong id="election-start-disp" class="text-dark">—</strong></span>
             <span><i class="bi bi-stop-fill me-1"></i>Closes: <strong id="election-end-disp" class="text-dark">—</strong></span>
             <span><i class="bi bi-people-fill me-1"></i>Roll: <strong class="text-dark">{{ voter_roll_count }}</strong> voters</span>
+            <span><i class="bi bi-card-list me-1"></i>Candidates: <strong class="text-dark">{{ candidate_count }}</strong></span>
           </div>
         </div>
         <div class="d-flex gap-2 flex-wrap">
@@ -365,9 +378,26 @@
       <!-- Candidate Roster -->
       <div class="ag-card overflow-hidden">
         <div class="p-4 pb-2">
-          <h3 class="h6 fw-bold mb-0 text-uppercase font-monospace" style="color: var(--ag-slate-600); letter-spacing: 0.04em;">
-            <i class="bi bi-card-list me-1 text-primary"></i>Official Candidate Roster
-          </h3>
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <h3 class="h6 fw-bold mb-0 text-uppercase font-monospace" style="color: var(--ag-slate-600); letter-spacing: 0.04em;">
+                <i class="bi bi-card-list me-1 text-primary"></i>Official Candidate Roster
+              </h3>
+              <span class="badge rounded-pill bg-light text-secondary border font-monospace small" id="candidate-count-badge">{{ candidates|length }} configured</span>
+            </div>
+            <div>
+              {% if managed_election and not voter_list_locked %}
+              <button type="button" class="ag-btn-primary px-3 py-1 font-monospace small d-flex align-items-center gap-1"
+                      data-bs-toggle="modal" data-bs-target="#addCandidateModal" style="font-size: 0.78rem;">
+                <i class="bi bi-person-plus-fill"></i> Add Candidate
+              </button>
+              {% elif voter_list_locked %}
+              <span class="ag-pill ag-pill-rose" style="font-size: 0.65rem; padding: 2px 7px;">
+                <i class="bi bi-lock-fill me-1"></i>ROSTER LOCKED
+              </span>
+              {% endif %}
+            </div>
+          </div>
         </div>
         <div class="table-responsive">
           <table class="table table-hover table-borderless align-middle mb-0 font-monospace small">
@@ -375,25 +405,41 @@
               <tr style="background: rgba(241,245,249,0.7); border-bottom: 1px solid var(--ag-border); color: var(--ag-slate-600);">
                 <th class="px-4 py-3">ID</th>
                 <th class="py-3">Candidate</th>
+                <th class="py-3">Party</th>
                 <th class="py-3 text-center">Votes</th>
-                <th class="px-4 py-3 text-end">Party</th>
+                {% if not voter_list_locked %}<th class="px-4 py-3 text-end">Action</th>{% endif %}
               </tr>
             </thead>
-            <tbody>
+            <tbody id="candidate-roster-tbody">
               {% if candidates %}
                 {% for candidate in candidates %}
-                <tr style="border-bottom: 1px solid rgba(226,232,240,0.5);">
+                <tr id="cand-row-{{ candidate.candidate_id }}" style="border-bottom: 1px solid rgba(226,232,240,0.5);">
                   <td class="px-4 py-2 fw-bold" style="color: var(--ag-primary);">#{{ candidate.candidate_id }}</td>
-                  <td class="py-2 fw-semibold" style="color: var(--ag-slate-900);">{{ candidate.name }}</td>
-                  <td class="py-2 text-center">
-                    <span class="badge font-monospace rounded-pill px-2 py-1" style="background: rgba(79,70,229,0.1); color: var(--ag-primary);">{{ candidate.votes|default:"0" }}</span>
+                  <td class="py-2 fw-semibold" style="color: var(--ag-slate-900);">
+                    {% if candidate.party_symbol_url %}
+                    <img src="{{ candidate.party_symbol_url }}" alt="Symbol" style="width: 20px; height: 20px; object-fit: contain;" class="me-1 align-text-bottom rounded">
+                    {% endif %}
+                    {{ candidate.name }}
                   </td>
-                  <td class="px-4 py-2 text-end text-muted">{{ candidate.party }}</td>
+                  <td class="py-2 text-muted">{{ candidate.party }}</td>
+                  <td class="py-2 text-center">
+                    <span class="badge font-monospace rounded-pill px-2 py-1" style="background: rgba(79,70,229,0.1); color: var(--ag-primary);" id="cand-votes-{{ candidate.candidate_id }}">{{ candidate.votes|default:"0" }}</span>
+                  </td>
+                  {% if not voter_list_locked %}
+                  <td class="px-4 py-2 text-end">
+                    <button class="btn btn-sm btn-link text-danger p-0" onclick="removeCandidate({{ managed_election.pk }}, {{ candidate.candidate_id }}, '{{ candidate.name|escapejs }}')" title="Remove candidate">
+                      <i class="bi bi-trash-fill"></i>
+                    </button>
+                  </td>
+                  {% endif %}
                 </tr>
                 {% endfor %}
               {% else %}
-              <tr>
-                <td colspan="4" class="text-center py-4 text-muted small">No candidates configured.</td>
+              <tr id="candidate-empty-row">
+                <td colspan="{% if voter_list_locked %}4{% else %}5{% endif %}" class="text-center py-4 text-muted small">
+                  <i class="bi bi-people fs-4 d-block mb-1 text-muted"></i>
+                  No candidates configured yet. Click "Add Candidate" to configure the ballot.
+                </td>
               </tr>
               {% endif %}
             </tbody>
@@ -622,6 +668,104 @@
         <button type="button" class="ag-btn-primary px-5 py-2 d-flex align-items-center gap-2" id="btn-add-voter-submit"
                 {% if managed_election %}data-election-id="{{ managed_election.pk }}"{% endif %}>
           <i class="bi bi-person-plus-fill"></i> Add to Roll
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     MODAL: Add Candidate to Ballot Roster
+     ════════════════════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="addCandidateModal" tabindex="-1" aria-labelledby="addCandidateModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+      <div class="modal-header border-0 pb-0" style="background: linear-gradient(135deg, #4f46e5, #0ea5e9); padding: 24px 28px 20px;">
+        <div>
+          <span class="badge bg-white bg-opacity-25 text-white font-monospace small mb-2">BALLOT ROSTER</span>
+          <h5 class="modal-title fw-bold text-white mb-0" id="addCandidateModalLabel">
+            <i class="bi bi-person-plus-fill me-2"></i>Add Candidate to Ballot
+          </h5>
+          <p class="text-white-50 small mb-0 mt-1">Election: <strong>{% if managed_election %}{{ managed_election.title|truncatechars:40 }}{% endif %}</strong></p>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div id="add-candidate-alert" class="alert d-none small py-2 px-3" role="alert"></div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold" style="color: var(--ag-slate-700);">Candidate Full Name <span class="text-danger">*</span></label>
+          <input type="text" id="candidate-name-input" class="form-control"
+                 placeholder="e.g. Dr. Rajesh Verma"
+                 style="border-color: var(--ag-border);">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold" style="color: var(--ag-slate-700);">Political Party / Affiliation</label>
+          <input type="text" id="candidate-party-input" class="form-control"
+                 placeholder="e.g. United Democratic Front (or Independent)"
+                 style="border-color: var(--ag-border);">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold" style="color: var(--ag-slate-700);">Ballot Position / Candidate ID <span class="text-muted">(optional)</span></label>
+          <input type="number" id="candidate-id-input" min="1" class="form-control font-monospace"
+                 placeholder="Leave blank to auto-assign next number"
+                 style="border-color: var(--ag-border);">
+          <div class="small mt-1" style="color: var(--ag-slate-400);">Unique positive integer matching smart contract index.</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold mb-2" style="color: var(--ag-slate-700);">Party Symbol / Icon</label>
+          <!-- Quick symbol presets -->
+          <div class="d-flex flex-wrap gap-2 mb-2" id="symbol-presets">
+            <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 py-1 px-2"
+                    onclick="selectSymbolPreset('https://img.icons8.com/color/96/lotus.png', 'Lotus')">
+              <img src="https://img.icons8.com/color/96/lotus.png" style="width:16px;height:16px;"> Lotus
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 py-1 px-2"
+                    onclick="selectSymbolPreset('https://img.icons8.com/color/96/hand.png', 'Hand')">
+              <img src="https://img.icons8.com/color/96/hand.png" style="width:16px;height:16px;"> Hand
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 py-1 px-2"
+                    onclick="selectSymbolPreset('https://img.icons8.com/color/96/broom.png', 'Broom')">
+              <img src="https://img.icons8.com/color/96/broom.png" style="width:16px;height:16px;"> Broom
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 py-1 px-2"
+                    onclick="selectSymbolPreset('https://img.icons8.com/color/96/sun.png', 'Sun')">
+              <img src="https://img.icons8.com/color/96/sun.png" style="width:16px;height:16px;"> Sun
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 py-1 px-2"
+                    onclick="selectSymbolPreset('https://img.icons8.com/color/96/scale.png', 'Scales')">
+              <img src="https://img.icons8.com/color/96/scale.png" style="width:16px;height:16px;"> Scales
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 py-1 px-2"
+                    onclick="selectSymbolPreset('https://img.icons8.com/color/96/tree.png', 'Tree')">
+              <img src="https://img.icons8.com/color/96/tree.png" style="width:16px;height:16px;"> Tree
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 py-1 px-2"
+                    onclick="selectSymbolPreset('https://img.icons8.com/color/96/ballot.png', 'NOTA / Ballot')">
+              <img src="https://img.icons8.com/color/96/ballot.png" style="width:16px;height:16px;"> Ballot
+            </button>
+          </div>
+          <input type="url" id="candidate-symbol-input" class="form-control small font-monospace"
+                 placeholder="Custom Image URL or select a preset above"
+                 style="border-color: var(--ag-border); font-size: 0.82rem;">
+        </div>
+
+        <div class="p-3 rounded-3" style="background: rgba(79,70,229,0.06); border: 1px solid rgba(79,70,229,0.2);">
+          <div class="d-flex gap-2 small" style="color: var(--ag-slate-700);">
+            <i class="bi bi-shield-lock-fill text-primary flex-shrink-0"></i>
+            <span>Candidates can only be configured in <strong>DRAFT</strong> state. Once the election is started, the candidate roster is locked permanently.</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0 px-4 pb-4 gap-2">
+        <button type="button" class="ag-btn-glass px-4 py-2" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="ag-btn-primary px-5 py-2 d-flex align-items-center gap-2" id="btn-add-candidate-submit"
+                {% if managed_election %}data-election-id="{{ managed_election.pk }}"{% endif %}>
+          <i class="bi bi-person-plus-fill"></i> Add Candidate
         </button>
       </div>
     </div>
@@ -1000,6 +1144,124 @@ document.getElementById('btn-lock-merkle')?.addEventListener('click', async () =
     btn.innerHTML = '<i class="bi bi-shield-lock-fill"></i> Lock Electoral Roll & Commit Root';
   }
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  CANDIDATE MANAGEMENT
+// ═══════════════════════════════════════════════════════════════════════════
+function selectSymbolPreset(url, name) {
+  const symInput = document.getElementById('candidate-symbol-input');
+  if (symInput) symInput.value = url;
+  const partyInput = document.getElementById('candidate-party-input');
+  if (partyInput && !partyInput.value) {
+    if (name === 'Lotus') partyInput.value = 'National Democratic Front';
+    else if (name === 'Hand') partyInput.value = 'United Progressive Alliance';
+    else if (name === 'Broom') partyInput.value = "Federal People's Party";
+    else if (name === 'Sun') partyInput.value = 'Green Democratic Coalition';
+    else if (name === 'NOTA / Ballot') partyInput.value = 'Independent';
+  }
+}
+
+document.getElementById('btn-add-candidate-submit')?.addEventListener('click', async () => {
+  const alertEl = document.getElementById('add-candidate-alert');
+  const elId = document.getElementById('btn-add-candidate-submit').dataset.electionId;
+  const name = document.getElementById('candidate-name-input').value.trim();
+  const party = document.getElementById('candidate-party-input').value.trim();
+  const cidVal = document.getElementById('candidate-id-input').value.trim();
+  const symbolUrl = document.getElementById('candidate-symbol-input').value.trim();
+
+  alertEl.className = 'alert d-none small py-2 px-3';
+
+  if (!name) { showAlert(alertEl, 'danger', 'Candidate name is required.'); return; }
+
+  const btn = document.getElementById('btn-add-candidate-submit');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Adding...';
+
+  try {
+    const payload = { name, party: party || 'Independent', party_symbol_url: symbolUrl };
+    if (cidVal) payload.candidate_id = parseInt(cidVal, 10);
+
+    const res = await fetch(`/api/v1/elections/${elId}/candidates/add/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showAlert(alertEl, 'success', `✅ ${data.message}`);
+      appendCandidateRow(data);
+      const badge = document.getElementById('candidate-count-badge');
+      if (badge) badge.textContent = `${data.total_candidates} configured`;
+      // Clear inputs
+      document.getElementById('candidate-name-input').value = '';
+      document.getElementById('candidate-party-input').value = '';
+      document.getElementById('candidate-id-input').value = '';
+      document.getElementById('candidate-symbol-input').value = '';
+    } else {
+      showAlert(alertEl, 'danger', data.error || 'Failed to add candidate.');
+    }
+  } catch (e) {
+    showAlert(alertEl, 'danger', 'Network error. Please try again.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-person-plus-fill"></i> Add Candidate';
+  }
+});
+
+function appendCandidateRow(data) {
+  const tbody = document.getElementById('candidate-roster-tbody');
+  const emptyRow = document.getElementById('candidate-empty-row');
+  if (emptyRow) emptyRow.remove();
+
+  const tr = document.createElement('tr');
+  tr.id = `cand-row-${data.candidate_id}`;
+  tr.style.cssText = 'border-bottom: 1px solid rgba(226,232,240,0.5);';
+
+  const symbolImg = data.party_symbol_url ?
+    `<img src="${data.party_symbol_url}" alt="Symbol" style="width: 20px; height: 20px; object-fit: contain;" class="me-1 align-text-bottom rounded">` : '';
+
+  tr.innerHTML = `
+    <td class="px-4 py-2 fw-bold" style="color: var(--ag-primary);">#${data.candidate_id}</td>
+    <td class="py-2 fw-semibold" style="color: var(--ag-slate-900);">
+      ${symbolImg}${data.name}
+    </td>
+    <td class="py-2 text-muted">${data.party}</td>
+    <td class="py-2 text-center">
+      <span class="badge font-monospace rounded-pill px-2 py-1" style="background: rgba(79,70,229,0.1); color: var(--ag-primary);" id="cand-votes-${data.candidate_id}">0</span>
+    </td>
+    <td class="px-4 py-2 text-end">
+      <button class="btn btn-sm btn-link text-danger p-0" onclick="removeCandidate(${ELECTION_ID}, ${data.candidate_id}, '${data.name.replace(/'/g, "\\'")}')" title="Remove candidate">
+        <i class="bi bi-trash-fill"></i>
+      </button>
+    </td>
+  `;
+  tbody.appendChild(tr);
+}
+
+async function removeCandidate(elId, candId, name) {
+  if (!confirm(`Remove Candidate '${name}' (#${candId}) from the ballot roster?\n\nThis action cannot be undone.`)) return;
+  try {
+    const res = await fetch(`/api/v1/elections/${elId}/candidates/${candId}/remove/`, {
+      method: 'DELETE',
+      headers: { 'X-CSRFToken': getCsrf() }
+    });
+    const data = await res.json();
+    if (res.ok) {
+      const row = document.getElementById(`cand-row-${candId}`);
+      if (row) {
+        row.style.transition = 'opacity 0.3s';
+        row.style.opacity = '0';
+        setTimeout(() => row.remove(), 300);
+      }
+      const badge = document.getElementById('candidate-count-badge');
+      if (badge) badge.textContent = `${data.total_candidates} configured`;
+    } else {
+      alert(`❌ ${data.error}`);
+    }
+  } catch (e) {
+    alert('Network error. Please try again.');
+  }
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  HELPERS
