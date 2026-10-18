@@ -5,36 +5,44 @@
 {% block meta_description %}Open transparency and independent cryptographic auditing portal for BlockVote India on Polygon Amoy.{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-4 py-2">
+<div class="container-fluid px-3 px-md-4 py-2">
 
   <!-- ══════════════════════════════════════════════════════════════════
-       OPEN-SOURCE PROOF HEADER (MNC Elevated Card)
+       OPEN-SOURCE PROOF HEADER (Antigravity Glass Card)
        ══════════════════════════════════════════════════════════════════ -->
-  <div class="card card-mnc mb-4">
-    <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+  <div class="ag-card mb-4 p-4 p-xl-4.5 position-relative overflow-hidden" style="border-top: 4px solid var(--ag-emerald);">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
       <div>
-        <div class="d-flex align-items-center gap-2 mb-2">
-          <span class="badge bg-success-subtle text-success font-monospace rounded-pill px-3 py-1.5 fw-semibold">
-            <i class="bi bi-patch-check-fill me-1"></i>PUBLIC AUDIT NODE
+        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+          <span class="ag-pill ag-pill-emerald">
+            <i class="bi bi-patch-check-fill"></i>
+            PUBLIC AUDIT NODE
           </span>
-          <span class="badge bg-light text-secondary border rounded-pill px-3 py-1.5 font-monospace">READ-ONLY RPC</span>
+          <span class="ag-pill ag-pill-neutral">
+            <i class="bi bi-broadcast-pin"></i>
+            READ-ONLY RPC • POLYGON AMOY
+          </span>
         </div>
-        <h1 class="h2 fw-bold text-dark tracking-tight mb-1">Independent Auditor Portal</h1>
-        <p class="text-muted small mb-0">Open to every citizen, journalist, and international observer. Zero authentication required.</p>
+        <h1 class="h2 fw-bold mb-1" style="color: var(--ag-slate-900); letter-spacing: -0.03em;">
+          Independent Auditor Portal
+        </h1>
+        <p class="small mb-0" style="color: var(--ag-slate-500);">
+          Certified institutional observer verification suite. Cryptographically gated read-only ledger access.
+        </p>
       </div>
 
       <!-- Contract Address with Direct Polygonscan Explorer Link -->
-      <div class="p-3 bg-light rounded-4 border border-light-subtle font-monospace small">
-        <div class="text-muted small text-uppercase fw-semibold mb-1">Polygon Amoy Verified Contract</div>
+      <div class="p-3 rounded-3 font-monospace small" style="background: rgba(241, 245, 249, 0.7); border: 1px solid var(--ag-border);">
+        <div class="small text-uppercase fw-semibold mb-1" style="color: var(--ag-slate-500); font-size: 0.7rem;">Polygon Amoy Verified Contract</div>
         <div class="d-flex align-items-center gap-2">
-          <a href="https://amoy.polygonscan.com/address/0x3B79d57a96F4B61c9e8D4Fe3B3cbfC465e63836B" target="_blank"
-             class="fw-bold text-primary text-break text-decoration-none d-flex align-items-center gap-1.5">
-            <span>0x3B79d57a96F4B61c9e8D4Fe3B3cbfC465e63836B</span>
+          <a href="https://amoy.polygonscan.com/address/{{ contract_address|default:'0x610178dA211FEF7D417bC0e6FeD39F05609AD788' }}" target="_blank"
+             class="fw-bold text-break text-decoration-none d-flex align-items-center gap-1.5" id="auditor-contract-link" style="color: var(--ag-primary);">
+            <span id="auditor-contract-addr">{{ contract_address|default:"0x610178dA211FEF7D417bC0e6FeD39F05609AD788" }}</span>
             <i class="bi bi-box-arrow-up-right small"></i>
           </a>
         </div>
-        <div class="d-flex items-center gap-2 mt-1.5 text-muted small">
-          <span class="text-success fw-semibold"><i class="bi bi-check-circle-fill me-1"></i>Verified Bytecode</span>
+        <div class="d-flex align-items-center gap-2 mt-1.5 small" style="color: var(--ag-slate-500);">
+          <span class="fw-semibold" style="color: var(--ag-emerald);"><i class="bi bi-check-circle-fill me-1"></i>Verified Bytecode</span>
           <span>•</span>
           <span>Amoy Testnet (80002)</span>
         </div>
@@ -42,87 +50,134 @@
     </div>
   </div>
 
-  <!-- ── Metric Cards Grid (MNC Elevated Cards) ───────────────────────── -->
+  <!-- ── Metric Cards Grid (Antigravity Bento Cards) ───────────────────── -->
   <div class="row g-3 mb-4">
     <div class="col-sm-6 col-lg-3">
-      <div class="card card-mnc p-4 h-100">
-        <div class="d-flex justify-content-between align-items-center text-muted small font-monospace text-uppercase mb-2">
+      <div class="ag-card p-4 h-100 position-relative overflow-hidden">
+        <div class="d-flex justify-content-between align-items-center small font-monospace text-uppercase mb-2" style="color: var(--ag-slate-500);">
           <span class="fw-semibold">Spent Nullifiers</span>
-          <div class="bg-primary-subtle text-primary rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+          <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background: rgba(79, 70, 229, 0.1); color: var(--ag-primary);">
             <i class="bi bi-fingerprint fs-6"></i>
           </div>
         </div>
-        <div class="h3 fw-bold text-dark font-monospace mb-1">{{ spent_nullifiers|default:"612" }}</div>
-        <div class="text-muted small">Recorded Anonymous Ballots</div>
+        <div class="h3 fw-bold font-monospace mb-1" id="metric-spent-nullifiers" style="color: var(--ag-slate-900);">{{ spent_nullifiers|default:"0" }}</div>
+        <div class="small" style="color: var(--ag-slate-500);">Recorded Anonymous Ballots</div>
       </div>
     </div>
 
     <div class="col-sm-6 col-lg-3">
-      <div class="card card-mnc p-4 h-100">
-        <div class="d-flex justify-content-between align-items-center text-muted small font-monospace text-uppercase mb-2">
+      <div class="ag-card p-4 h-100 position-relative overflow-hidden">
+        <div class="d-flex justify-content-between align-items-center small font-monospace text-uppercase mb-2" style="color: var(--ag-slate-500);">
           <span class="fw-semibold">Electoral Roll Size</span>
-          <div class="bg-info-subtle text-info rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+          <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background: rgba(14, 165, 233, 0.1); color: var(--ag-sky);">
             <i class="bi bi-file-earmark-lock-fill fs-6"></i>
           </div>
         </div>
-        <div class="h3 fw-bold text-dark font-monospace mb-1">{{ voter_count|default:"1,840" }}</div>
-        <div class="text-muted small">Sealed Merkle Leaves</div>
+        <div class="h3 fw-bold font-monospace mb-1" id="metric-voter-count" style="color: var(--ag-slate-900);">{{ voter_count|default:"0" }}</div>
+        <div class="small" style="color: var(--ag-slate-500);">Sealed Merkle Leaves</div>
       </div>
     </div>
 
     <div class="col-sm-6 col-lg-3">
-      <div class="card card-mnc p-4 h-100">
-        <div class="d-flex justify-content-between align-items-center text-muted small font-monospace text-uppercase mb-2">
+      <div class="ag-card p-4 h-100 position-relative overflow-hidden">
+        <div class="d-flex justify-content-between align-items-center small font-monospace text-uppercase mb-2" style="color: var(--ag-slate-500);">
           <span class="fw-semibold">Current Block</span>
-          <div class="bg-secondary-subtle text-secondary rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+          <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background: rgba(100, 116, 139, 0.1); color: var(--ag-slate-700);">
             <i class="bi bi-cubes fs-6"></i>
           </div>
         </div>
-        <div class="h3 fw-bold text-primary font-monospace mb-1" id="current-block-height">#1,492,040</div>
-        <div class="text-muted small">Polygon Amoy Stream</div>
+        <div class="h3 fw-bold font-monospace mb-1" id="current-block-height" style="color: var(--ag-primary);">#{{ latest_block|default:"1,492,040" }}</div>
+        <div class="small" style="color: var(--ag-slate-500);">Polygon Amoy Stream</div>
       </div>
     </div>
 
     <div class="col-sm-6 col-lg-3">
-      <div class="card card-mnc p-4 h-100">
-        <div class="d-flex justify-content-between align-items-center text-muted small font-monospace text-uppercase mb-2">
+      <div class="ag-card p-4 h-100 position-relative overflow-hidden">
+        <div class="d-flex justify-content-between align-items-center small font-monospace text-uppercase mb-2" style="color: var(--ag-slate-500);">
           <span class="fw-semibold">Integrity Score</span>
-          <div class="bg-success-subtle text-success rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+          <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background: rgba(16, 185, 129, 0.1); color: var(--ag-emerald);">
             <i class="bi bi-shield-check fs-6"></i>
           </div>
         </div>
-        <div class="h3 fw-bold text-success font-monospace mb-1">100% PASS</div>
-        <div class="text-muted small">0 Nullifier Collisions</div>
+        {% if nullifier_collisions == 0 %}
+        <div class="h3 fw-bold font-monospace mb-1" id="integrity-score-metric" style="color: var(--ag-emerald);">100% PASS</div>
+        <div class="small" id="integrity-collision-text" style="color: var(--ag-slate-500);">0 Nullifier Collisions</div>
+        {% else %}
+        <div class="h3 fw-bold font-monospace mb-1" id="integrity-score-metric" style="color: var(--ag-rose);">{{ nullifier_collisions }} COLLISION</div>
+        <div class="small fw-semibold" id="integrity-collision-text" style="color: var(--ag-rose);">Anti-Replay Violation</div>
+        {% endif %}
       </div>
     </div>
   </div>
 
+  <!-- ── Candidate Tallies Overview (Real-Time Dynamic Tallies) ────────── -->
+  {% if candidates %}
+  <div class="ag-card mb-4 p-4 p-xl-4.5 position-relative overflow-hidden" style="border-top: 4px solid var(--ag-primary);">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <span class="ag-pill ag-pill-primary" style="font-size: 0.7rem; padding: 2px 8px;">
+          BALLOT CONSERVATION & TALLIES
+        </span>
+        <h3 class="h5 fw-bold mb-0 mt-2" style="color: var(--ag-slate-900);">
+          <i class="bi bi-bar-chart-line-fill text-primary me-2"></i>Live On-Chain Candidate Tallies
+        </h3>
+      </div>
+      <span class="ag-pill ag-pill-emerald">Sum: 100% Conserved</span>
+    </div>
+    <div>
+      <div class="row g-3">
+        {% for c in candidates %}
+        <div class="col-12 col-md-4">
+          <div class="p-3.5 rounded-3" style="background: rgba(248, 250, 252, 0.85); border: 1px solid var(--ag-border);">
+            <div class="d-flex justify-content-between align-items-center mb-1.5">
+              <span class="fw-bold" style="color: var(--ag-slate-900);">{{ c.name }}</span>
+              <span class="badge font-monospace rounded-pill px-2.5 py-1" style="background: rgba(79, 70, 229, 0.1); color: var(--ag-primary);">#{{ c.candidate_id }}</span>
+            </div>
+            <div class="small font-monospace mb-2.5" style="color: var(--ag-slate-500); font-size: 0.75rem;">{{ c.party|default:"Independent" }}</div>
+            <div class="d-flex justify-content-between font-monospace small mb-1.5">
+              <span style="color: var(--ag-slate-500);">Tallied Ballots:</span>
+              <span class="fw-bold font-monospace" id="tally-cand-{{ c.candidate_id }}" style="color: var(--ag-slate-900);">{{ c.vote_count }}</span>
+            </div>
+            <div class="progress rounded-pill" style="height: 8px; background: rgba(226, 232, 240, 0.8);">
+              <div class="progress-bar rounded-pill" role="progressbar" style="width: {{ c.vote_pct|default:'0' }}%; background: linear-gradient(90deg, #4f46e5, #0ea5e9);"></div>
+            </div>
+            <div class="text-end small font-monospace mt-1.5" style="font-size: 0.75rem; color: var(--ag-slate-500);">{{ c.vote_pct|default:"0" }}% of ballots</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   <!-- ══════════════════════════════════════════════════════════════════
        INDEPENDENT AUDIT ENGINE & VERIFY INTEGRITY ACTION
        ══════════════════════════════════════════════════════════════════ -->
-  <div class="card card-mnc mb-4">
+  <div class="ag-card mb-4 p-4 p-xl-4.5 position-relative overflow-hidden" style="border-top: 4px solid var(--ag-emerald);">
     
     <!-- Card Header -->
-    <div class="card-header bg-white border-0 pt-4 pb-2 px-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
       <div>
-        <span class="text-success font-monospace small fw-bold text-uppercase" style="font-size: 0.72rem;">MATHEMATICAL PROOF PIPELINE</span>
-        <h2 class="h5 fw-bold text-dark mb-0 mt-0.5">
+        <span class="ag-pill ag-pill-emerald" style="font-size: 0.7rem; padding: 2px 8px;">
+          MATHEMATICAL PROOF PIPELINE
+        </span>
+        <h2 class="h5 fw-bold mb-0 mt-2" style="color: var(--ag-slate-900);">
           <i class="bi bi-shield-check text-success me-2"></i>Client-Side Mathematical Audit Engine
         </h2>
       </div>
 
-      <button type="button" id="btn-run-audit" class="btn btn-primary btn-lg rounded-3 fw-semibold shadow-sm px-4 py-2.5 d-flex align-items-center gap-2">
+      <button type="button" id="btn-run-audit" class="ag-btn-primary px-4 py-2.5 d-flex align-items-center gap-2" style="background: linear-gradient(135deg, #10b981, #059669);">
         <i class="bi bi-play-circle-fill"></i>
         <span>Verify Election Integrity</span>
       </button>
     </div>
 
-    <div class="card-body p-4">
-      <p class="text-muted small leading-relaxed mb-4">
+    <div>
+      <p class="small mb-4" style="color: var(--ag-slate-500); line-height: 1.6;">
         Clicking <strong>Verify Election Integrity</strong> triggers a client-side execution script that downloads the public Merkle Root and spent Nullifier sets directly from the Polygon Amoy blockchain. The tool validates that every ballot proof respects zero-knowledge constraints and that no citizen has voted more than once.
       </p>
 
-      <!-- Audit Results Panel (Injected dynamically with prominent System Integrity: Verified banner) -->
+      <!-- Audit Results Panel -->
       <div id="audit-results-panel" class="hidden"></div>
     </div>
 
@@ -131,23 +186,25 @@
   <!-- ══════════════════════════════════════════════════════════════════
        LIVE MEMPOOL STREAM: Enterprise Data Table
        ══════════════════════════════════════════════════════════════════ -->
-  <div class="card card-mnc mb-4">
+  <div class="ag-card mb-4 overflow-hidden position-relative">
     
-    <div class="card-header bg-white border-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center">
+    <div class="p-4 pb-2 d-flex justify-content-between align-items-center">
       <div>
-        <span class="text-primary font-monospace small fw-bold text-uppercase" style="font-size: 0.72rem;">ON-CHAIN TRANSACTIONS</span>
-        <h3 class="h5 fw-bold text-dark mb-0 mt-0.5">
+        <span class="ag-pill ag-pill-primary" style="font-size: 0.7rem; padding: 2px 8px;">
+          ON-CHAIN TRANSACTIONS
+        </span>
+        <h3 class="h5 fw-bold mb-0 mt-2" style="color: var(--ag-slate-900);">
           <i class="bi bi-hdd-network text-primary me-2"></i>Live Polygon Amoy Mempool Stream
         </h3>
       </div>
-      <span class="badge bg-light text-secondary font-monospace border rounded-pill px-3 py-1.5">RPC: Direct Amoy Node</span>
+      <span class="ag-pill ag-pill-neutral">RPC: Direct Amoy Node</span>
     </div>
 
-    <div class="card-body p-0">
+    <div>
       <div class="table-responsive" style="max-height: 440px; overflow-y: auto;">
         <table class="table table-hover table-borderless align-middle mb-0 font-monospace small">
-          <thead class="sticky-top table-light text-secondary small text-uppercase">
-            <tr class="border-bottom">
+          <thead class="sticky-top small text-uppercase" style="background: rgba(241, 245, 249, 0.95); backdrop-filter: blur(8px); border-bottom: 1px solid var(--ag-border); color: var(--ag-slate-600);">
+            <tr>
               <th class="px-4 py-3">Transaction Hash</th>
               <th class="px-4 py-3">Block #</th>
               <th class="px-4 py-3">Cryptographic Nullifier</th>
@@ -156,16 +213,39 @@
               <th class="px-4 py-3">Status</th>
             </tr>
           </thead>
-          <tbody id="mempool-table-body" class="table-group-divider">
-            <!-- Populated dynamically via auditor_mempool.js -->
+          <tbody id="mempool-table-body">
+            {% if recent_ballots %}
+              {% for b in recent_ballots %}
+              <tr class="font-monospace small" style="border-bottom: 1px solid rgba(226, 232, 240, 0.5);">
+                <td class="px-4 py-2.5">
+                  <a href="https://amoy.polygonscan.com/tx/{{ b.transaction_hash }}" target="_blank" class="fw-semibold text-decoration-none" style="color: var(--ag-primary);">
+                    {{ b.transaction_hash|slice:":10" }}...{{ b.transaction_hash|slice:"-8:" }}
+                  </a>
+                </td>
+                <td class="px-4 py-2.5 text-secondary">#{{ b.block_number }}</td>
+                <td class="px-4 py-2.5 fw-bold text-truncate" style="max-width: 140px; color: var(--ag-slate-900);">{{ b.nullifier|slice:":12" }}...</td>
+                <td class="px-4 py-2.5 text-muted">{{ b.gas_used }} wei</td>
+                <td class="px-4 py-2.5 text-muted">{{ b.timestamp|time:"H:i:s" }}</td>
+                <td class="px-4 py-2.5">
+                  <span class="ag-pill ag-pill-emerald" style="font-size: 0.68rem; padding: 1px 6px;">
+                    <i class="bi bi-check-circle-fill"></i>Confirmed
+                  </span>
+                </td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr id="mempool-empty-row" class="text-center font-monospace text-muted small">
+                <td colspan="6" class="py-4">No on-chain ballots recorded yet. Stream listening on Polygon node...</td>
+              </tr>
+            {% endif %}
           </tbody>
         </table>
       </div>
     </div>
 
-    <div class="card-footer bg-white border-top py-3 px-4 d-flex justify-content-between font-monospace small text-muted">
+    <div class="py-3 px-4 d-flex justify-content-between font-monospace small" style="border-top: 1px solid var(--ag-border); color: var(--ag-slate-500); background: rgba(248, 250, 252, 0.5);">
       <span>Zero Raw Voter Identifiers Recorded</span>
-      <span class="text-primary fw-semibold"><i class="bi bi-broadcast text-success me-1"></i>Real-Time Event Stream</span>
+      <span class="fw-semibold" style="color: var(--ag-primary);"><i class="bi bi-broadcast text-success me-1"></i>Real-Time Event Stream</span>
     </div>
 
   </div>

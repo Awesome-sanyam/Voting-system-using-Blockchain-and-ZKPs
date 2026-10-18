@@ -2,209 +2,492 @@
 {% load static %}
 
 {% block title %}Voter Authentication & Identity Gateway — BlockVote India{% endblock %}
-{% block meta_description %}Authenticate or register your citizen identity using the API Setu KYC Sandbox simulation.{% endblock %}
+{% block meta_description %}Authenticate or register your citizen identity using the API Setu KYC Sandbox simulation with dynamic OTP verification.{% endblock %}
 
 {% block content %}
-<div class="container py-5">
+<div class="container py-4 py-md-5" style="margin-top: 1rem;">
   <div class="row justify-content-center">
     <div class="col-12 col-md-8 col-lg-6">
 
-      <!-- ── Breadcrumb / Back ─────────────────────────────────────────── -->
+      <!-- Breadcrumb -->
       <div class="mb-3">
-        <a href="/" class="text-decoration-none text-muted small font-monospace">
+        <a href="/" class="text-decoration-none text-muted small font-monospace d-inline-flex align-items-center ag-nav-link px-2 py-1">
           <i class="bi bi-arrow-left me-1"></i>Back to Operational Hub
         </a>
       </div>
 
-      <!-- ── Authentication Card ───────────────────────────────────────── -->
-      <div class="card card-mnc border-start border-primary border-4">
-        
-        <!-- Header -->
-        <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="badge bg-primary-subtle text-primary font-monospace text-uppercase">Voter Gateway</span>
-            <span class="badge bg-light text-secondary font-monospace border">ECI Sandbox</span>
-          </div>
-          <h1 class="h4 fw-bold text-dark mb-1">Citizen Identity Verification</h1>
-          <p class="text-muted small mb-3">
-            Mathematical zero-knowledge voter whitelisting. Identity hashes are salted locally before entering the Merkle roll.
-          </p>
+      <!-- Auth Card -->
+      <div class="ag-card p-4 p-md-5" style="border-top: 4px solid #4f46e5 !important;">
 
-          <!-- Tab Navigation -->
-          <ul class="nav nav-pills nav-fill bg-light p-1 rounded font-monospace small mb-2" id="voterAuthTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-              <button class="nav-link rounded py-2 {% if active_tab != 'register' %}active fw-semibold{% endif %}" id="login-tab" data-bs-toggle="pill" data-bs-target="#login-panel" type="button" role="tab" aria-controls="login-panel" aria-selected="{% if active_tab != 'register' %}true{% else %}false{% endif %}">
-                <i class="bi bi-box-arrow-in-right me-1"></i>Voter OTP Login
+        <!-- Header -->
+        <div class="mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="ag-pill ag-pill-primary">VOTER GATEWAY</span>
+            <span class="ag-pill">
+              <span class="ag-pulse-dot bg-success me-1"></span>
+              ECI Identity Gateway
+            </span>
+          </div>
+          <h1 class="h3 fw-bold text-dark tracking-tight mb-1">Citizen Identity Verification</h1>
+          <p class="text-muted small mb-0" style="line-height: 1.5;">
+            Mathematical zero-knowledge voter whitelisting. OTP verified before session begins.
+          </p>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="p-1 rounded-pill mb-4 border d-flex" style="background: rgba(241, 245, 249, 0.8);">
+          <ul class="nav nav-pills w-100 font-monospace small" id="voterAuthTabs" role="tablist">
+            <li class="nav-item flex-fill text-center" role="presentation">
+              <button class="nav-link w-100 rounded-pill py-2 {% if active_tab != 'register' %}active fw-semibold shadow-xs{% endif %}"
+                      id="login-tab" data-bs-toggle="pill" data-bs-target="#login-panel" type="button" role="tab">
+                <i class="bi bi-shield-lock me-1"></i>Voter OTP Login
               </button>
             </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link rounded py-2 {% if active_tab == 'register' %}active fw-semibold{% endif %}" id="register-tab" data-bs-toggle="pill" data-bs-target="#register-panel" type="button" role="tab" aria-controls="register-panel" aria-selected="{% if active_tab == 'register' %}true{% else %}false{% endif %}">
+            <li class="nav-item flex-fill text-center" role="presentation">
+              <button class="nav-link w-100 rounded-pill py-2 {% if active_tab == 'register' %}active fw-semibold shadow-xs{% endif %}"
+                      id="register-tab" data-bs-toggle="pill" data-bs-target="#register-panel" type="button" role="tab">
                 <i class="bi bi-person-plus me-1"></i>Register (API Setu)
               </button>
             </li>
           </ul>
         </div>
 
-        <!-- Body -->
-        <div class="card-body p-4 pt-2">
-          
-          <div class="tab-content" id="voterAuthTabContent">
+        <div class="tab-content" id="voterAuthTabContent">
 
-            <!-- ════════════════════════════════════════════════════════════
-                 TAB 1: OTP LOGIN
-                 ════════════════════════════════════════════════════════════ -->
-            <div class="tab-pane fade {% if active_tab != 'register' %}show active{% endif %}" id="login-panel" role="tabpanel" aria-labelledby="login-tab">
-              <form method="POST" action="/auth/voter/" id="form-voter-login" class="d-flex flex-column gap-3 mt-2">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="login">
-                <input type="hidden" name="next" value="{{ next }}">
+          <!-- ── TAB 1: OTP LOGIN ──────────────────────────────────────────── -->
+          <div class="tab-pane fade {% if active_tab != 'register' %}show active{% endif %}" id="login-panel" role="tabpanel">
 
-                <!-- EPIC Input -->
-                <div>
-                  <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="login-epic">
-                    EPIC Voter ID
-                  </label>
-                  <input type="text" id="login-epic" name="epic_number" maxlength="10" placeholder="e.g. IND1234567" value="IND1234567"
-                         class="form-control font-monospace text-uppercase" required />
-                  <div class="form-text small font-monospace text-muted" id="login-epic-feedback">
-                    Standard 10-character Electoral Photo Identity Card number.
-                  </div>
+            <!-- OTP Security Notice Banner (hidden until OTP sent) -->
+            <div id="otp-sandbox-banner" class="d-none mb-3 p-3 rounded-4 border font-monospace small" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.35) !important;">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-shield-check text-success fs-6"></i>
+                  <span class="fw-semibold text-success" id="otp-banner-title">Security OTP Dispatched</span>
                 </div>
-
-                <!-- Mobile Input -->
-                <div>
-                  <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="login-mobile">
-                    Registered Mobile Number
-                  </label>
-                  <div class="input-group">
-                    <span class="input-group-text bg-light font-monospace small text-muted">+91</span>
-                    <input type="tel" id="login-mobile" name="phone_number" maxlength="10" placeholder="9876543210" value="9876543210"
-                           class="form-control font-monospace" required />
-                  </div>
-                </div>
-
-                <!-- OTP Input with Sandbox Hint -->
-                <div>
-                  <div class="d-flex justify-content-between align-items-center mb-1">
-                    <label class="form-label fw-bold small text-secondary text-uppercase mb-0" for="login-otp">
-                      6-Digit Security OTP
-                    </label>
-                    <span class="badge bg-info-subtle text-info font-monospace small">Sandbox Code: 749201</span>
-                  </div>
-                  <input type="text" id="login-otp" name="otp" maxlength="6" placeholder="749201" value="749201"
-                         class="form-control font-monospace fw-bold fs-5 text-center letter-spacing-2" required />
-                </div>
-
-                <button type="submit" class="btn btn-primary btn-lg rounded-3 fw-semibold shadow-sm w-100 py-3 mt-2 d-flex align-items-center justify-content-center gap-2">
-                  <i class="bi bi-shield-check"></i>
-                  <span>Validate OTP & Enter Terminal</span>
-                </button>
-              </form>
+                <span class="badge bg-warning text-dark rounded-pill ms-auto" id="otp-expiry-badge" style="font-size:0.7rem;">10:00</span>
+              </div>
+              <div class="text-secondary small" id="otp-dispatch-msg" style="line-height: 1.45;">
+                <i class="bi bi-phone me-1 text-primary"></i>A 6-digit verification code has been dispatched via SMS. Please check your mobile messages and enter the code below.
+              </div>
             </div>
 
-            <!-- ════════════════════════════════════════════════════════════
-                 TAB 2: REGISTER VIA API SETU
-                 ════════════════════════════════════════════════════════════ -->
-            <div class="tab-pane fade {% if active_tab == 'register' %}show active{% endif %}" id="register-panel" role="tabpanel" aria-labelledby="register-tab">
-              <form method="POST" action="/auth/voter/" id="form-voter-register" class="d-flex flex-column gap-3 mt-2">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="register">
-                <input type="hidden" name="next" value="{{ next }}">
+            <form method="POST" action="/auth/voter/" id="form-voter-login" class="d-flex flex-column gap-3">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="login">
+              <input type="hidden" name="next" value="{{ next }}">
 
-                <div class="alert alert-light border small font-monospace text-muted mb-0 py-2 px-3">
-                  <i class="bi bi-info-circle-fill text-primary me-1"></i>
-                  Simulates government KYC query via API Setu to verify eligibility (>18 years).
+              <!-- EPIC Input -->
+              <div>
+                <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="login-epic">EPIC Voter ID Number</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-white border-end-0 text-muted rounded-start-3"><i class="bi bi-person-badge"></i></span>
+                  <input type="text" id="login-epic" name="epic_number" maxlength="10" placeholder="Enter 10-character EPIC ID"
+                         value="{{ request.GET.epic|default:'' }}"
+                         class="form-control ag-input font-monospace text-uppercase" autocomplete="off" required />
                 </div>
+                <div class="form-text small font-monospace text-muted mt-1">10-character Electoral Photo Identity Card number.</div>
+              </div>
 
-                <!-- Registration EPIC Input -->
-                <div>
-                  <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="reg-epic">
-                    EPIC Voter ID Number
+              <!-- Mobile Input -->
+              <div>
+                <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="login-mobile">Registered Mobile Number</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-white border-end-0 text-muted font-monospace small rounded-start-3">+91</span>
+                  <input type="tel" id="login-mobile" name="phone_number" maxlength="10" placeholder="Enter 10-digit mobile number"
+                         value="{{ request.GET.phone|default:'' }}"
+                         class="form-control ag-input font-monospace" autocomplete="off" required />
+                </div>
+              </div>
+
+              <!-- 6-Digit Security OTP (Always Visible) -->
+              <div id="otp-input-section">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <label class="form-label fw-bold small text-secondary text-uppercase mb-0" for="login-otp">
+                    6-Digit Security OTP
                   </label>
-                  <input type="text" id="reg-epic" name="epic_number" maxlength="10" placeholder="e.g. IND9876543" value="IND9876543"
-                         class="form-control font-monospace text-uppercase" required />
-                  <div id="epic-format-alert" class="small font-monospace mt-1 text-muted">
-                    Format: 3 letters + 7 digits (e.g., <span class="fw-bold">IND9876543</span>).
-                  </div>
+                  <span class="font-monospace small text-muted d-none" id="otp-timer-container">
+                    Expires: <span id="otp-timer-inline" class="text-success fw-bold">10:00</span>
+                  </span>
                 </div>
-
-                <!-- Registration Mobile Input -->
-                <div>
-                  <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="reg-mobile">
-                    Aadhaar-Linked Mobile Number
-                  </label>
-                  <div class="input-group">
-                    <span class="input-group-text bg-light font-monospace small text-muted">+91</span>
-                    <input type="tel" id="reg-mobile" name="phone_number" maxlength="10" placeholder="9876543211" value="9876543211"
-                           class="form-control font-monospace" required />
-                  </div>
+                <div class="input-group">
+                  <span class="input-group-text bg-white border-end-0 text-muted rounded-start-3"><i class="bi bi-shield-lock"></i></span>
+                  <input type="text" id="login-otp" name="otp" maxlength="6" placeholder="Enter 6-digit OTP"
+                         class="form-control ag-input ag-otp-input font-monospace text-center fs-5 fw-bold" 
+                         autocomplete="one-time-code" required />
+                  <button type="button" id="btn-send-otp" class="btn font-monospace px-3 fw-semibold rounded-end-3"
+                          style="background: rgba(79,70,229,0.1); border: 1.5px solid rgba(79,70,229,0.35); color:#4f46e5;">
+                    <i class="bi bi-send me-1"></i><span>Send OTP</span>
+                  </button>
                 </div>
+                <div class="form-text small font-monospace text-muted mt-1" id="login-otp-helper">
+                  <i class="bi bi-info-circle me-1"></i>Enter EPIC and Mobile, then click <strong>Send OTP</strong>.
+                </div>
+              </div>
 
-                <button type="submit" id="btn-submit-registration" class="btn btn-success btn-lg rounded-3 fw-semibold shadow-sm w-100 py-3 mt-2 d-flex align-items-center justify-content-center gap-2">
-                  <i class="bi bi-person-check-fill"></i>
-                  <span>Register & Whitelist Citizen Hash</span>
-                </button>
-              </form>
+              <!-- Submit Button (Always Visible) -->
+              <button type="submit" id="btn-login-submit" class="ag-btn-primary w-100 py-3 mt-1 shadow-sm">
+                <i class="bi bi-shield-check"></i>
+                <span>Verify Credentials &amp; Enter Terminal</span>
+              </button>
+            </form>
+
+          </div>
+
+          <!-- ── TAB 2: REGISTER ───────────────────────────────────────────── -->
+          <div class="tab-pane fade {% if active_tab == 'register' %}show active{% endif %}" id="register-panel" role="tabpanel">
+
+            <!-- Registration OTP Security Notice Banner (hidden until OTP sent) -->
+            <div id="reg-otp-sandbox-banner" class="d-none mb-3 p-3 rounded-4 border font-monospace small" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.35) !important;">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-shield-check text-success fs-6"></i>
+                  <span class="fw-semibold text-success" id="reg-otp-banner-title">Registration OTP Dispatched</span>
+                </div>
+                <span class="badge bg-warning text-dark rounded-pill ms-auto" id="reg-otp-expiry-badge" style="font-size:0.7rem;">10:00</span>
+              </div>
+              <div class="text-secondary small" id="reg-otp-dispatch-msg" style="line-height: 1.45;">
+                <i class="bi bi-phone me-1 text-primary"></i>A 6-digit verification code has been dispatched via SMS. Please check your mobile messages and enter the code below.
+              </div>
             </div>
 
+            <form method="POST" action="/auth/voter/" id="form-voter-register" class="d-flex flex-column gap-3">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="register">
+              <input type="hidden" name="next" value="{{ next }}">
+
+              <div class="alert alert-info border-0 rounded-4 py-2 px-3 small font-monospace mb-1" style="background: rgba(14, 165, 233, 0.1);">
+                <i class="bi bi-info-circle-fill text-info me-1"></i>
+                <strong>Govt API Setu Simulation:</strong> Validates voter age (≥ 18) and citizenship with mandatory OTP verification before whitelisting on-chain.
+              </div>
+
+              <!-- Full Name -->
+              <div>
+                <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="reg-name">Full Citizen Name (As per Aadhaar/EPIC)</label>
+                <input type="text" id="reg-name" name="full_name" placeholder="Enter full legal citizen name"
+                       class="form-control ag-input font-monospace" required />
+              </div>
+
+              <!-- EPIC Input -->
+              <div>
+                <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="reg-epic">EPIC Voter ID</label>
+                <input type="text" id="reg-epic" name="epic_number" maxlength="10" placeholder="Enter 10-character EPIC ID"
+                       class="form-control ag-input font-monospace text-uppercase" required />
+              </div>
+
+              <!-- Mobile Input -->
+              <div>
+                <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="reg-mobile">Mobile Number</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-white border-end-0 text-muted font-monospace small rounded-start-3">+91</span>
+                  <input type="tel" id="reg-mobile" name="phone_number" maxlength="10" placeholder="Enter 10-digit mobile number"
+                         class="form-control ag-input font-monospace" required />
+                </div>
+              </div>
+
+              <!-- 6-Digit Registration OTP (Always Visible) -->
+              <div id="reg-otp-input-section">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <label class="form-label fw-bold small text-secondary text-uppercase mb-0" for="reg-otp">
+                    6-Digit Mobile Verification OTP
+                  </label>
+                  <span class="font-monospace small text-muted d-none" id="reg-otp-timer-container">
+                    Expires: <span id="reg-otp-timer-inline" class="text-success fw-bold">10:00</span>
+                  </span>
+                </div>
+                <div class="input-group">
+                  <span class="input-group-text bg-white border-end-0 text-muted rounded-start-3"><i class="bi bi-shield-lock"></i></span>
+                  <input type="text" id="reg-otp" name="otp" maxlength="6" placeholder="Enter 6-digit OTP"
+                         class="form-control ag-input ag-otp-input font-monospace text-center fs-5 fw-bold" 
+                         autocomplete="one-time-code" required />
+                  <button type="button" id="btn-reg-send-otp" class="btn font-monospace px-3 fw-semibold rounded-end-3" 
+                          style="background: rgba(14, 165, 233, 0.1); border: 1.5px solid rgba(14, 165, 233, 0.35); color:#0284c7;">
+                    <i class="bi bi-send me-1"></i><span>Send OTP</span>
+                  </button>
+                </div>
+                <div class="form-text small font-monospace text-muted mt-1" id="reg-otp-helper">
+                  <i class="bi bi-info-circle me-1"></i>Click <strong>Send OTP</strong> to generate citizen verification token.
+                </div>
+              </div>
+
+              <!-- Registration Submit Button (Always Visible) -->
+              <button type="submit" id="btn-reg-submit" class="ag-btn-primary w-100 py-3 mt-1 shadow-sm" style="background: linear-gradient(135deg, #0284c7, #0369a1);">
+                <i class="bi bi-patch-check-fill"></i>
+                <span>Verify OTP &amp; Whitelist Citizen Identity</span>
+              </button>
+            </form>
           </div>
 
         </div>
 
-        <!-- Card Footer -->
-        <div class="card-footer bg-light border-top py-3 font-monospace small text-muted text-center">
-          <i class="bi bi-lock-fill me-1"></i>
-          Raw Voter IDs are cryptographically hashed using SHA-256 + Server Salt.
+        <!-- Privacy Footer -->
+        <div class="border-top pt-4 mt-4 text-muted font-monospace small text-center" style="font-size: 0.76rem; line-height: 1.5;">
+          <i class="bi bi-shield-check text-success me-1"></i>Zero-Knowledge Guarantee: Raw citizen identifiers never touch the Polygon ledger.
         </div>
 
       </div>
-
     </div>
   </div>
 </div>
-{% endblock %}
 
-{% block extra_scripts %}
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    // Real-time client-side validation for EPIC format (e.g., 3 letters + 7 numbers)
-    const epicRegex = /^[A-Z]{3}[0-9]{7}$/;
+(function () {
+  'use strict';
 
-    const regEpicInput = document.getElementById('reg-epic');
-    const formatAlert = document.getElementById('epic-format-alert');
-    const submitBtn = document.getElementById('btn-submit-registration');
+  let loginTimerInterval = null;
+  let loginSecondsLeft = 600;
 
-    function validateEpicInput(input, feedbackEl) {
-      if (!input || !feedbackEl) return;
-      const val = input.value.trim().toUpperCase();
-      input.value = val;
+  let regTimerInterval = null;
+  let regSecondsLeft = 600;
 
-      if (val.length === 0) {
-        feedbackEl.className = 'small font-monospace mt-1 text-muted';
-        feedbackEl.textContent = 'Format: 3 letters + 7 digits (e.g., IND9876543).';
-        return true;
+  // Helper: fill login fields from sandbox hint buttons
+  window.fillLoginFields = function(epic, phone) {
+    document.getElementById('login-epic').value = epic;
+    document.getElementById('login-mobile').value = phone;
+  };
+
+  function getCsrfToken() {
+    const input = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (input && input.value) return input.value;
+    return document.cookie.split('; ').find(r => r.startsWith('csrftoken='))?.split('=')[1] || '';
+  }
+
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  // ── Login OTP Timer ────────────────────────────────────────────────────────
+  function startLoginOTPTimer(seconds) {
+    loginSecondsLeft = seconds;
+    if (loginTimerInterval) clearInterval(loginTimerInterval);
+    loginTimerInterval = setInterval(() => {
+      loginSecondsLeft--;
+      const badge = document.getElementById('otp-expiry-badge');
+      const inline = document.getElementById('otp-timer-inline');
+      const fmt = formatTime(Math.max(0, loginSecondsLeft));
+      if (badge) badge.textContent = fmt;
+      if (inline) {
+        inline.textContent = fmt;
+        if (loginSecondsLeft <= 60) {
+          inline.className = 'text-danger fw-bold';
+          if (badge) badge.className = 'badge bg-danger text-white rounded-pill ms-auto';
+        }
       }
-
-      if (epicRegex.test(val)) {
-        feedbackEl.className = 'small font-monospace mt-1 text-success fw-semibold';
-        feedbackEl.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Valid EPIC Identifier Format';
-        return true;
-      } else {
-        feedbackEl.className = 'small font-monospace mt-1 text-danger';
-        feedbackEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i>Invalid format: Expecting 3 uppercase letters followed by 7 digits';
-        return false;
+      if (loginSecondsLeft <= 0) {
+        clearInterval(loginTimerInterval);
+        document.getElementById('otp-timer-container')?.classList.add('d-none');
+        const helper = document.getElementById('login-otp-helper');
+        if (helper) helper.innerHTML = '<span class="text-danger"><i class="bi bi-x-octagon-fill me-1"></i>OTP expired. Click <strong>Send OTP</strong> for a fresh code.</span>';
+        document.getElementById('otp-sandbox-banner').innerHTML = `
+          <div class="d-flex align-items-center gap-2 text-danger">
+            <i class="bi bi-x-octagon-fill"></i>
+            <strong>OTP Expired.</strong>
+            <span class="text-muted">Click "Send OTP" again for a fresh code.</span>
+          </div>`;
       }
+    }, 1000);
+  }
+
+  // ── Registration OTP Timer ─────────────────────────────────────────────────
+  function startRegOTPTimer(seconds) {
+    regSecondsLeft = seconds;
+    if (regTimerInterval) clearInterval(regTimerInterval);
+    regTimerInterval = setInterval(() => {
+      regSecondsLeft--;
+      const badge = document.getElementById('reg-otp-expiry-badge');
+      const inline = document.getElementById('reg-otp-timer-inline');
+      const fmt = formatTime(Math.max(0, regSecondsLeft));
+      if (badge) badge.textContent = fmt;
+      if (inline) {
+        inline.textContent = fmt;
+        if (regSecondsLeft <= 60) {
+          inline.className = 'text-danger fw-bold';
+          if (badge) badge.className = 'badge bg-danger text-white rounded-pill ms-auto';
+        }
+      }
+      if (regSecondsLeft <= 0) {
+        clearInterval(regTimerInterval);
+        document.getElementById('reg-otp-timer-container')?.classList.add('d-none');
+        const helper = document.getElementById('reg-otp-helper');
+        if (helper) helper.innerHTML = '<span class="text-danger"><i class="bi bi-x-octagon-fill me-1"></i>OTP expired. Click <strong>Send OTP</strong> for a fresh code.</span>';
+        document.getElementById('reg-otp-sandbox-banner').innerHTML = `
+          <div class="d-flex align-items-center gap-2 text-danger">
+            <i class="bi bi-x-octagon-fill"></i>
+            <strong>OTP Expired.</strong>
+            <span class="text-muted">Click "Send OTP" again for a fresh code.</span>
+          </div>`;
+      }
+    }, 1000);
+  }
+
+  // ── Dispatch Login OTP ─────────────────────────────────────────────────────
+  function sendLoginOTP() {
+    const epic = document.getElementById('login-epic').value.trim().toUpperCase();
+    const phone = document.getElementById('login-mobile').value.trim();
+    const btn = document.getElementById('btn-send-otp');
+
+    if (!epic || epic.length < 7) {
+      alert('Please enter a valid EPIC Voter ID (minimum 7 characters).');
+      document.getElementById('login-epic').focus();
+      return;
+    }
+    if (!phone || phone.length < 10) {
+      alert('Please enter a valid 10-digit mobile number.');
+      document.getElementById('login-mobile').focus();
+      return;
     }
 
-    regEpicInput?.addEventListener('input', () => {
-      validateEpicInput(regEpicInput, formatAlert);
-    });
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span><span>Sending...</span>';
 
-    const loginEpicInput = document.getElementById('login-epic');
-    const loginFeedback = document.getElementById('login-epic-feedback');
-    loginEpicInput?.addEventListener('input', () => {
-      validateEpicInput(loginEpicInput, loginFeedback);
+    fetch('/api/v1/send-otp/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCsrfToken()
+      },
+      body: JSON.stringify({ epic_number: epic, phone_number: phone }),
+      credentials: 'same-origin'
+    })
+    .then(r => r.json())
+    .then(data => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i><span>Resend OTP</span>';
+
+      if (data.status === 'sent') {
+        const banner = document.getElementById('otp-sandbox-banner');
+        banner.classList.remove('d-none');
+        const titleEl = document.getElementById('otp-banner-title');
+        if (titleEl) {
+          titleEl.textContent = data.sms_dispatched ? 'Live SMS OTP Dispatched' : 'Security OTP Dispatched';
+        }
+        document.getElementById('otp-dispatch-msg').textContent = data.message || 'Verification code sent to your registered mobile.';
+
+        document.getElementById('otp-timer-container')?.classList.remove('d-none');
+        const helper = document.getElementById('login-otp-helper');
+        if (helper) {
+          helper.innerHTML = '<span class="text-success fw-semibold"><i class="bi bi-check-circle me-1"></i>OTP sent to mobile! Enter 6 digits and click Verify Credentials.</span>';
+        }
+        document.getElementById('login-otp').focus();
+
+        startLoginOTPTimer(data.expires_in_seconds || 600);
+      } else {
+        alert('Error: ' + (data.error || 'Failed to send OTP. Please try again.'));
+      }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-send me-1"></i><span>Send OTP</span>';
+      alert('Network error. Is the server running?\n' + err.message);
     });
+  }
+
+  // ── Dispatch Registration OTP ──────────────────────────────────────────────
+  function sendRegOTP() {
+    const epic = document.getElementById('reg-epic').value.trim().toUpperCase();
+    const phone = document.getElementById('reg-mobile').value.trim();
+    const name = document.getElementById('reg-name').value.trim();
+    const btn = document.getElementById('btn-reg-send-otp');
+
+    if (!name) {
+      alert('Please enter your full citizen name as per Aadhaar/EPIC.');
+      document.getElementById('reg-name').focus();
+      return;
+    }
+    if (!epic || epic.length < 7) {
+      alert('Please enter a valid EPIC Voter ID (minimum 7 characters, e.g. IND1234567).');
+      document.getElementById('reg-epic').focus();
+      return;
+    }
+    if (!phone || phone.length < 10) {
+      alert('Please enter a valid 10-digit mobile number.');
+      document.getElementById('reg-mobile').focus();
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span><span>Sending...</span>';
+
+    fetch('/api/v1/send-otp/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCsrfToken()
+      },
+      body: JSON.stringify({ epic_number: epic, phone_number: phone }),
+      credentials: 'same-origin'
+    })
+    .then(r => r.json())
+    .then(data => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i><span>Resend OTP</span>';
+
+      if (data.status === 'sent') {
+        const banner = document.getElementById('reg-otp-sandbox-banner');
+        banner.classList.remove('d-none');
+        const titleEl = document.getElementById('reg-otp-banner-title');
+        if (titleEl) {
+          titleEl.textContent = data.sms_dispatched ? 'Live SMS Registration OTP Dispatched' : 'Registration OTP Dispatched';
+        }
+        document.getElementById('reg-otp-dispatch-msg').textContent = data.message || 'Verification code sent to your registered mobile.';
+
+        document.getElementById('reg-otp-timer-container')?.classList.remove('d-none');
+        const helper = document.getElementById('reg-otp-helper');
+        if (helper) {
+          helper.innerHTML = '<span class="text-success fw-semibold"><i class="bi bi-check-circle me-1"></i>Verification OTP sent! Check your SMS and enter 6 digits.</span>';
+        }
+        document.getElementById('reg-otp').focus();
+
+        startRegOTPTimer(data.expires_in_seconds || 600);
+      } else {
+        alert('Error: ' + (data.error || 'Failed to dispatch verification OTP.'));
+      }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-send me-1"></i><span>Send OTP</span>';
+      alert('Network error: ' + err.message);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Login handlers
+    const sendBtn = document.getElementById('btn-send-otp');
+    if (sendBtn) sendBtn.addEventListener('click', sendLoginOTP);
+
+    const resendLink = document.getElementById('resend-otp-link');
+    if (resendLink) resendLink.addEventListener('click', e => { e.preventDefault(); sendLoginOTP(); });
+
+    // Registration handlers
+    const regSendBtn = document.getElementById('btn-reg-send-otp');
+    if (regSendBtn) regSendBtn.addEventListener('click', sendRegOTP);
+
+    const regResendLink = document.getElementById('reg-resend-otp-link');
+    if (regResendLink) regResendLink.addEventListener('click', e => { e.preventDefault(); sendRegOTP(); });
+
+    // Auto-switch tab if requested in query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam === 'register') {
+      const regTab = document.getElementById('register-tab');
+      if (regTab && typeof bootstrap !== 'undefined') {
+        new bootstrap.Tab(regTab).show();
+      }
+    } else if (tabParam === 'login') {
+      const loginTab = document.getElementById('login-tab');
+      if (loginTab && typeof bootstrap !== 'undefined') {
+        new bootstrap.Tab(loginTab).show();
+      }
+    }
   });
+})();
 </script>
+
+<style>
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+</style>
 {% endblock %}

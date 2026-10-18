@@ -16,172 +16,117 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
+  <!-- ── Antigravity Light Theme Design System ──────────────────────────── -->
+  <link rel="stylesheet" href="{% static 'api/css/antigravity.css' %}">
+
   <!-- ── SnarkJS Groth16 In-Browser Prover & QRCode Library ────────────── -->
   <script src="https://cdn.jsdelivr.net/npm/snarkjs@0.7.4/build/snarkjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-  <!-- ── MNC Enterprise Design System Overrides ────────────────────────── -->
+  <!-- ── Utility Aliases ──────────────────────────────────────────────── -->
   <style>
-    :root {
-      --bv-bg: #f8fafc;
-      --bv-surface: #ffffff;
-      --bv-primary: #2563eb;
-      --bv-primary-hover: #1d4ed8;
-      --bv-border: #e2e8f0;
-      --bv-text-primary: #0f172a;
-      --bv-text-muted: #64748b;
-    }
-    body {
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bv-bg);
-      color: var(--bv-text-primary);
-      letter-spacing: -0.01em;
-    }
-    .font-monospace, code, pre, .font-mono {
-      font-family: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
-    }
-    /* Sleek Navigation Hover Transitions */
-    .nav-link-mnc {
-      color: var(--bv-text-muted);
-      font-weight: 500;
-      transition: all 0.2s ease;
-      border-radius: 8px;
-      padding: 0.5rem 0.85rem !important;
-    }
-    .nav-link-mnc:hover {
-      color: var(--bv-primary);
-      background-color: #f1f5f9;
-    }
-    .nav-link-mnc.active {
-      color: var(--bv-primary) !important;
-      background-color: #eff6ff !important;
-      font-weight: 600;
-    }
-    /* Elevated MNC Cards & Soft Shadows */
-    .card-mnc {
-      background: var(--bv-surface);
-      border-radius: 1rem !important;
-      border: 1px solid rgba(226, 232, 240, 0.8) !important;
-      box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.02) !important;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .card-mnc-hover:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.08), 0 4px 8px -2px rgba(15, 23, 42, 0.03) !important;
-    }
-    /* Large Airy Form Inputs */
-    .form-control-mnc {
-      background-color: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 0.75rem;
-      padding: 0.75rem 1rem;
-      font-size: 0.95rem;
-      transition: all 0.2s ease;
-    }
-    .form-control-mnc:focus {
-      background-color: #ffffff;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
-    }
-    /* Smooth Pulse Animation for Live Sessions */
-    @keyframes pulse-live {
-      0% { transform: scale(0.95); opacity: 0.8; }
-      50% { transform: scale(1.05); opacity: 1; }
-      100% { transform: scale(0.95); opacity: 0.8; }
-    }
-    .pulse-indicator {
-      animation: pulse-live 2s infinite ease-in-out;
-    }
-    /* Compatibility alias for existing JS modules using classList toggle('hidden') */
-    .hidden {
-      display: none !important;
-    }
-    .cursor-pointer {
-      cursor: pointer;
-    }
+    .hidden { display: none !important; }
+    .cursor-pointer { cursor: pointer; }
   </style>
 
   {% block extra_head %}{% endblock %}
 </head>
 
-<body class="bg-light d-flex flex-column min-vh-100 text-dark">
+<body class="antigravity-body d-flex flex-column min-vh-100 text-dark">
 
-  <!-- ══════════════ ENTERPRISE MINIMALIST DARK NAVBAR ══════════════ -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-    <div class="container-fluid px-4">
+  <!-- ══════════════ FLOATING GLASSMORHPIC NAVBAR ══════════════ -->
+  <header class="sticky-top ag-navbar-container container-fluid px-3 px-md-4">
+    <nav class="navbar navbar-expand-xl ag-navbar-glass">
+      <div class="container-fluid px-1 px-md-2">
 
-      <!-- Brand Identity -->
-      <a class="navbar-brand fw-bold d-flex align-items-center me-4" href="/">
-        <div class="bg-primary text-white rounded-3 p-2 d-flex align-items-center justify-content-center me-2.5 shadow-sm" style="width: 36px; height: 36px;">
-          <i class="bi bi-shield-check fs-5"></i>
-        </div>
-        <div>
-          <span class="fs-5 tracking-tight">BlockVote</span>
-          <span class="text-primary fs-5 ms-0.5">India</span>
-        </div>
-        <span class="badge bg-primary-subtle text-primary ms-2.5 px-2 py-1 small font-monospace rounded-pill" style="font-size: 0.65rem; font-weight: 600;">ENTERPRISE ZKP</span>
-      </a>
+        <!-- Brand Identity -->
+        <a class="navbar-brand fw-bold d-flex align-items-center me-3 me-xl-4 text-decoration-none text-nowrap" href="/">
+          <div class="rounded-3 p-2 d-flex align-items-center justify-content-center me-2 shadow-sm flex-shrink-0" 
+               style="width: 36px; height: 36px; background: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%); color: #fff;">
+            <i class="bi bi-shield-check fs-5"></i>
+          </div>
+          <div class="text-nowrap">
+            <span class="fs-5 fw-bold text-dark" style="letter-spacing:-0.02em;">BlockVote</span><span class="fs-5 fw-bold" style="color: #4f46e5; letter-spacing:-0.02em;">&nbsp;India</span>
+          </div>
+          <span class="ag-pill ag-pill-primary ms-2 d-none d-sm-inline-flex text-nowrap" style="font-size: 0.68rem; padding: 0.2rem 0.55rem;">
+            ZKP CORE
+          </span>
+        </a>
 
-      <!-- Mobile Hamburger Toggler -->
-      <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarEnterprise" aria-controls="navbarEnterprise" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+        <!-- Mobile Toggler -->
+        <button class="navbar-toggler border-0 shadow-none p-1.5" type="button" data-bs-toggle="collapse" data-bs-target="#navbarAntigravity" aria-controls="navbarAntigravity" aria-expanded="false" aria-label="Toggle navigation">
+          <i class="bi bi-list fs-3 text-secondary"></i>
+        </button>
 
-      <!-- Nav Links & System Telemetry -->
-      <div class="collapse navbar-collapse" id="navbarEnterprise">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1">
-          <li class="nav-item">
-            <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">
-              <i class="bi bi-grid-fill me-1.5 opacity-75"></i>Portal Hub
+        <!-- Nav Links & Live Web3 / Backend Status -->
+        <div class="collapse navbar-collapse" id="navbarAntigravity">
+          <ul class="navbar-nav me-auto mb-2 mb-xl-0 gap-1 text-nowrap">
+            <li class="nav-item">
+              <a class="ag-nav-link {% if request.path == '/' %}active{% endif %}" href="/">
+                <i class="bi bi-grid-fill me-1.5 opacity-75"></i>Portal Hub
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="ag-nav-link {% if request.path == '/voter/' or '/auth/voter/' in request.path %}active{% endif %}" href="/voter/">
+                <i class="bi bi-person-check-fill me-1.5 opacity-75"></i>Voter Portal
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="ag-nav-link {% if request.path == '/admin-panel/' or '/auth/admin/' in request.path %}active{% endif %}" href="/admin-panel/">
+                <i class="bi bi-speedometer2 me-1.5 opacity-75"></i>Admin Console
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="ag-nav-link {% if request.path == '/auditor/' or '/auth/auditor/' in request.path %}active{% endif %}" href="/auditor/">
+                <i class="bi bi-journal-check me-1.5 opacity-75"></i>Public Auditor
+              </a>
+            </li>
+          </ul>
+
+          <!-- Right Status Bar: Backend Status + Web3 Wallet Pill + Session -->
+          <div class="d-flex flex-wrap align-items-center gap-2 mt-3 mt-xl-0 flex-shrink-0">
+            
+            <!-- Real-time Backend Health & Block Height Pill -->
+            <div id="ag-backend-status-pill" class="ag-pill ag-pill-emerald shadow-xs text-nowrap" title="Checking blockchain node connection...">
+              <span class="ag-pulse-dot bg-success me-1"></span>
+              <span class="fw-semibold">Node #13 (Active)</span>
+            </div>
+
+            <!-- Gasless Relayer Indicator -->
+            <div class="ag-pill ag-pill-primary shadow-xs d-none d-xxl-inline-flex text-nowrap" title="Zero gas fee transactions relayed on Polygon">
+              <i class="bi bi-lightning-charge-fill text-indigo"></i>
+              <span>Gasless Relayer</span>
+            </div>
+
+            <!-- Dedicated Web3 Wallet Pill (MetaMask/Provider Injection) -->
+            <div id="ag-wallet-pill-container" class="d-inline-flex align-items-center text-nowrap">
+              <button type="button" id="btn-connect-wallet" class="ag-pill ag-pill-primary cursor-pointer border-0 py-1.5 px-3 text-nowrap">
+                <i class="bi bi-wallet2 text-indigo"></i>
+                <span class="fw-semibold">Connect Wallet</span>
+              </button>
+            </div>
+
+            <!-- Session Termination -->
+            {% if request.session.voter_hash or request.user.is_authenticated %}
+            <a href="/logout/" class="btn btn-sm btn-outline-danger font-monospace rounded-pill px-3 py-1 d-flex align-items-center shadow-xs" title="Terminate Active Session">
+              <i class="bi bi-box-arrow-right me-1"></i>Logout
             </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link {% if request.path == '/voter/' or '/auth/voter/' in request.path %}active{% endif %}" href="/voter/">
-              <i class="bi bi-person-check-fill me-1.5 opacity-75"></i>Voter Portal
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link {% if request.path == '/admin-panel/' or '/auth/admin/' in request.path %}active{% endif %}" href="/admin-panel/">
-              <i class="bi bi-speedometer2 me-1.5 opacity-75"></i>Admin Console
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link {% if request.path == '/auditor/' or '/auth/auditor/' in request.path %}active{% endif %}" href="/auditor/">
-              <i class="bi bi-journal-check me-1.5 opacity-75"></i>Public Auditor
-            </a>
-          </li>
-        </ul>
+            {% endif %}
 
-        <!-- Network & Gasless Telemetry Badges + Session Logout -->
-        <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
-          <div class="badge bg-secondary d-flex align-items-center py-2 px-3 rounded-pill font-monospace small">
-            <span class="spinner-grow spinner-grow-sm text-success me-2" role="status" style="width: 0.5rem; height: 0.5rem;"></span>
-            <span class="fw-semibold">Polygon Amoy</span>
-            <span class="text-white-50 ms-1">(80002)</span>
           </div>
 
-          <div class="badge bg-primary py-2 px-3 rounded-pill font-monospace small d-flex align-items-center">
-            <i class="bi bi-lightning-charge-fill me-1"></i>
-            <span>Gasless Relayer</span>
-          </div>
-
-          {% if request.session.voter_hash or request.user.is_authenticated %}
-          <a href="/logout/" class="btn btn-outline-light btn-sm font-monospace ms-2 rounded-pill px-3 d-flex align-items-center" title="Terminate Session">
-            <i class="bi bi-box-arrow-right me-1"></i>Logout
-          </a>
-          {% endif %}
         </div>
-
       </div>
-    </div>
-  </nav>
+    </nav>
+  </header>
 
   <!-- ══════════════ MAIN CONTENT ══════════════ -->
-  <main class="flex-grow-1">
+  <main class="flex-grow-1 py-3">
     {% if messages %}
     <div class="container-fluid px-4 mb-3">
       {% for message in messages %}
-      <div class="alert {% if message.tags == 'error' %}alert-danger border-danger-subtle{% elif message.tags == 'success' %}alert-success border-success-subtle{% elif message.tags == 'warning' %}alert-warning border-warning-subtle{% else %}alert-info border-info-subtle{% endif %} alert-dismissible fade show shadow-sm rounded-4 d-flex align-items-center p-3 mb-2" role="alert">
+      <div class="ag-card alert alert-dismissible fade show p-3 mb-2 d-flex align-items-center border-0 shadow-sm" role="alert"
+           style="background: rgba(255, 255, 255, 0.92); border-left: 4px solid {% if message.tags == 'error' %}#f43f5e{% elif message.tags == 'success' %}#10b981{% elif message.tags == 'warning' %}#f59e0b{% else %}#4f46e5{% endif %} !important;">
         {% if message.tags == 'error' %}
         <i class="bi bi-exclamation-octagon-fill me-2.5 fs-5 text-danger"></i>
         {% elif message.tags == 'success' %}
@@ -189,9 +134,9 @@
         {% elif message.tags == 'warning' %}
         <i class="bi bi-exclamation-triangle-fill me-2.5 fs-5 text-warning"></i>
         {% else %}
-        <i class="bi bi-info-circle-fill me-2.5 fs-5 text-info"></i>
+        <i class="bi bi-info-circle-fill me-2.5 fs-5 text-primary"></i>
         {% endif %}
-        <div class="fw-medium small">{{ message }}</div>
+        <div class="fw-medium small text-dark">{{ message }}</div>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
       {% endfor %}
@@ -201,29 +146,37 @@
     {% block content %}{% endblock %}
   </main>
 
-  <!-- ══════════════ ENTERPRISE ACADEMIC FOOTER ══════════════ -->
-  <footer class="bg-white border-top py-4 mt-5">
+  <!-- ══════════════ WEIGHTLESS GLASS FOOTER ══════════════ -->
+  <footer class="mt-auto py-4 border-top" style="background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px);">
     <div class="container-fluid px-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 text-muted small font-monospace">
-      <div class="d-flex align-items-center gap-2">
-        <i class="bi bi-shield-lock text-primary"></i>
-        <span>BlockVote India · Polygon Amoy Smart Contract: </span>
-        <a href="https://amoy.polygonscan.com/address/0x3B79d57a96F4B61c9e8D4Fe3B3cbfC465e63836B" target="_blank" class="text-primary text-decoration-none fw-semibold">
-          0x3B79d57a96F4B61c9e8D4Fe3B3cbfC465e63836B
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <i class="bi bi-shield-lock" style="color: #4f46e5;"></i>
+        <span><strong class="text-nowrap text-dark">BlockVote&nbsp;India</strong> &middot; Polygon Amoy Smart Contract: </span>
+        <a id="footer-contract-link" href="#" target="_blank" 
+           class="text-decoration-none fw-semibold" style="color: #4f46e5;">
+          0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
         </a>
       </div>
 
-      <div class="d-flex align-items-center gap-3">
-        <span>ZKP Standard: <strong>Groth16 / BN128</strong></span>
+      <div class="d-flex flex-wrap align-items-center gap-3">
+        <span>ZKP Standard: <strong class="text-dark">Groth16 / BN128</strong></span>
         <span>•</span>
-        <span>Merkle Depth: <strong>20 Levels</strong></span>
+        <span>Merkle Tree: <strong class="text-dark">20 Levels (1,048,576 Cap)</strong></span>
         <span>•</span>
-        <span class="text-success"><i class="bi bi-shield-fill-check me-1"></i>MNC Tier Security</span>
+        <span class="text-success"><i class="bi bi-shield-fill-check me-1"></i>Active Sentinel Guarded</span>
       </div>
     </div>
   </footer>
 
+  <!-- ── Toast Notification Container ── -->
+  <div id="ag-toast-container"></div>
+
   <!-- ── Bootstrap 5.3.3 Bundle JS ────────────────────────────────────── -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+  <!-- ── UI & Web3 Support Libraries ─────────────────────────────────── -->
+  <script src="{% static 'api/js/antigravity_ui.js' %}"></script>
+  <script src="{% static 'api/js/web3_wallet.js' %}"></script>
 
   <!-- ── Local Circuit Helper (SnarkJS / ZKP Prover) ───────────────────── -->
   <script src="{% static 'api/js/zkp_prover.js' %}"></script>

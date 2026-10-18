@@ -5,157 +5,165 @@
 {% block meta_description %}Gated authentication portal for accredited election observers, NGOs, and institutional verifiers with cryptographic trust tokens.{% endblock %}
 
 {% block content %}
-<div class="container py-5">
+<div class="container py-5" style="margin-top: 1rem;">
   <div class="row justify-content-center">
-    <div class="col-12 col-md-8 col-lg-6">
+    <div class="col-12 col-md-9 col-lg-7 col-xl-6">
 
-      <!-- ── Breadcrumb / Back ─────────────────────────────────────────── -->
-      <div class="mb-3">
-        <a href="/" class="text-decoration-none text-muted small font-monospace">
-          <i class="bi bi-arrow-left me-1"></i>Back to Operational Hub
+      <!-- Breadcrumb / Back -->
+      <div class="mb-4">
+        <a href="/" class="text-decoration-none text-muted small font-monospace d-inline-flex align-items-center gap-2 py-1 px-2.5 rounded-pill bg-white border shadow-xs" style="transition: all 0.2s ease;">
+          <i class="bi bi-arrow-left text-primary"></i>
+          <span>Back to Operational Hub</span>
         </a>
       </div>
 
-      <!-- ── Auditor Authentication Card ───────────────────────────────── -->
-      <div class="card card-mnc border-start border-success border-4">
+      <!-- Auditor Authentication Card -->
+      <div class="ag-card p-4 p-md-5 position-relative overflow-hidden" style="border-top: 4px solid var(--ag-warning);">
         
+        <!-- Subtle Top Glow -->
+        <div class="position-absolute top-0 end-0 p-5 pointer-events-none" style="background: radial-gradient(circle at top right, rgba(245, 158, 11, 0.12), transparent 70%); width: 220px; height: 220px; z-index: 0;"></div>
+
         <!-- Header -->
-        <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="badge bg-warning-subtle text-warning-emphasis font-monospace text-uppercase">Public Auditor Gateway</span>
-            <span class="badge bg-light text-secondary font-monospace border">Institutional Observer</span>
+        <div class="position-relative" style="z-index: 1;">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="ag-pill ag-pill-warning">
+              <i class="bi bi-shield-check"></i>
+              Public Auditor Gateway
+            </span>
+            <span class="ag-pill ag-pill-neutral">
+              <i class="bi bi-buildings"></i>
+              Institutional Observer
+            </span>
           </div>
-          <h1 class="h4 fw-bold text-dark mb-1">Institutional Verifier Access</h1>
-          <p class="text-muted small mb-3">
+
+          <h1 class="h3 fw-bold mb-2" style="color: var(--ag-slate-900); letter-spacing: -0.02em;">
+            Institutional Verifier Access
+          </h1>
+          <p class="small mb-4" style="color: var(--ag-slate-500); line-height: 1.6;">
             Independent zero-knowledge cryptographic verification, real-time mempool tracking, and tally verification portal.
           </p>
 
           <!-- Tab Navigation -->
-          <ul class="nav nav-pills nav-fill bg-light p-1 rounded font-monospace small mb-2" id="auditorAuthTabs" role="tablist">
+          <ul class="nav nav-pills nav-fill p-1 rounded-3 mb-4" id="auditorAuthTabs" role="tablist" style="background: rgba(241, 245, 249, 0.85); border: 1px solid var(--ag-border);">
             <li class="nav-item" role="presentation">
-              <button class="nav-link rounded py-2 {% if active_tab != 'register' %}active fw-semibold{% endif %}" id="auditor-login-tab" data-bs-toggle="pill" data-bs-target="#auditor-login-panel" type="button" role="tab" aria-controls="auditor-login-panel" aria-selected="{% if active_tab != 'register' %}true{% else %}false{% endif %}">
-                <i class="bi bi-box-arrow-in-right me-1"></i>Auditor Login
+              <button class="nav-link rounded-2 py-2 small font-monospace {% if active_tab != 'register' %}active fw-semibold shadow-xs{% endif %}" id="auditor-login-tab" data-bs-toggle="pill" data-bs-target="#auditor-login-panel" type="button" role="tab" aria-controls="auditor-login-panel" aria-selected="{% if active_tab != 'register' %}true{% else %}false{% endif %}">
+                <i class="bi bi-box-arrow-in-right me-1.5"></i>Auditor Login
               </button>
             </li>
             <li class="nav-item" role="presentation">
-              <button class="nav-link rounded py-2 {% if active_tab == 'register' %}active fw-semibold{% endif %}" id="auditor-register-tab" data-bs-toggle="pill" data-bs-target="#auditor-register-panel" type="button" role="tab" aria-controls="auditor-register-panel" aria-selected="{% if active_tab == 'register' %}true{% else %}false{% endif %}">
-                <i class="bi bi-shield-lock me-1"></i>Gated Registration
+              <button class="nav-link rounded-2 py-2 small font-monospace {% if active_tab == 'register' %}active fw-semibold shadow-xs{% endif %}" id="auditor-register-tab" data-bs-toggle="pill" data-bs-target="#auditor-register-panel" type="button" role="tab" aria-controls="auditor-register-panel" aria-selected="{% if active_tab == 'register' %}true{% else %}false{% endif %}">
+                <i class="bi bi-shield-lock me-1.5"></i>Gated Registration
               </button>
             </li>
           </ul>
         </div>
 
         <!-- Body -->
-        <div class="card-body p-4 pt-2">
-          
+        <div class="position-relative" style="z-index: 1;">
           <div class="tab-content" id="auditorAuthTabContent">
 
-            <!-- ════════════════════════════════════════════════════════════
-                 TAB 1: AUDITOR LOGIN
-                 ════════════════════════════════════════════════════════════ -->
+            <!-- TAB 1: AUDITOR LOGIN -->
             <div class="tab-pane fade {% if active_tab != 'register' %}show active{% endif %}" id="auditor-login-panel" role="tabpanel" aria-labelledby="auditor-login-tab">
-              <form method="POST" action="/auth/auditor/" id="form-auditor-login" class="d-flex flex-column gap-3 mt-2">
+              <form method="POST" action="/auth/auditor/" id="form-auditor-login" class="d-flex flex-column gap-3.5">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="login">
                 <input type="hidden" name="next" value="{{ next }}">
 
                 <!-- Username Input -->
                 <div>
-                  <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="auditor-username">
+                  <label class="form-label small fw-bold text-uppercase mb-1.5" for="auditor-username" style="color: var(--ag-slate-600); letter-spacing: 0.04em;">
                     Auditor Handle / Username
                   </label>
                   <div class="input-group">
-                    <span class="input-group-text bg-light text-muted"><i class="bi bi-person-badge-fill"></i></span>
-                    <input type="text" id="auditor-username" name="username" placeholder="e.g. adr_observer"
-                           class="form-control font-monospace" required autofocus />
+                    <span class="input-group-text bg-white border-end-0 text-muted" style="border-color: var(--ag-border);"><i class="bi bi-person-badge-fill text-warning"></i></span>
+                    <input type="text" id="auditor-username" name="username" placeholder="Enter registered auditor handle"
+                           class="form-control ag-input font-monospace border-start-0" required autofocus />
                   </div>
                 </div>
 
                 <!-- Password Input -->
                 <div>
-                  <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="auditor-password">
+                  <label class="form-label small fw-bold text-uppercase mb-1.5" for="auditor-password" style="color: var(--ag-slate-600); letter-spacing: 0.04em;">
                     Password
                   </label>
                   <div class="input-group">
-                    <span class="input-group-text bg-light text-muted"><i class="bi bi-key-fill"></i></span>
+                    <span class="input-group-text bg-white border-end-0 text-muted" style="border-color: var(--ag-border);"><i class="bi bi-lock-fill text-warning"></i></span>
                     <input type="password" id="auditor-password" name="password" placeholder="••••••••"
-                           class="form-control font-monospace" required />
+                           class="form-control ag-input font-monospace border-start-0" required />
                   </div>
                 </div>
 
-                <button type="submit" class="btn btn-dark btn-lg rounded-3 fw-semibold shadow-sm w-100 py-3 mt-2 d-flex align-items-center justify-content-center gap-2">
-                  <i class="bi bi-shield-check text-warning"></i>
+                <button type="submit" class="ag-btn-primary w-100 py-3 mt-2 d-flex align-items-center justify-content-center gap-2" style="background: linear-gradient(135deg, #d97706, #b45309);">
+                  <i class="bi bi-shield-check"></i>
                   <span>Authenticate Institutional Auditor</span>
                 </button>
               </form>
             </div>
 
-            <!-- ════════════════════════════════════════════════════════════
-                 TAB 2: GATED AUDITOR REGISTRATION
-                 ════════════════════════════════════════════════════════════ -->
+            <!-- TAB 2: GATED AUDITOR REGISTRATION -->
             <div class="tab-pane fade {% if active_tab == 'register' %}show active{% endif %}" id="auditor-register-panel" role="tabpanel" aria-labelledby="auditor-register-tab">
-              <form method="POST" action="/auth/auditor/" id="form-auditor-register" class="d-flex flex-column gap-3 mt-2">
+              <form method="POST" action="/auth/auditor/" id="form-auditor-register" class="d-flex flex-column gap-3.5">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="register">
                 <input type="hidden" name="next" value="{{ next }}">
 
-                <div class="alert alert-light border small font-monospace text-muted mb-0 py-2 px-3">
-                  <i class="bi bi-shield-exclamation text-warning me-1"></i>
-                  Access restricted to verified institutional sources only. Requires an authorized RSA-signed token issued by the Election Authority.
+                <div class="p-3 rounded-3 small font-monospace text-muted" style="background: rgba(241, 245, 249, 0.7); border: 1px solid var(--ag-border);">
+                  <i class="bi bi-shield-exclamation text-warning me-1.5"></i>
+                  Restricted to verified institutional observers. Requires an authorized token issued by the Election Commission.
                 </div>
 
                 <!-- Organization Name -->
                 <div>
-                  <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="reg-auditor-org">
+                  <label class="form-label small fw-bold text-uppercase mb-1.5" for="reg-auditor-org" style="color: var(--ag-slate-600); letter-spacing: 0.04em;">
                     Institutional Organization
                   </label>
                   <div class="input-group">
-                    <span class="input-group-text bg-light text-muted"><i class="bi bi-building"></i></span>
-                    <input type="text" id="reg-auditor-org" name="organization" placeholder="e.g. Association for Democratic Reforms (ADR)" value="Association for Democratic Reforms (ADR)"
-                           class="form-control" required />
+                    <span class="input-group-text bg-white border-end-0 text-muted" style="border-color: var(--ag-border);"><i class="bi bi-building"></i></span>
+                    <input type="text" id="reg-auditor-org" name="organization" placeholder="Enter official institutional organization name"
+                           class="form-control ag-input border-start-0" required />
                   </div>
                 </div>
 
                 <!-- Desired Username -->
                 <div>
-                  <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="reg-auditor-username">
+                  <label class="form-label small fw-bold text-uppercase mb-1.5" for="reg-auditor-username" style="color: var(--ag-slate-600); letter-spacing: 0.04em;">
                     Auditor Username
                   </label>
                   <div class="input-group">
-                    <span class="input-group-text bg-light text-muted"><i class="bi bi-person-fill"></i></span>
-                    <input type="text" id="reg-auditor-username" name="username" placeholder="e.g. adr_lead_auditor" value="adr_lead_auditor"
-                           class="form-control font-monospace" required />
+                    <span class="input-group-text bg-white border-end-0 text-muted" style="border-color: var(--ag-border);"><i class="bi bi-person-fill"></i></span>
+                    <input type="text" id="reg-auditor-username" name="username" placeholder="Enter desired auditor username"
+                           class="form-control ag-input font-monospace border-start-0" required />
                   </div>
                 </div>
 
                 <!-- Password -->
                 <div>
-                  <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="reg-auditor-password">
+                  <label class="form-label small fw-bold text-uppercase mb-1.5" for="reg-auditor-password" style="color: var(--ag-slate-600); letter-spacing: 0.04em;">
                     Secure Password
                   </label>
                   <div class="input-group">
-                    <span class="input-group-text bg-light text-muted"><i class="bi bi-lock-fill"></i></span>
-                    <input type="password" id="reg-auditor-password" name="password" placeholder="••••••••" value="AuditorPass2026!"
-                           class="form-control font-monospace" required />
+                    <span class="input-group-text bg-white border-end-0 text-muted" style="border-color: var(--ag-border);"><i class="bi bi-lock-fill"></i></span>
+                    <input type="password" id="reg-auditor-password" name="password" placeholder="Create a secure password (min 8 chars)" minlength="8"
+                           class="form-control ag-input font-monospace border-start-0" required />
                   </div>
                 </div>
 
                 <!-- Mandatory Trusted Institution Access Token -->
-                <div class="p-3 bg-light border border-warning-subtle rounded">
-                  <div class="d-flex justify-content-between align-items-center mb-1">
-                    <label class="form-label fw-bold small text-dark text-uppercase mb-0" for="reg-trust-token">
-                      <i class="bi bi-key-fill text-warning me-1"></i>Trusted Institution Access Token
+                <div class="p-3.5 rounded-3" style="background: rgba(245, 158, 11, 0.04); border: 1px solid rgba(245, 158, 11, 0.3);">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="form-label small fw-bold text-uppercase mb-0" for="reg-trust-token" style="color: var(--ag-slate-800);">
+                      <i class="bi bi-key-fill text-warning me-1.5"></i>Trusted Access Token
                     </label>
-                    <span class="badge bg-warning-subtle text-warning-emphasis font-monospace small">Mandatory Gatekeeper</span>
+                    <span class="ag-pill ag-pill-warning" style="font-size: 0.7rem; padding: 2px 6px;">Mandatory Gatekeeper</span>
                   </div>
-                  <input type="text" id="reg-trust-token" name="trust_invite_code" placeholder="Enter issued invite token" value="ECI-AUDIT-2026-SECURE"
-                         class="form-control font-monospace fw-semibold" required />
+                  <input type="text" id="reg-trust-token" name="trust_invite_code" placeholder="Enter issued invite token"
+                         class="form-control ag-input font-monospace fw-bold" required />
                   <div class="form-text small font-monospace text-muted mt-2">
-                    <i class="bi bi-info-circle me-1"></i>Requires an authorized RSA-signed token issued by the Election Authority. (Sandbox Token: <code class="text-dark fw-bold font-monospace">ECI-AUDIT-2026-SECURE</code>)
+                    <i class="bi bi-info-circle me-1"></i>Official verification token authorized by the Election Authority.
                   </div>
                 </div>
 
-                <button type="submit" class="btn btn-warning text-dark btn-lg rounded-3 fw-semibold shadow-sm w-100 py-3 mt-2 d-flex align-items-center justify-content-center gap-2">
+                <button type="submit" class="ag-btn-primary w-100 py-3 mt-2 d-flex align-items-center justify-content-center gap-2" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; font-weight: 600;">
                   <i class="bi bi-check-circle-fill"></i>
                   <span>Register & Authenticate Institutional Profile</span>
                 </button>
@@ -163,12 +171,11 @@
             </div>
 
           </div>
-
         </div>
 
         <!-- Card Footer -->
-        <div class="card-footer bg-light border-top py-3 font-monospace small text-muted text-center">
-          <i class="bi bi-file-earmark-check-fill text-warning me-1"></i>
+        <div class="pt-4 mt-4 text-center font-monospace small" style="border-top: 1px solid var(--ag-border); color: var(--ag-slate-500);">
+          <i class="bi bi-cpu-fill text-warning me-1.5"></i>
           Public auditors execute client-side zk-SNARK verification directly against the Polygon Amoy smart contract.
         </div>
 

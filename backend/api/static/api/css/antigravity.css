@@ -1,0 +1,558 @@
+/* ==========================================================================
+   BlockVote India — "Antigravity" Light Theme Design System
+   antigravity.css
+   ========================================================================== */
+
+:root {
+  /* ── Canvas & Surface Tokens ── */
+  --ag-canvas: #f8fafc;
+  --ag-canvas-subtle: #f1f5f9;
+  --ag-surface: rgba(255, 255, 255, 0.85);
+  --ag-surface-hover: rgba(255, 255, 255, 0.95);
+  --ag-surface-glass: rgba(255, 255, 255, 0.72);
+  --ag-border: rgba(226, 232, 240, 0.9);
+  --ag-border-glow: rgba(99, 102, 241, 0.25);
+  
+  /* ── Typography & Slate Hierarchy ── */
+  --ag-text-primary: #0f172a;
+  --ag-text-secondary: #475569;
+  --ag-text-muted: #64748b;
+  --ag-text-subtle: #94a3b8;
+
+  /* ── Accent & Semantic Colors ── */
+  --ag-indigo: #4f46e5;
+  --ag-indigo-light: #6366f1;
+  --ag-indigo-subtle: #eef2ff;
+  --ag-cyan: #0ea5e9;
+  --ag-cyan-subtle: #f0f9ff;
+  --ag-emerald: #10b981;
+  --ag-emerald-subtle: #ecfdf5;
+  --ag-amber: #f59e0b;
+  --ag-amber-subtle: #fffbeb;
+  --ag-rose: #f43f5e;
+  --ag-rose-subtle: #fff1f2;
+
+  /* ── "Antigravity" Diffused Multi-Layer Shadows ── */
+  --ag-shadow-ambient: 0 10px 30px -10px rgba(15, 23, 42, 0.06), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
+  --ag-shadow-float: 0 20px 35px -12px rgba(79, 70, 229, 0.12), 0 8px 12px -6px rgba(15, 23, 42, 0.04);
+  --ag-shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.02), 0 8px 24px -4px rgba(15, 23, 42, 0.06);
+  --ag-shadow-modal: 0 25px 50px -12px rgba(15, 23, 42, 0.18);
+
+  /* ── Spring Physics Easing ── */
+  --ag-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --ag-transition: all 0.28s var(--ag-spring);
+}
+
+/* ── Global Canvas & Mesh Glow ── */
+body.antigravity-body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--ag-canvas);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.08) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
+  background-attachment: fixed;
+  color: var(--ag-text-primary);
+  letter-spacing: -0.015em;
+  min-height: 100vh;
+}
+
+.font-monospace, code, pre, .font-mono {
+  font-family: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+}
+
+/* ── Antigravity Floating Glass Cards ── */
+.ag-card {
+  background: var(--ag-surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--ag-border) !important;
+  border-radius: 1.25rem !important;
+  box-shadow: var(--ag-shadow-ambient) !important;
+  transition: var(--ag-transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.ag-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent);
+  pointer-events: none;
+}
+
+.ag-card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--ag-shadow-float) !important;
+  border-color: rgba(99, 102, 241, 0.25) !important;
+}
+
+/* ── Floating Glass Navbar ── */
+.ag-navbar-container {
+  padding-top: 0.85rem;
+  padding-bottom: 0.5rem;
+}
+
+.ag-navbar-glass {
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 9999px;
+  padding: 0.65rem 1.4rem;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 4px 6px -2px rgba(15, 23, 42, 0.02);
+  transition: var(--ag-transition);
+}
+
+.ag-nav-link {
+  color: var(--ag-text-secondary);
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 0.45rem 0.95rem !important;
+  border-radius: 9999px;
+  transition: var(--ag-transition);
+  display: inline-flex;
+  align-items: center;
+}
+
+.ag-nav-link:hover {
+  color: var(--ag-indigo);
+  background: rgba(79, 70, 229, 0.06);
+}
+
+.ag-nav-link.active {
+  color: var(--ag-indigo) !important;
+  background: rgba(79, 70, 229, 0.1) !important;
+  font-weight: 600;
+}
+
+/* ── Antigravity Buttons ── */
+.ag-btn-primary {
+  background: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%);
+  color: #ffffff !important;
+  border: none;
+  font-weight: 600;
+  border-radius: 0.85rem;
+  padding: 0.75rem 1.35rem;
+  box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.28);
+  transition: var(--ag-transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.ag-btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px 0 rgba(79, 70, 229, 0.38);
+  filter: brightness(1.04);
+}
+
+.ag-btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.ag-btn-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.ag-btn-glass {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--ag-text-primary);
+  border: 1px solid var(--ag-border);
+  font-weight: 500;
+  border-radius: 0.85rem;
+  padding: 0.65rem 1.15rem;
+  box-shadow: var(--ag-shadow-ambient);
+  transition: var(--ag-transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.ag-btn-glass:hover:not(:disabled) {
+  background: #ffffff;
+  border-color: rgba(99, 102, 241, 0.3);
+  color: var(--ag-indigo);
+  transform: translateY(-2px);
+  box-shadow: var(--ag-shadow-float);
+}
+
+.ag-btn-emerald {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff !important;
+  border: none;
+  font-weight: 600;
+  border-radius: 0.85rem;
+  padding: 0.75rem 1.35rem;
+  box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.25);
+  transition: var(--ag-transition);
+}
+
+.ag-btn-emerald:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px 0 rgba(16, 185, 129, 0.35);
+}
+
+/* ── Clean Glassmorphic Inputs ── */
+.ag-input {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(203, 213, 225, 0.85) !important;
+  border-radius: 0.85rem !important;
+  padding: 0.75rem 1rem !important;
+  color: var(--ag-text-primary) !important;
+  transition: var(--ag-transition) !important;
+  font-size: 0.95rem;
+}
+
+.ag-input:focus {
+  background: #ffffff !important;
+  border-color: var(--ag-indigo) !important;
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12) !important;
+  outline: none;
+}
+
+/* ── Web3 Pills & Telemetry Badges ── */
+.ag-pill {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--ag-border);
+  border-radius: 9999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.78rem;
+  font-family: 'JetBrains Mono', monospace;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  transition: var(--ag-transition);
+}
+
+.ag-pill:hover {
+  border-color: rgba(99, 102, 241, 0.35);
+  background: #ffffff;
+}
+
+.ag-pill-primary {
+  background: var(--ag-indigo-subtle);
+  border-color: rgba(99, 102, 241, 0.2);
+  color: var(--ag-indigo);
+  font-weight: 600;
+}
+
+.ag-pill-emerald {
+  background: var(--ag-emerald-subtle);
+  border-color: rgba(16, 185, 129, 0.2);
+  color: #047857;
+  font-weight: 600;
+}
+
+.ag-pill-amber {
+  background: var(--ag-amber-subtle);
+  border-color: rgba(245, 158, 11, 0.2);
+  color: #b45309;
+  font-weight: 600;
+}
+
+.ag-pill-rose {
+  background: var(--ag-rose-subtle);
+  border-color: rgba(244, 63, 94, 0.2);
+  color: #be123c;
+  font-weight: 600;
+}
+
+/* ── Bento Grid Layouts ── */
+.ag-bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1.25rem;
+}
+
+/* ── Copyable Hash Pills ── */
+.ag-hash-badge {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 0.2rem 0.55rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--ag-indigo);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: var(--ag-transition);
+}
+
+.ag-hash-badge:hover {
+  background: var(--ag-indigo-subtle);
+  border-color: rgba(79, 70, 229, 0.3);
+  color: #3730a3;
+  transform: translateY(-1px);
+}
+
+/* ── Glass Toast Notifications (Bottom Right) ── */
+#ag-toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 1080;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-width: 420px;
+  pointer-events: none;
+}
+
+.ag-toast {
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 1rem;
+  box-shadow: 0 15px 35px -5px rgba(15, 23, 42, 0.12), 0 5px 15px rgba(15, 23, 42, 0.04);
+  padding: 0.95rem 1.2rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  animation: agToastSlideIn 0.35s var(--ag-spring);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+@keyframes agToastSlideIn {
+  from {
+    transform: translateY(20px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* ── Skeleton Loading Primitives ── */
+.ag-skeleton {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: agSkeletonShimmer 1.8s infinite;
+  border-radius: 0.5rem;
+}
+
+@keyframes agSkeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Live Pulse Indicators ── */
+@keyframes agGlowPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.15);
+  }
+}
+
+.ag-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  animation: agGlowPulse 2s infinite ease-in-out;
+}
+
+/* ── Spacing \u0026 Alignment Refinements ── */
+
+/* Bootstrap fractional gap/margin/padding utilities not always present */
+.gap-1\.5 { gap: 0.375rem !important; }
+.gap-2\.5 { gap: 0.625rem !important; }
+.gap-3\.5 { gap: 0.875rem !important; }
+.me-1\.5 { margin-right: 0.375rem !important; }
+.me-2\.5 { margin-right: 0.625rem !important; }
+.mb-1\.5 { margin-bottom: 0.375rem !important; }
+.mb-2\.5 { margin-bottom: 0.625rem !important; }
+.mt-1\.5 { margin-top: 0.375rem !important; }
+.ms-0\.5 { margin-left: 0.125rem !important; }
+.ms-1\.5 { margin-left: 0.375rem !important; }
+.ms-2\.5 { margin-left: 0.625rem !important; }
+.px-1\.5 { padding-left: 0.375rem !important; padding-right: 0.375rem !important; }
+.px-2\.5 { padding-left: 0.625rem !important; padding-right: 0.625rem !important; }
+.px-3\.5 { padding-left: 0.875rem !important; padding-right: 0.875rem !important; }
+.py-0\.5 { padding-top: 0.125rem !important; padding-bottom: 0.125rem !important; }
+.py-1\.5 { padding-top: 0.375rem !important; padding-bottom: 0.375rem !important; }
+.py-2\.5 { padding-top: 0.625rem !important; padding-bottom: 0.625rem !important; }
+.p-1\.5 { padding: 0.375rem !important; }
+.p-2\.5 { padding: 0.625rem !important; }
+.p-3\.5 { padding: 0.875rem !important; }
+.p-4\.5 { padding: 1.25rem !important; }
+.p-xl-4\.5 { padding: 1.25rem !important; }
+
+/* Prevent text overflow in pills and badges */
+.ag-pill, .badge {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Prevent step badge pills from overlapping each other on small viewport */
+.ag-pill[id^="step-badge-"] {
+  flex-shrink: 0;
+}
+
+/* OTP boxes — uniform sizing and responsive on mobile */
+.otp-box {
+  width: 44px !important;
+  height: 48px !important;
+  text-align: center;
+  padding: 0 !important;
+  font-size: 1.2rem !important;
+  font-weight: 700;
+  border-radius: 0.75rem !important;
+  flex: 1 1 auto;
+  min-width: 36px;
+  max-width: 52px;
+}
+
+/* Auth card gap-3.5 support */
+.gap-3\.5 { gap: 0.875rem !important; }
+
+/* Card section top-border alignment */
+.ag-card[style*="border-top"] {
+  border-top-left-radius: 1.25rem !important;
+  border-top-right-radius: 1.25rem !important;
+}
+
+/* Fix button text overflow */
+.ag-btn-primary span, .ag-btn-glass span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Responsive pill step indicator bar wrapping */
+#step-badge-1, #step-badge-2, #step-badge-3 {
+  font-size: 0.73rem !important;
+  padding: 5px 10px !important;
+}
+
+/* Sandbox hint section collapse smooth */
+.collapse.show,
+.collapsing {
+  transition: height 0.35s ease;
+}
+
+/* ag-pill-sky and ag-pill-warning additions (if missing) */
+.ag-pill-sky {
+  background: #f0f9ff;
+  border-color: rgba(14, 165, 233, 0.2);
+  color: #0369a1;
+  font-weight: 600;
+}
+
+.ag-pill-warning, .ag-pill-amber {
+  background: var(--ag-amber-subtle);
+  border-color: rgba(245, 158, 11, 0.25);
+  color: #92400e;
+  font-weight: 600;
+}
+
+.ag-pill-neutral {
+  background: #f8fafc;
+  border-color: rgba(148, 163, 184, 0.3);
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Live broadcast pulse animation on QR status badge */
+.pulse-indicator {
+  animation: agGlowPulse 1.8s infinite ease-in-out;
+}
+
+/* Candidate option cards hover state */
+.candidate-option {
+  cursor: pointer;
+  transition: all 0.18s ease !important;
+  border-radius: 0.75rem !important;
+}
+
+.candidate-option:hover {
+  background: rgba(79, 70, 229, 0.04) !important;
+  border-color: rgba(79, 70, 229, 0.3) !important;
+}
+
+/* Form input group seamless border */
+.input-group .ag-input {
+  border-radius: 0 0.85rem 0.85rem 0 !important;
+}
+
+.input-group .input-group-text:first-child ~ .ag-input {
+  border-left: none !important;
+}
+
+/* Progress bar smooth transition */
+.progress-bar.transition {
+  transition: width 1s ease-out, background-color 0.6s ease;
+}
+
+/* Footer contract address clamp on small screens */
+#footer-contract-link {
+  font-size: 0.78rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 360px;
+  display: inline-block;
+}
+
+@media (max-width: 768px) {
+  #footer-contract-link {
+    max-width: 220px;
+  }
+  .ag-navbar-glass {
+    border-radius: 1.25rem;
+    padding: 0.5rem 1rem;
+  }
+}
+
+/* Shadow utility */
+.shadow-xs {
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* tracking-tight utility */
+.tracking-tight {
+  letter-spacing: -0.025em !important;
+}
+
+/* Hidden utility (essential for state-based panels) */
+.hidden {
+  display: none !important;
+}
+
+/* Fix OTP placeholder letter-spacing so placeholder text is not stretched */
+.ag-otp-input::placeholder,
+input[name="otp"]::placeholder {
+  letter-spacing: normal !important;
+  font-size: 0.92rem !important;
+  font-weight: 400 !important;
+  color: #94a3b8 !important;
+}
+
+/* Prevent navbar brand and title clashing */
+.navbar-brand {
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+.navbar-brand span {
+  white-space: nowrap !important;
+}
+

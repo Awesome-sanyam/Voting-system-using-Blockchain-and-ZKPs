@@ -5,74 +5,95 @@
 {% block meta_description %}Select your authorized operational portal: Citizen Voter Portal, Administrative Command Center, or Institutional Auditor Verifier.{% endblock %}
 
 {% block content %}
-<div class="container py-5">
+<div class="container py-4 py-md-5">
 
-  <!-- ── Hub Header ──────────────────────────────────────────────────────── -->
+  <!-- ── Hub Header (Antigravity Centerpiece) ────────────────────────────── -->
   <div class="text-center mb-5">
-    <span class="badge bg-primary-subtle text-primary font-monospace text-uppercase mb-2 px-3 py-1.5">
-      <i class="bi bi-shield-check me-1"></i>Zero-Trust Multi-Role Architecture
-    </span>
-    <h1 class="h2 fw-bold text-dark mb-2">BlockVote India Operational Hub</h1>
-    <p class="text-muted mx-auto" style="max-width: 680px;">
+    <div class="d-inline-flex align-items-center gap-2 mb-3">
+      <span class="ag-pill ag-pill-primary shadow-xs">
+        <i class="bi bi-shield-check text-indigo"></i>
+        <span>ZERO-KNOWLEDGE MULTI-ROLE ARCHITECTURE</span>
+      </span>
+      <span class="ag-pill ag-pill-emerald shadow-xs d-none d-md-inline-flex">
+        <span class="ag-pulse-dot bg-success"></span>
+        <span>POLYGON AMOY TESTNET</span>
+      </span>
+    </div>
+    
+    <h1 class="display-6 fw-bold text-dark tracking-tight mb-2">
+      <span class="text-nowrap">BlockVote&nbsp;India</span> <span class="text-nowrap" style="background: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Operational Hub</span>
+    </h1>
+    <p class="text-muted mx-auto fs-6" style="max-width: 680px; line-height: 1.6;">
       Cryptographically enforced access control boundaries across Voter, Administrative Authority, and Certified Institutional Auditor tiers. Select your destination below.
     </p>
   </div>
 
-  <!-- ── 3 Main Enterprise Cards Grid ────────────────────────────────────── -->
+  <!-- ── 3 Main Antigravity Glass Cards Grid ────────────────────────────── -->
   <div class="row g-4 justify-content-center">
 
     <!-- ══════════════════════════════════════════════════════════════════
          PORTAL 1: Citizen Voter Portal
          ══════════════════════════════════════════════════════════════════ -->
     <div class="col-12 col-md-6 col-lg-4">
-      <div class="card card-mnc card-mnc-hover h-100 border-start border-primary border-4">
+      <div class="ag-card ag-card-hover h-100 p-4 d-flex flex-column justify-content-between" style="border-top: 3px solid #4f46e5 !important;">
         
-        <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
-          <h2 class="h5 fw-bold text-dark mb-0">
-            <i class="bi bi-person-check text-primary me-2"></i>Voter Portal
-          </h2>
-          <span class="badge bg-primary-subtle text-primary font-monospace">Electorate</span>
-        </div>
-
-        <div class="card-body p-4 d-flex flex-column justify-content-between">
-          <div>
-            <p class="text-muted small mb-3">
-              Access the anonymous voting terminal. Register via API Setu KYC simulation, receive 3-minute dynamic QR session tokens, and cast gasless Groth16 zero-knowledge ballots.
-            </p>
-
-            <ul class="list-group list-group-flush small font-monospace mb-4">
-              <li class="list-group-item px-0 py-1.5 bg-transparent text-muted">
-                <i class="bi bi-check2 text-success me-2"></i>EPIC & Mobile OTP Validation
-              </li>
-              <li class="list-group-item px-0 py-1.5 bg-transparent text-muted">
-                <i class="bi bi-check2 text-success me-2"></i>Client-Side SnarkJS Prover
-              </li>
-              <li class="list-group-item px-0 py-1.5 bg-transparent text-muted">
-                <i class="bi bi-check2 text-success me-2"></i>Zero Raw Identity Storage
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            {% if has_voter_session %}
-            <div class="alert alert-success py-2 px-3 small font-monospace mb-3 border-0 d-flex align-items-center">
-              <i class="bi bi-patch-check-fill me-2 fs-6"></i>
+        <div>
+          <!-- Header -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex align-items-center gap-2.5">
+              <div class="rounded-3 p-2 d-flex align-items-center justify-content-center shadow-xs" style="background: rgba(79, 70, 229, 0.1); color: #4f46e5; width: 40px; height: 40px;">
+                <i class="bi bi-person-check fs-5"></i>
+              </div>
               <div>
-                <div>Active Voter Session</div>
-                <div class="text-muted small font-monospace text-truncate" style="max-width: 220px;">{{ voter_hash }}</div>
+                <span class="text-muted font-monospace small" style="font-size: 0.72rem; text-transform: uppercase;">CITIZEN TERMINAL</span>
+                <h2 class="h5 fw-bold text-dark mb-0">Voter Portal</h2>
               </div>
             </div>
-            <a href="/voter/" class="btn btn-primary w-100 fw-bold py-2.5 shadow-sm d-flex align-items-center justify-content-center gap-2">
-              <i class="bi bi-box-arrow-in-right"></i>
-              <span>Enter Voting Terminal</span>
-            </a>
-            {% else %}
-            <a href="/auth/voter/" class="btn btn-primary w-100 fw-bold py-2.5 shadow-sm d-flex align-items-center justify-content-center gap-2">
-              <i class="bi bi-box-arrow-in-right"></i>
-              <span>Authenticate / Register Voter</span>
-            </a>
-            {% endif %}
+            <span class="ag-pill ag-pill-primary">Electorate</span>
           </div>
+
+          <!-- Body Description -->
+          <p class="text-muted small mb-4" style="line-height: 1.55;">
+            Access the anonymous voting booth. Register via API Setu KYC simulation, generate 3-minute dynamic QR session tokens, and cast gasless Groth16 zero-knowledge ballots.
+          </p>
+
+          <!-- Feature Checklist -->
+          <ul class="list-unstyled font-monospace small mb-4 d-flex flex-column gap-2">
+            <li class="d-flex align-items-center text-secondary">
+              <i class="bi bi-patch-check-fill text-success me-2 fs-6"></i>
+              <span>EPIC & Mobile OTP Validation</span>
+            </li>
+            <li class="d-flex align-items-center text-secondary">
+              <i class="bi bi-patch-check-fill text-success me-2 fs-6"></i>
+              <span>Client-Side SnarkJS Prover</span>
+            </li>
+            <li class="d-flex align-items-center text-secondary">
+              <i class="bi bi-patch-check-fill text-success me-2 fs-6"></i>
+              <span>Zero Raw Identity Storage</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Action Section -->
+        <div class="pt-2 border-top">
+          {% if has_voter_session %}
+          <div class="ag-pill ag-pill-emerald w-100 justify-content-between mb-3 py-2 px-3 shadow-xs">
+            <div class="d-flex align-items-center gap-2 text-truncate">
+              <span class="ag-pulse-dot bg-success"></span>
+              <span class="text-dark fw-bold text-truncate">{{ voter_hash|truncatechars:18 }}</span>
+            </div>
+            <span class="badge bg-success text-white font-monospace rounded-pill">Active</span>
+          </div>
+          <a href="/voter/" class="ag-btn-primary w-100 shadow-sm text-decoration-none">
+            <i class="bi bi-box-arrow-in-right"></i>
+            <span>Enter Voting Terminal</span>
+          </a>
+          {% else %}
+          <a href="/auth/voter/" class="ag-btn-primary w-100 shadow-sm text-decoration-none">
+            <i class="bi bi-box-arrow-in-right"></i>
+            <span>Authenticate / Register Voter</span>
+          </a>
+          {% endif %}
         </div>
 
       </div>
@@ -82,54 +103,65 @@
          PORTAL 2: Admin Command Console
          ══════════════════════════════════════════════════════════════════ -->
     <div class="col-12 col-md-6 col-lg-4">
-      <div class="card card-mnc card-mnc-hover h-100 border-start border-danger border-4">
+      <div class="ag-card ag-card-hover h-100 p-4 d-flex flex-column justify-content-between" style="border-top: 3px solid #f43f5e !important;">
         
-        <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
-          <h2 class="h5 fw-bold text-dark mb-0">
-            <i class="bi bi-shield-lock-fill text-danger me-2"></i>Admin Console
-          </h2>
-          <span class="badge bg-danger-subtle text-danger font-monospace">Authority</span>
-        </div>
-
-        <div class="card-body p-4 d-flex flex-column justify-content-between">
-          <div>
-            <p class="text-muted small mb-3">
-              Election Authority management console. Freeze the voter roll via on-chain Merkle root cryptographic lock, inspect live request velocity, and review AI Sentinel DDoS mitigation logs.
-            </p>
-
-            <ul class="list-group list-group-flush small font-monospace mb-4">
-              <li class="list-group-item px-0 py-1.5 bg-transparent text-muted">
-                <i class="bi bi-check2 text-success me-2"></i>Merkle Electoral Roll Sealing
-              </li>
-              <li class="list-group-item px-0 py-1.5 bg-transparent text-muted">
-                <i class="bi bi-check2 text-success me-2"></i>Active Sentinel AI Monitor
-              </li>
-              <li class="list-group-item px-0 py-1.5 bg-transparent text-muted">
-                <i class="bi bi-check2 text-success me-2"></i>Staff & Superuser RBAC
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            {% if is_admin %}
-            <div class="alert alert-danger py-2 px-3 small font-monospace mb-3 border-0 d-flex align-items-center">
-              <i class="bi bi-shield-check me-2 fs-6"></i>
+        <div>
+          <!-- Header -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex align-items-center gap-2.5">
+              <div class="rounded-3 p-2 d-flex align-items-center justify-content-center shadow-xs" style="background: rgba(244, 63, 94, 0.1); color: #f43f5e; width: 40px; height: 40px;">
+                <i class="bi bi-shield-lock-fill fs-5"></i>
+              </div>
               <div>
-                <div>Administrator Authenticated</div>
-                <div class="text-muted small font-monospace">Authorized as Staff</div>
+                <span class="text-muted font-monospace small" style="font-size: 0.72rem; text-transform: uppercase;">CONTROL ROOM</span>
+                <h2 class="h5 fw-bold text-dark mb-0">Admin Console</h2>
               </div>
             </div>
-            <a href="/admin-panel/" class="btn btn-danger w-100 fw-bold py-2.5 shadow-sm d-flex align-items-center justify-content-center gap-2">
-              <i class="bi bi-speedometer2"></i>
-              <span>Open Command Center</span>
-            </a>
-            {% else %}
-            <a href="/auth/admin/" class="btn btn-outline-danger w-100 fw-bold py-2.5 d-flex align-items-center justify-content-center gap-2">
-              <i class="bi bi-shield-lock-fill"></i>
-              <span>Admin Console Login</span>
-            </a>
-            {% endif %}
+            <span class="ag-pill ag-pill-rose">Authority</span>
           </div>
+
+          <!-- Body Description -->
+          <p class="text-muted small mb-4" style="line-height: 1.55;">
+            Election Authority management console. Freeze the voter roll via on-chain Merkle root cryptographic lock, inspect live request velocity, and review AI Sentinel DDoS mitigation telemetry.
+          </p>
+
+          <!-- Feature Checklist -->
+          <ul class="list-unstyled font-monospace small mb-4 d-flex flex-column gap-2">
+            <li class="d-flex align-items-center text-secondary">
+              <i class="bi bi-patch-check-fill text-success me-2 fs-6"></i>
+              <span>Merkle Electoral Roll Sealing</span>
+            </li>
+            <li class="d-flex align-items-center text-secondary">
+              <i class="bi bi-patch-check-fill text-success me-2 fs-6"></i>
+              <span>Active Sentinel AI Monitor</span>
+            </li>
+            <li class="d-flex align-items-center text-secondary">
+              <i class="bi bi-patch-check-fill text-success me-2 fs-6"></i>
+              <span>Staff & Superuser RBAC</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Action Section -->
+        <div class="pt-2 border-top">
+          {% if is_admin %}
+          <div class="ag-pill ag-pill-rose w-100 justify-content-between mb-3 py-2 px-3 shadow-xs">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-shield-check text-danger"></i>
+              <span class="text-dark fw-bold">Administrator Authenticated</span>
+            </div>
+            <span class="badge bg-danger text-white font-monospace rounded-pill">Staff</span>
+          </div>
+          <a href="/admin-panel/" class="btn btn-danger w-100 fw-bold py-2.5 rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2 text-decoration-none">
+            <i class="bi bi-speedometer2"></i>
+            <span>Open Command Center</span>
+          </a>
+          {% else %}
+          <a href="/auth/admin/" class="ag-btn-glass w-100 justify-content-center shadow-xs text-decoration-none fw-semibold">
+            <i class="bi bi-shield-lock-fill text-danger"></i>
+            <span>Admin Console Login</span>
+          </a>
+          {% endif %}
         </div>
 
       </div>
@@ -139,54 +171,65 @@
          PORTAL 3: Public Auditor Portal
          ══════════════════════════════════════════════════════════════════ -->
     <div class="col-12 col-md-6 col-lg-4">
-      <div class="card card-mnc card-mnc-hover h-100 border-start border-success border-4">
+      <div class="ag-card ag-card-hover h-100 p-4 d-flex flex-column justify-content-between" style="border-top: 3px solid #10b981 !important;">
         
-        <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
-          <h2 class="h5 fw-bold text-dark mb-0">
-            <i class="bi bi-journal-check text-success me-2"></i>Public Auditor
-          </h2>
-          <span class="badge bg-success-subtle text-success font-monospace">Observer</span>
-        </div>
-
-        <div class="card-body p-4 d-flex flex-column justify-content-between">
-          <div>
-            <p class="text-muted small mb-3">
-              Independent cryptographic verification suite. Real-time Polygon Amoy mempool event listener, spent nullifier anti-double-vote scanner, and mathematical tally integrity audit engine.
-            </p>
-
-            <ul class="list-group list-group-flush small font-monospace mb-4">
-              <li class="list-group-item px-0 py-1.5 bg-transparent text-muted">
-                <i class="bi bi-check2 text-success me-2"></i>Direct On-Chain RPC Stream
-              </li>
-              <li class="list-group-item px-0 py-1.5 bg-transparent text-muted">
-                <i class="bi bi-check2 text-success me-2"></i>Ballot Conservation Law Proof
-              </li>
-              <li class="list-group-item px-0 py-1.5 bg-transparent text-muted">
-                <i class="bi bi-check2 text-success me-2"></i>Institutional Observer Token Gating
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            {% if is_auditor %}
-            <div class="alert alert-success py-2 px-3 small font-monospace mb-3 border-0 d-flex align-items-center">
-              <i class="bi bi-patch-check-fill me-2 fs-6"></i>
+        <div>
+          <!-- Header -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex align-items-center gap-2.5">
+              <div class="rounded-3 p-2 d-flex align-items-center justify-content-center shadow-xs" style="background: rgba(16, 185, 129, 0.1); color: #10b981; width: 40px; height: 40px;">
+                <i class="bi bi-journal-check fs-5"></i>
+              </div>
               <div>
-                <div>Auditor Authorized</div>
-                <div class="text-muted small font-monospace">Institutional Verifier Session</div>
+                <span class="text-muted font-monospace small" style="font-size: 0.72rem; text-transform: uppercase;">VERIFICATION SUITE</span>
+                <h2 class="h5 fw-bold text-dark mb-0">Public Auditor</h2>
               </div>
             </div>
-            <a href="/auditor/" class="btn btn-success w-100 fw-bold py-2.5 shadow-sm d-flex align-items-center justify-content-center gap-2">
-              <i class="bi bi-journal-check"></i>
-              <span>Launch Auditor Portal</span>
-            </a>
-            {% else %}
-            <a href="/auth/auditor/" class="btn btn-outline-success w-100 fw-bold py-2.5 d-flex align-items-center justify-content-center gap-2">
-              <i class="bi bi-key-fill"></i>
-              <span>Auditor Sign In / Token Entry</span>
-            </a>
-            {% endif %}
+            <span class="ag-pill ag-pill-emerald">Observer</span>
           </div>
+
+          <!-- Body Description -->
+          <p class="text-muted small mb-4" style="line-height: 1.55;">
+            Independent cryptographic verification suite. Real-time Polygon Amoy mempool event listener, spent nullifier anti-double-vote scanner, and mathematical tally integrity audit engine.
+          </p>
+
+          <!-- Feature Checklist -->
+          <ul class="list-unstyled font-monospace small mb-4 d-flex flex-column gap-2">
+            <li class="d-flex align-items-center text-secondary">
+              <i class="bi bi-patch-check-fill text-success me-2 fs-6"></i>
+              <span>Direct On-Chain RPC Stream</span>
+            </li>
+            <li class="d-flex align-items-center text-secondary">
+              <i class="bi bi-patch-check-fill text-success me-2 fs-6"></i>
+              <span>Ballot Conservation Law Proof</span>
+            </li>
+            <li class="d-flex align-items-center text-secondary">
+              <i class="bi bi-patch-check-fill text-success me-2 fs-6"></i>
+              <span>Institutional Observer Gating</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Action Section -->
+        <div class="pt-2 border-top">
+          {% if is_auditor %}
+          <div class="ag-pill ag-pill-emerald w-100 justify-content-between mb-3 py-2 px-3 shadow-xs">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-patch-check-fill text-success"></i>
+              <span class="text-dark fw-bold">Auditor Session Active</span>
+            </div>
+            <span class="badge bg-success text-white font-monospace rounded-pill">Verified</span>
+          </div>
+          <a href="/auditor/" class="ag-btn-emerald w-100 justify-content-center shadow-sm text-decoration-none">
+            <i class="bi bi-journal-check"></i>
+            <span>Launch Auditor Portal</span>
+          </a>
+          {% else %}
+          <a href="/auth/auditor/" class="ag-btn-glass w-100 justify-content-center shadow-xs text-decoration-none fw-semibold">
+            <i class="bi bi-key-fill text-success"></i>
+            <span>Auditor Sign In / Token Entry</span>
+          </a>
+          {% endif %}
         </div>
 
       </div>
@@ -194,17 +237,20 @@
 
   </div>
 
-  <!-- ── Information Banner ──────────────────────────────────────────────── -->
-  <div class="card card-mnc p-4 mt-5">
+  <!-- ── Information Banner (Weightless Glass Pill) ───────────────────────── -->
+  <div class="ag-card p-4 mt-5">
     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 font-monospace small">
-      <div>
-        <span class="text-primary fw-bold"><i class="bi bi-info-circle-fill me-1"></i>Security Architecture:</span>
-        <span class="text-muted ms-1">No plain identity information (Name, EPIC, Phone) is ever published on the Polygon blockchain or persisted unhashed.</span>
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-shield-check text-primary fs-5"></i>
+        <div>
+          <strong class="text-dark">Sovereign Privacy Architecture:</strong>
+          <span class="text-muted ms-1">Raw citizen identifiers (Name, EPIC, Phone) are never published to Polygon or persisted unhashed.</span>
+        </div>
       </div>
-      <div class="text-muted">
-        <span>Curvature: <strong>Alt-BN128</strong></span>
-        <span class="mx-2">•</span>
-        <span>Chain: <strong>Polygon Amoy (80002)</strong></span>
+      <div class="d-flex align-items-center gap-3 text-muted">
+        <span>Circuit: <strong class="text-dark">Alt-BN128</strong></span>
+        <span>•</span>
+        <span>Chain: <strong class="text-primary">Polygon Amoy (80002)</strong></span>
       </div>
     </div>
   </div>

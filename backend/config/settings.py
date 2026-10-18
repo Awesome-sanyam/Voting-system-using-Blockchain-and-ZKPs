@@ -38,6 +38,7 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -172,3 +173,50 @@ CSRF_TRUSTED_ORIGINS = [
 # ── Static files ─────────────────────────────────────────────────────────────
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'api', 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# ── SMS / OTP Dispatch Configuration ─────────────────────────────────────────
+TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', '').strip()
+TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '').strip()
+TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', '').strip()
+MSG91_AUTH_KEY = os.environ.get('MSG91_AUTH_KEY', '').strip()
+MSG91_SENDER_ID = os.environ.get('MSG91_SENDER_ID', 'BLOCKVOTE').strip()
+
+# ── Session Security ──────────────────────────────────────────────────────────
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 3600  # 1-hour voter session lifetime
+
+# ── Structured Logging (blockvote logger used throughout views.py) ────────────
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'blockvote': {
+            'format': '[{asctime}] [{levelname}] {name}: {message}',
+            'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'blockvote',
+        },
+    },
+    'loggers': {
+        'blockvote': {
+            'handlers': ['console'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+        'django': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+    },
+}
+
+# ── Default Primary Key Type ──────────────────────────────────────────────────
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

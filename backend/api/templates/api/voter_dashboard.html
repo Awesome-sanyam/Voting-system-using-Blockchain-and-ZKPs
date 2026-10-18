@@ -5,127 +5,163 @@
 {% block meta_description %}Authenticate, generate your dynamic QR session, and cast an anonymous zero-knowledge vote on Polygon Amoy.{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-4 py-2">
+<div class="container-fluid px-3 px-md-4 py-2">
 
   <!-- ── Top Status & Title ─────────────────────────────────────────────── -->
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center pb-4 mb-4 gap-3">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center pb-4 mb-4 gap-3 border-bottom" style="border-color: var(--ag-border) !important;">
     <div>
-      <div class="d-flex align-items-center gap-2 mb-2">
-        <span class="badge bg-primary-subtle text-primary font-monospace rounded-pill px-3 py-1.5 fw-semibold">
-          <i class="bi bi-shield-shaded me-1"></i>GROTH16 ZKP TERMINAL
+      <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+        <span class="ag-pill ag-pill-primary">
+          <i class="bi bi-shield-shaded"></i>
+          GROTH16 ZKP TERMINAL
         </span>
-        <span class="badge bg-light text-secondary border rounded-pill px-3 py-1.5 font-monospace">ECI SANDBOX</span>
+        <span class="ag-pill ag-pill-neutral">
+          <i class="bi bi-geo-alt"></i>
+          ECI SANDBOX • POLYGON AMOY
+        </span>
       </div>
-      <h1 class="h2 fw-bold text-dark tracking-tight mb-1">Citizen Voting Terminal</h1>
-      <p class="text-muted small mb-0">Cryptographic privacy guaranteed via client-side Groth16 zero-knowledge SNARK circuits on Polygon Amoy.</p>
+      <h1 class="h2 fw-bold mb-1" style="color: var(--ag-slate-900); letter-spacing: -0.03em;">
+        Citizen Voting Terminal
+      </h1>
+      <p class="small mb-0" style="color: var(--ag-slate-500);">
+        Cryptographic privacy guaranteed via client-side Groth16 zero-knowledge SNARK circuits on Polygon Amoy.
+      </p>
     </div>
 
     <!-- Step Progress Indicator -->
-    <div class="d-flex align-items-center gap-2 bg-white p-2 rounded-4 shadow-sm border border-light-subtle font-monospace small">
-      <span id="step-badge-1" class="badge bg-primary text-white py-2 px-3 rounded-pill fw-semibold">1. Authentication</span>
-      <i class="bi bi-chevron-right text-muted small"></i>
-      <span id="step-badge-2" class="badge bg-light text-muted border py-2 px-3 rounded-pill">2. Hologram QR</span>
-      <i class="bi bi-chevron-right text-muted small"></i>
-      <span id="step-badge-3" class="badge bg-light text-muted border py-2 px-3 rounded-pill">3. ZK Ballot</span>
+    <div class="d-flex align-items-center gap-1.5 p-1.5 rounded-pill font-monospace small bg-white border shadow-xs" style="border-color: var(--ag-border);">
+      <span id="step-badge-1" class="ag-pill ag-pill-primary fw-bold" style="padding: 6px 14px; font-size: 0.78rem;">
+        1. Authentication
+      </span>
+      <i class="bi bi-chevron-right text-muted px-1" style="font-size: 0.7rem;"></i>
+      <span id="step-badge-2" class="ag-pill ag-pill-neutral" style="padding: 6px 14px; font-size: 0.78rem;">
+        2. Hologram QR
+      </span>
+      <i class="bi bi-chevron-right text-muted px-1" style="font-size: 0.7rem;"></i>
+      <span id="step-badge-3" class="ag-pill ag-pill-neutral" style="padding: 6px 14px; font-size: 0.78rem;">
+        3. ZK Ballot
+      </span>
     </div>
   </div>
 
-  <!-- ── 3 Core Modules Grid (MNC Tier Cards) ─────────────────────────── -->
-  <div class="row g-4">
+  <!-- ── 3 Core Modules Grid (Antigravity Bento Grid) ───────────────────── -->
+  <div class="row g-4 mb-4">
 
     <!-- ══════════════════════════════════════════════════════════════════
          CARD 1: Authentication & Identity Gateway
          ══════════════════════════════════════════════════════════════════ -->
     <div class="col-12 col-lg-4">
-      <div class="card card-mnc h-100 mb-4">
+      <div class="ag-card h-100 d-flex flex-column justify-content-between p-4 p-xl-4.5 position-relative overflow-hidden" style="border-top: 4px solid var(--ag-primary);">
         
         <!-- Header -->
-        <div class="card-header bg-white border-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center">
-          <div>
-            <span class="text-primary font-monospace small fw-bold text-uppercase" style="font-size: 0.72rem;">STEP 1 • VERIFICATION</span>
-            <h2 class="h5 fw-bold text-dark mb-0 mt-0.5">
-              <i class="bi bi-person-badge text-primary me-2"></i>Identity Gateway
-            </h2>
+        <div>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <span class="ag-pill ag-pill-primary" style="font-size: 0.7rem; padding: 2px 8px;">
+                STEP 1 • IDENTITY VERIFICATION
+              </span>
+              <h2 class="h5 fw-bold mb-0 mt-2" style="color: var(--ag-slate-900);">
+                <i class="bi bi-person-badge text-primary me-2"></i>Identity Gateway
+              </h2>
+            </div>
+            <span id="auth-status-pill" class="ag-pill ag-pill-neutral">Pending</span>
           </div>
-          <span id="auth-status-pill" class="badge bg-secondary-subtle text-secondary font-monospace rounded-pill px-3 py-1.5">Pending</span>
+
+          <p class="small mb-4" style="color: var(--ag-slate-500); line-height: 1.55;">
+            Enter registered credentials to obtain an authorized session. Identity is hashed with SHA-256 and salted locally — raw identifiers never touch the ledger.
+          </p>
+
+          <!-- Authentication Form (Visible until Verified) -->
+          <div id="auth-phase-pending" class="d-flex flex-column gap-3">
+            <div>
+              <label class="form-label small fw-bold text-uppercase mb-1.5" for="voter-mobile" style="color: var(--ag-slate-600); letter-spacing: 0.04em;">
+                Registered Mobile Number
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-white border-end-0 font-monospace text-muted px-3" style="border-color: var(--ag-border);">+91</span>
+                <input type="tel" id="voter-mobile" maxlength="10" placeholder="Enter 10-digit mobile number"
+                       class="form-control ag-input font-monospace border-start-0" autocomplete="tel" />
+              </div>
+            </div>
+
+            <div>
+              <label class="form-label small fw-bold text-uppercase mb-1.5" for="voter-epic" style="color: var(--ag-slate-600); letter-spacing: 0.04em;">
+                EPIC Voter ID Number
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-white border-end-0 text-muted px-3" style="border-color: var(--ag-border);"><i class="bi bi-card-text text-primary"></i></span>
+                <input type="text" id="voter-epic" maxlength="10" placeholder="Enter 10-character EPIC ID"
+                       value="{% if voter_epic %}{{ voter_epic }}{% endif %}"
+                       class="form-control ag-input font-monospace text-uppercase border-start-0" autocomplete="off" />
+              </div>
+            </div>
+
+            <!-- Dispatched OTP Banner (hidden until OTP sent) -->
+            <div id="dash-otp-banner" class="d-none p-3 rounded-3" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.35);">
+              <div class="d-flex align-items-center justify-content-between small mb-1">
+                <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-shield-check text-success"></i>
+                  <span id="dash-otp-banner-text" class="text-success fw-semibold">Security OTP Dispatched</span>
+                </div>
+                <span class="text-muted font-monospace" style="font-size: 0.72rem;"><i class="bi bi-phone me-1"></i>SMS Delivered</span>
+              </div>
+              <div class="text-secondary small font-monospace" id="dash-otp-msg" style="font-size: 0.76rem; line-height: 1.4;">
+                A 6-digit verification code has been dispatched via SMS. Please check your mobile messages and enter the code below.
+              </div>
+            </div>
+
+            <!-- 6-Digit Security OTP (ALWAYS VISIBLE) -->
+            <div>
+              <div class="d-flex justify-content-between align-items-center mb-1.5">
+                <label class="form-label small fw-bold text-uppercase mb-0" for="dash-otp-input" style="color: var(--ag-slate-600); letter-spacing: 0.04em;">
+                  6-Digit Security OTP
+                </label>
+                <span class="font-monospace text-muted d-none" id="dash-otp-countdown-container" style="font-size: 0.75rem;">
+                  Expires in: <span id="dash-otp-countdown" class="text-success fw-bold">10:00</span>
+                </span>
+              </div>
+              <div class="input-group">
+                <span class="input-group-text bg-white border-end-0 text-muted px-3" style="border-color: var(--ag-border);"><i class="bi bi-shield-lock text-primary"></i></span>
+                <input type="text" id="dash-otp-input" maxlength="6" placeholder="Enter 6-digit OTP"
+                       class="form-control ag-input ag-otp-input font-monospace text-center fs-5 fw-bold border-start-0" 
+                       autocomplete="one-time-code" />
+                <button type="button" id="btn-request-otp" class="btn font-monospace px-3 fw-semibold border-start"
+                        style="background: rgba(79,70,229,0.08); border-color: var(--ag-border); color: #4f46e5;">
+                  <i class="bi bi-send me-1"></i><span id="btn-request-otp-text">Send OTP</span>
+                </button>
+              </div>
+              <div class="form-text small font-monospace text-muted mt-1" id="dash-otp-helper">
+                <i class="bi bi-info-circle me-1"></i>Enter Mobile &amp; EPIC, then click <strong>Send OTP</strong>.
+              </div>
+            </div>
+
+            <button type="button" id="btn-verify-otp" class="ag-btn-primary w-100 py-3 mt-1 d-flex align-items-center justify-content-center gap-2">
+              <i class="bi bi-check-circle-fill"></i>
+              <span>Verify &amp; Authorize Terminal</span>
+            </button>
+          </div>
+
+          <!-- Verified State View -->
+          <div id="auth-phase-verified" class="hidden mt-2">
+            <div class="p-3.5 rounded-3 mb-3" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3);">
+              <div class="d-flex align-items-center gap-2 fw-bold small mb-2" style="color: var(--ag-emerald);">
+                <i class="bi bi-patch-check-fill fs-6"></i>
+                <span>Identity Whitelisted & Authenticated</span>
+              </div>
+              <div class="small font-monospace" style="color: var(--ag-slate-700);">
+                Voter Hash: <span id="display-voter-hash" class="fw-bold px-1.5 py-0.5 rounded bg-white border" style="color: var(--ag-slate-900);">0x...</span>
+              </div>
+            </div>
+            <div class="d-flex justify-content-between font-monospace small px-1" style="color: var(--ag-slate-500);">
+              <span>ECI Status: Whitelisted</span>
+              <span class="text-success fw-bold"><i class="bi bi-check2 me-1"></i>Ready to Vote</span>
+            </div>
+          </div>
         </div>
 
-        <!-- Body -->
-        <div class="card-body p-4 d-flex flex-column justify-content-between">
-          <div>
-            <p class="text-muted small mb-4">
-              Enter registered credentials to obtain an authorized session. Identity is hashed with SHA-256 and salted locally — raw identifiers never touch the ledger.
-            </p>
-
-            <!-- Step 1: Mobile & EPIC -->
-            <div id="auth-phase-1" class="d-flex flex-column gap-3">
-              <div>
-                <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="voter-mobile">Registered Mobile Number</label>
-                <div class="input-group">
-                  <span class="input-group-text bg-light border-0 font-monospace text-muted px-3">+91</span>
-                  <input type="tel" id="voter-mobile" maxlength="10" placeholder="9876543210" value="9876543210"
-                         class="form-control form-control-lg bg-light border-0 font-monospace" />
-                </div>
-              </div>
-
-              <div>
-                <label class="form-label fw-bold small text-secondary text-uppercase mb-1" for="voter-epic">EPIC Voter ID Number</label>
-                <input type="text" id="voter-epic" maxlength="10" placeholder="IND9876543" value="IND9876543"
-                       class="form-control form-control-lg bg-light border-0 font-monospace text-uppercase" />
-              </div>
-
-              <button type="button" id="btn-request-otp" class="btn btn-primary btn-lg rounded-3 fw-semibold shadow-sm w-100 py-3 mt-2 d-flex align-items-center justify-content-center gap-2">
-                <i class="bi bi-shield-lock-fill"></i>
-                <span>Request Authentication OTP</span>
-              </button>
-            </div>
-
-            <!-- Step 2: OTP Entry (Hidden initially) -->
-            <div id="auth-phase-2" class="hidden d-flex flex-column gap-3">
-              <div class="alert alert-info border-0 rounded-4 py-2.5 px-3 small mb-1">
-                <i class="bi bi-info-circle-fill me-1"></i>
-                <strong>Sandbox OTP Dispatched:</strong> Code: <code class="fw-bold font-monospace text-dark">749201</code>
-              </div>
-
-              <div>
-                <label class="form-label fw-bold small text-secondary text-uppercase mb-2">6-Digit Security OTP</label>
-                <div class="d-flex justify-content-between gap-1" id="otp-input-group">
-                  <input type="text" maxlength="1" value="7" class="otp-box form-control form-control-lg bg-light border-0 text-center font-monospace fw-bold fs-5 p-0 rounded-3" style="width: 46px; height: 50px;" />
-                  <input type="text" maxlength="1" value="4" class="otp-box form-control form-control-lg bg-light border-0 text-center font-monospace fw-bold fs-5 p-0 rounded-3" style="width: 46px; height: 50px;" />
-                  <input type="text" maxlength="1" value="9" class="otp-box form-control form-control-lg bg-light border-0 text-center font-monospace fw-bold fs-5 p-0 rounded-3" style="width: 46px; height: 50px;" />
-                  <input type="text" maxlength="1" value="2" class="otp-box form-control form-control-lg bg-light border-0 text-center font-monospace fw-bold fs-5 p-0 rounded-3" style="width: 46px; height: 50px;" />
-                  <input type="text" maxlength="1" value="0" class="otp-box form-control form-control-lg bg-light border-0 text-center font-monospace fw-bold fs-5 p-0 rounded-3" style="width: 46px; height: 50px;" />
-                  <input type="text" maxlength="1" value="1" class="otp-box form-control form-control-lg bg-light border-0 text-center font-monospace fw-bold fs-5 p-0 rounded-3" style="width: 46px; height: 50px;" />
-                </div>
-              </div>
-
-              <button type="button" id="btn-verify-otp" class="btn btn-success btn-lg rounded-3 fw-semibold shadow-sm w-100 py-3 mt-2 d-flex align-items-center justify-content-center gap-2">
-                <i class="bi bi-check-circle-fill"></i>
-                <span>Verify & Authorize Session</span>
-              </button>
-            </div>
-
-            <!-- Verified State View -->
-            <div id="auth-phase-verified" class="hidden mt-2">
-              <div class="alert alert-success border-0 rounded-4 p-3 mb-2 shadow-xs">
-                <div class="d-flex align-items-center text-success fw-bold small mb-1">
-                  <i class="bi bi-patch-check-fill me-1.5 fs-6"></i>Identity Whitelisted & Authenticated
-                </div>
-                <div class="text-muted font-monospace small text-break">
-                  Voter Hash: <span id="display-voter-hash" class="text-dark fw-bold">0x...</span>
-                </div>
-              </div>
-              <div class="d-flex justify-content-between text-muted font-monospace small px-1">
-                <span>ECI Status: Whitelisted</span>
-                <span class="text-success fw-semibold"><i class="bi bi-check2 me-1"></i>Ready to Vote</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Privacy Assurance Note -->
-          <div class="border-top pt-3 mt-4 text-muted font-monospace small">
-            <i class="bi bi-shield-check text-success me-1"></i>Zero-Knowledge Guarantee: Raw citizen identifiers are never transmitted to Polygon.
-          </div>
+        <!-- Privacy Assurance Note -->
+        <div class="pt-3 mt-4 small font-monospace" style="border-top: 1px solid var(--ag-border); color: var(--ag-slate-500);">
+          <i class="bi bi-shield-check text-success me-1"></i>Zero-Knowledge Guarantee: Raw identifiers are never broadcast.
         </div>
 
       </div>
@@ -135,69 +171,69 @@
          CARD 2: 3-Minute Hologram Dynamic QR Token (Prominent Center)
          ══════════════════════════════════════════════════════════════════ -->
     <div class="col-12 col-lg-4">
-      <div class="card card-mnc h-100 mb-4">
+      <div class="ag-card h-100 d-flex flex-column justify-content-between p-4 p-xl-4.5 position-relative overflow-hidden" style="border-top: 4px solid var(--ag-sky);">
         
         <!-- Header -->
-        <div class="card-header bg-white border-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center">
-          <div>
-            <span class="text-info font-monospace small fw-bold text-uppercase" style="font-size: 0.72rem;">STEP 2 • LIVE TOKEN</span>
-            <h2 class="h5 fw-bold text-dark mb-0 mt-0.5">
-              <i class="bi bi-qr-code-scan text-info me-2"></i>Dynamic Session QR
-            </h2>
+        <div>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <span class="ag-pill ag-pill-sky" style="font-size: 0.7rem; padding: 2px 8px;">
+                STEP 2 • LIVE TOKEN
+              </span>
+              <h2 class="h5 fw-bold mb-0 mt-2" style="color: var(--ag-slate-900);">
+                <i class="bi bi-qr-code-scan text-info me-2"></i>Dynamic Session QR
+              </h2>
+            </div>
+            <div id="qr-status-indicator">
+              <span class="ag-pill ag-pill-emerald pulse-indicator">
+                <i class="bi bi-broadcast"></i>
+                Live Stream
+              </span>
+            </div>
           </div>
-          <div id="qr-status-indicator">
-            <span class="badge bg-success rounded-pill px-3 py-1.5 font-monospace pulse-indicator shadow-xs">
-              <i class="bi bi-broadcast me-1"></i>Live Session
-            </span>
+
+          <p class="small mb-3" style="color: var(--ag-slate-500); line-height: 1.55;">
+            Single-use 60-second cryptographic session. Signed via server HMAC. QR expires and is disabled at 00:00.
+          </p>
+
+          <!-- Prominent Dynamic QR Canvas Container -->
+          <div class="d-flex justify-content-center my-3">
+            <div class="p-3 bg-white rounded-4 shadow-sm d-flex align-items-center justify-content-center position-relative" style="min-height: 220px; min-width: 220px; border: 1px solid var(--ag-border); box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.08) !important;">
+              <div id="qr-code-target" class="d-flex flex-column align-items-center justify-content-center text-center">
+                <div class="spinner-border text-primary mb-2" role="status" style="width: 2rem; height: 2rem;">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <span class="small font-monospace text-muted">Awaiting Identity Auth...</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Linear Countdown Progress Bar -->
+          <div class="mb-3 px-1">
+            <div class="d-flex justify-content-between font-monospace small mb-1.5">
+              <span style="color: var(--ag-slate-500);">Token Lifetime</span>
+              <span id="qr-countdown-text" class="fw-bold font-monospace" style="color: var(--ag-primary);">01:00</span>
+            </div>
+            <div class="progress rounded-pill" style="height: 8px; background: rgba(226, 232, 240, 0.8);">
+              <div id="qr-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated rounded-pill" role="progressbar" style="width: 100%; background: linear-gradient(90deg, #4f46e5, #0ea5e9);"></div>
+            </div>
+          </div>
+
+          <!-- Token Cryptographic Credentials -->
+          <div class="p-2.5 rounded-3 font-monospace small" style="background: rgba(241, 245, 249, 0.7); border: 1px solid var(--ag-border);">
+            <div class="d-flex justify-content-between align-items-center py-1">
+              <span style="color: var(--ag-slate-500);">Signature:</span>
+              <span id="qr-signature" class="fw-bold text-truncate" style="max-width: 170px; color: var(--ag-slate-800);">HMAC-SHA256</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center py-1" style="border-top: 1px dashed var(--ag-border);">
+              <span style="color: var(--ag-slate-500);">Anti-Replay Nonce:</span>
+              <span id="qr-nonce" class="fw-bold" style="color: var(--ag-primary);">d8f4e2...</span>
+            </div>
           </div>
         </div>
 
-        <!-- Body -->
-        <div class="card-body p-4 d-flex flex-column justify-content-between text-center">
-          <div>
-            <p class="text-muted small mb-3">
-              Cryptographically signed via server HMAC. Rotates automatically every 180 seconds via WebSocket stream.
-            </p>
-
-            <!-- Prominent Dynamic QR Canvas Container -->
-            <div class="d-flex justify-content-center my-3">
-              <div class="p-3 bg-light border border-light-subtle rounded-4 shadow-xs d-flex align-items-center justify-content-center position-relative" style="min-height: 220px; min-width: 220px;">
-                <div id="qr-code-target" class="d-flex flex-column align-items-center justify-content-center text-center">
-                  <div class="spinner-border text-primary mb-2" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                  </div>
-                  <span class="small font-monospace text-muted">Awaiting Identity Auth...</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Linear Countdown Progress Bar -->
-            <div class="mb-3 px-2">
-              <div class="d-flex justify-content-between font-monospace small mb-1.5">
-                <span class="text-muted">Token Lifetime</span>
-                <span id="qr-countdown-text" class="fw-bold text-primary font-monospace">03:00</span>
-              </div>
-              <div class="progress rounded-pill bg-light" style="height: 10px;">
-                <div id="qr-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary rounded-pill" role="progressbar" style="width: 100%;"></div>
-              </div>
-            </div>
-
-            <!-- Token Cryptographic Credentials -->
-            <ul class="list-group list-group-flush border-0 rounded-3 small font-monospace text-start bg-light p-2 mb-0">
-              <li class="list-group-item d-flex justify-content-between align-items-center py-2 bg-transparent border-0">
-                <span class="text-muted">Signature:</span>
-                <span id="qr-signature" class="fw-bold text-dark text-truncate" style="max-width: 150px;">HMAC-SHA256</span>
-              </li>
-              <li class="list-group-item d-flex justify-content-between align-items-center py-2 bg-transparent border-0">
-                <span class="text-muted">Anti-Replay Nonce:</span>
-                <span id="qr-nonce" class="fw-bold text-secondary">d8f4e2...</span>
-              </li>
-            </ul>
-          </div>
-
-          <div class="border-top pt-3 mt-4 text-muted font-monospace small text-center">
-            Pushed continuously via Django Channels WebSocket. Auto-rotates at 00:00.
-          </div>
+        <div class="pt-3 mt-4 small font-monospace text-center" style="border-top: 1px solid var(--ag-border); color: var(--ag-slate-500);">
+          Single-use session — QR is cryptographically disabled when timer reaches 00:00. Refresh page to start a new session.
         </div>
 
       </div>
@@ -207,89 +243,88 @@
          CARD 3: ZK Voting Booth (Anonymous Ballot)
          ══════════════════════════════════════════════════════════════════ -->
     <div class="col-12 col-lg-4">
-      <div class="card card-mnc h-100 mb-4">
+      <div class="ag-card h-100 d-flex flex-column justify-content-between p-4 p-xl-4.5 position-relative overflow-hidden" style="border-top: 4px solid var(--ag-emerald);">
         
         <!-- Header -->
-        <div class="card-header bg-white border-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center">
-          <div>
-            <span class="text-success font-monospace small fw-bold text-uppercase" style="font-size: 0.72rem;">STEP 3 • ANONYMOUS VOTE</span>
-            <h2 class="h5 fw-bold text-dark mb-0 mt-0.5">
-              <i class="bi bi-box-seam text-success me-2"></i>ZK Anonymous Ballot
-            </h2>
+        <div>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <span class="ag-pill ag-pill-emerald" style="font-size: 0.7rem; padding: 2px 8px;">
+                STEP 3 • ANONYMOUS VOTE
+              </span>
+              <h2 class="h5 fw-bold mb-0 mt-2" style="color: var(--ag-slate-900);">
+                <i class="bi bi-box-seam text-success me-2"></i>ZK Anonymous Ballot
+              </h2>
+            </div>
+            <span class="ag-pill ag-pill-emerald">Gasless Relay</span>
           </div>
-          <span class="badge bg-success-subtle text-success font-monospace rounded-pill px-3 py-1.5">Gasless Relay</span>
+
+          <p class="small mb-3" style="color: var(--ag-slate-500); line-height: 1.55;">
+            Select your candidate below. When submitted, client-side <span class="font-monospace fw-semibold" style="color: var(--ag-primary);">snarkjs</span> generates a zero-knowledge proof locally on this browser.
+          </p>
+
+          <!-- Candidate Selection List -->
+          <form id="vote-form" class="d-flex flex-column gap-2.5 mb-3" onsubmit="event.preventDefault();">
+            {% csrf_token %}
+
+            {% if candidates %}
+              {% for candidate in candidates %}
+              <div class="candidate-option p-3 rounded-3 d-flex justify-content-between align-items-center cursor-pointer" style="background: white; border: 1.5px solid var(--ag-border); transition: all 0.2s ease;">
+                <div class="d-flex align-items-center gap-3">
+                  <input type="radio" name="candidate" value="{{ candidate.candidate_id }}" class="form-check-input mt-0" style="cursor: pointer;" />
+                  <div>
+                    <div class="fw-bold small" style="color: var(--ag-slate-900);">{{ candidate.name }}</div>
+                    <div class="font-monospace small" style="font-size: 0.75rem; color: var(--ag-slate-500);">{{ candidate.party }}</div>
+                  </div>
+                </div>
+                <span class="badge font-monospace rounded-pill px-2.5 py-1 bg-light text-secondary border">#{{ candidate.candidate_id }}</span>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="candidate-option p-3 rounded-3 d-flex justify-content-between align-items-center cursor-pointer" style="background: rgba(79, 70, 229, 0.05); border: 1.5px solid var(--ag-primary); transition: all 0.2s ease;">
+                <div class="d-flex align-items-center gap-3">
+                  <input type="radio" name="candidate" value="1" checked class="form-check-input mt-0" style="cursor: pointer;" />
+                  <div>
+                    <div class="fw-bold small" style="color: var(--ag-primary);">Dr. A. Sharma</div>
+                    <div class="font-monospace small" style="font-size: 0.75rem; color: var(--ag-slate-500);">National Tech & Integrity Coalition</div>
+                  </div>
+                </div>
+                <span class="badge font-monospace rounded-pill px-2.5 py-1 bg-white text-primary border" style="border-color: var(--ag-primary) !important;">#01</span>
+              </div>
+
+              <div class="candidate-option p-3 rounded-3 d-flex justify-content-between align-items-center cursor-pointer" style="background: white; border: 1.5px solid var(--ag-border); transition: all 0.2s ease;">
+                <div class="d-flex align-items-center gap-3">
+                  <input type="radio" name="candidate" value="2" class="form-check-input mt-0" style="cursor: pointer;" />
+                  <div>
+                    <div class="fw-bold small" style="color: var(--ag-slate-900);">Priya Sundaram</div>
+                    <div class="font-monospace small" style="font-size: 0.75rem; color: var(--ag-slate-500);">Democratic Progressive Front</div>
+                  </div>
+                </div>
+                <span class="badge font-monospace rounded-pill px-2.5 py-1 bg-light text-secondary border">#02</span>
+              </div>
+
+              <div class="candidate-option p-3 rounded-3 d-flex justify-content-between align-items-center cursor-pointer" style="background: white; border: 1.5px solid var(--ag-border); transition: all 0.2s ease;">
+                <div class="d-flex align-items-center gap-3">
+                  <input type="radio" name="candidate" value="3" class="form-check-input mt-0" style="cursor: pointer;" />
+                  <div>
+                    <div class="fw-bold small" style="color: var(--ag-slate-900);">Rajesh Verma</div>
+                    <div class="font-monospace small" style="font-size: 0.75rem; color: var(--ag-slate-500);">Sovereign Reform Alliance</div>
+                  </div>
+                </div>
+                <span class="badge font-monospace rounded-pill px-2.5 py-1 bg-light text-secondary border">#03</span>
+              </div>
+            {% endif %}
+
+            <!-- Cast Action Button -->
+            <button type="button" id="btn-cast-vote" class="ag-btn-primary w-100 py-3 mt-2 d-flex align-items-center justify-content-center gap-2">
+              <i class="bi bi-check2-circle fs-5"></i>
+              <span>Cast Anonymous Vote</span>
+            </button>
+          </form>
         </div>
 
-        <!-- Body -->
-        <div class="card-body p-4 d-flex flex-column justify-content-between">
-          <div>
-            <p class="text-muted small mb-3">
-              Select your candidate below. When submitted, client-side <span class="font-monospace text-primary fw-semibold">snarkjs</span> generates a zero-knowledge proof locally on this browser.
-            </p>
-
-            <!-- Candidate Selection List (Borderless Clickable List Items) -->
-            <form id="vote-form" class="d-flex flex-column gap-2 mb-3" onsubmit="event.preventDefault();">
-              {% csrf_token %}
-
-              {% if candidates %}
-                {% for candidate in candidates %}
-                <div class="candidate-option list-group-item list-group-item-action border-0 rounded-3 mb-2 p-3 bg-light cursor-pointer d-flex justify-content-between align-items-center transition">
-                  <div class="d-flex align-items-center gap-3">
-                    <input type="radio" name="candidate" value="{{ candidate.candidate_id }}" class="form-check-input mt-0" />
-                    <div>
-                      <div class="fw-bold text-dark small">{{ candidate.name }}</div>
-                      <div class="text-muted font-monospace small" style="font-size: 0.75rem;">{{ candidate.party }}</div>
-                    </div>
-                  </div>
-                  <span class="badge bg-white text-secondary font-monospace border rounded-pill px-2.5 py-1">#{{ candidate.candidate_id }}</span>
-                </div>
-                {% endfor %}
-              {% else %}
-                <div class="candidate-option list-group-item list-group-item-action border-0 rounded-3 mb-2 p-3 bg-primary-subtle text-primary cursor-pointer d-flex justify-content-between align-items-center transition">
-                  <div class="d-flex align-items-center gap-3">
-                    <input type="radio" name="candidate" value="1" checked class="form-check-input mt-0" />
-                    <div>
-                      <div class="fw-bold text-dark small">Dr. A. Sharma</div>
-                      <div class="text-muted font-monospace small" style="font-size: 0.75rem;">National Tech & Integrity Coalition</div>
-                    </div>
-                  </div>
-                  <span class="badge bg-white text-primary font-monospace border rounded-pill px-2.5 py-1">#01</span>
-                </div>
-
-                <div class="candidate-option list-group-item list-group-item-action border-0 rounded-3 mb-2 p-3 bg-light cursor-pointer d-flex justify-content-between align-items-center transition">
-                  <div class="d-flex align-items-center gap-3">
-                    <input type="radio" name="candidate" value="2" class="form-check-input mt-0" />
-                    <div>
-                      <div class="fw-bold text-dark small">Priya Sundaram</div>
-                      <div class="text-muted font-monospace small" style="font-size: 0.75rem;">Democratic Progressive Front</div>
-                    </div>
-                  </div>
-                  <span class="badge bg-white text-secondary font-monospace border rounded-pill px-2.5 py-1">#02</span>
-                </div>
-
-                <div class="candidate-option list-group-item list-group-item-action border-0 rounded-3 mb-2 p-3 bg-light cursor-pointer d-flex justify-content-between align-items-center transition">
-                  <div class="d-flex align-items-center gap-3">
-                    <input type="radio" name="candidate" value="3" class="form-check-input mt-0" />
-                    <div>
-                      <div class="fw-bold text-dark small">Rajesh Verma</div>
-                      <div class="text-muted font-monospace small" style="font-size: 0.75rem;">Sovereign Reform Alliance</div>
-                    </div>
-                  </div>
-                  <span class="badge bg-white text-secondary font-monospace border rounded-pill px-2.5 py-1">#03</span>
-                </div>
-              {% endif %}
-
-              <!-- Cast Action Button -->
-              <button type="button" id="btn-cast-vote" class="btn btn-primary btn-lg rounded-3 fw-semibold shadow-sm w-100 py-3 mt-2 d-flex align-items-center justify-content-center gap-2">
-                <i class="bi bi-check2-circle fs-5"></i>
-                <span>Cast Anonymous Vote</span>
-              </button>
-            </form>
-          </div>
-
-          <div class="border-top pt-3 mt-3 text-muted font-monospace small text-center">
-            ZK Circuit: 20-Level Merkle Tree • Nullifier Anti-Replay
-          </div>
+        <div class="pt-3 mt-3 small font-monospace text-center" style="border-top: 1px solid var(--ag-border); color: var(--ag-slate-500);">
+          ZK Circuit: 20-Level Merkle Tree • Nullifier Anti-Replay
         </div>
 
       </div>
@@ -302,22 +337,22 @@
 <!-- ══════════════════════════════════════════════════════════════════
      MODAL: ZK Proof Computation & Cryptographic Receipt
      ══════════════════════════════════════════════════════════════════ -->
-<div id="zk-modal" class="modal fade show hidden" tabindex="-1" style="background: rgba(15, 23, 42, 0.65); display: none;">
+<div id="zk-modal" class="modal fade show hidden" tabindex="-1" style="background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(8px); display: none; z-index: 1060;">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content border-0 shadow-lg rounded-4 p-2 bg-white">
+    <div class="modal-content ag-card border-0 p-3 bg-white" style="box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25) !important;">
 
       <!-- Active Computing State View -->
       <div id="modal-computing-view" class="modal-body text-center p-4">
-        <div class="spinner-border text-primary mb-3" style="width: 3.5rem; height: 3.5rem;" role="status">
+        <div class="spinner-border text-primary mb-3" style="width: 3.5rem; height: 3.5rem; border-width: 0.28em;" role="status">
           <span class="visually-hidden">Computing...</span>
         </div>
-        <h3 class="h5 fw-bold text-dark mb-1">Generating Local zk-SNARK Proof...</h3>
-        <p class="text-muted small mb-4">
+        <h3 class="h5 fw-bold mb-1" style="color: var(--ag-slate-900);">Generating Local zk-SNARK Proof...</h3>
+        <p class="small mb-4" style="color: var(--ag-slate-500);">
           Compiling cryptographic witness via <code class="font-monospace">voter_eligibility.wasm</code> and generating Groth16 proof using client-side WASM.
         </p>
 
         <!-- Live Computation Status Step -->
-        <div class="alert alert-light border small font-monospace text-primary text-start d-flex align-items-center gap-2 mb-0 rounded-3">
+        <div class="p-3 rounded-3 font-monospace small text-start d-flex align-items-center gap-2 mb-0" style="background: rgba(79, 70, 229, 0.08); border: 1px solid rgba(79, 70, 229, 0.25); color: var(--ag-primary);">
           <span class="spinner-grow spinner-grow-sm text-primary" role="status"></span>
           <span id="modal-status-text">Deriving private voter scalar & nullifier witness...</span>
         </div>
@@ -325,37 +360,37 @@
 
       <!-- Success Receipt View -->
       <div id="modal-receipt-view" class="modal-body text-center p-4 hidden">
-        <div class="text-success display-5 mb-2">
+        <div class="display-5 mb-2" style="color: var(--ag-emerald);">
           <i class="bi bi-patch-check-fill"></i>
         </div>
-        <h3 class="h5 fw-bold text-dark">Cryptographic Ballot Secured</h3>
-        <p class="text-muted small mb-3">Your anonymous zero-knowledge vote has been broadcast to the Polygon blockchain.</p>
+        <h3 class="h5 fw-bold mb-1" style="color: var(--ag-slate-900);">Cryptographic Ballot Secured</h3>
+        <p class="small mb-3" style="color: var(--ag-slate-500);">Your anonymous zero-knowledge vote has been broadcast to the Polygon blockchain.</p>
 
         <!-- Receipt Details Box -->
-        <div class="card bg-light border-0 rounded-4 p-3 text-start font-monospace small mb-3">
-          <div class="mb-2">
-            <span class="text-muted small text-uppercase d-block mb-1">Transaction Hash</span>
-            <a id="receipt-tx-link" href="#" target="_blank" class="fw-bold text-primary text-break text-decoration-none">
+        <div class="p-3.5 rounded-3 text-start font-monospace small mb-3" style="background: rgba(241, 245, 249, 0.85); border: 1px solid var(--ag-border);">
+          <div class="mb-2.5">
+            <span class="small text-uppercase d-block mb-1" style="color: var(--ag-slate-500); font-size: 0.7rem; font-weight: 700;">Transaction Hash</span>
+            <a id="receipt-tx-link" href="#" target="_blank" class="fw-bold text-break text-decoration-none" style="color: var(--ag-primary);">
               0x...
             </a>
           </div>
           <div>
-            <span class="text-muted small text-uppercase d-block mb-1">Cryptographic Nullifier</span>
-            <span id="receipt-nullifier" class="text-secondary text-break fw-semibold">0x...</span>
+            <span class="small text-uppercase d-block mb-1" style="color: var(--ag-slate-500); font-size: 0.7rem; font-weight: 700;">Cryptographic Nullifier</span>
+            <span id="receipt-nullifier" class="text-break fw-semibold" style="color: var(--ag-slate-800);">0x...</span>
           </div>
-          <hr class="my-2" />
+          <hr class="my-2.5" style="border-color: var(--ag-border);" />
           <div class="d-flex justify-content-between small">
-            <span class="text-muted">Network: Polygon Amoy</span>
-            <span class="text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Confirmed On-Chain</span>
+            <span style="color: var(--ag-slate-500);">Network: Polygon Amoy</span>
+            <span class="fw-bold" style="color: var(--ag-emerald);"><i class="bi bi-check-circle-fill me-1"></i>Confirmed On-Chain</span>
           </div>
         </div>
 
         <!-- Actions -->
         <div class="d-flex gap-2">
-          <button type="button" id="btn-copy-receipt" class="btn btn-outline-secondary w-50 rounded-3 fw-semibold py-2.5">
-            Copy Tx Hash
+          <button type="button" id="btn-copy-receipt" class="ag-btn-glass w-50 py-2.5 small fw-semibold">
+            <i class="bi bi-copy me-1"></i>Copy Tx Hash
           </button>
-          <button type="button" id="btn-close-modal" class="btn btn-primary w-50 rounded-3 fw-semibold py-2.5">
+          <button type="button" id="btn-close-modal" class="ag-btn-primary w-50 py-2.5 small fw-semibold">
             Done
           </button>
         </div>
@@ -373,8 +408,7 @@
     // ── STEP 1: Authentication State Progression ───────────────────
     const btnRequestOtp = document.getElementById('btn-request-otp');
     const btnVerifyOtp = document.getElementById('btn-verify-otp');
-    const authPhase1 = document.getElementById('auth-phase-1');
-    const authPhase2 = document.getElementById('auth-phase-2');
+    const authPhasePending = document.getElementById('auth-phase-pending');
     const authPhaseVerified = document.getElementById('auth-phase-verified');
     const authStatusPill = document.getElementById('auth-status-pill');
     const displayVoterHash = document.getElementById('display-voter-hash');
@@ -382,47 +416,173 @@
     const stepBadge2 = document.getElementById('step-badge-2');
     const stepBadge3 = document.getElementById('step-badge-3');
 
-    // Default or stored voter hash
-    let activeVoterHash = sessionStorage.getItem('blockvote_voter_hash') || null;
+    // Check server context first, then browser session storage
+    const serverVoterHash = "{{ voter_hash|default:'' }}";
+    let activeVoterHash = serverVoterHash || sessionStorage.getItem('blockvote_voter_hash') || null;
 
     if (activeVoterHash) {
       advanceToVerified(activeVoterHash);
     }
 
-    btnRequestOtp?.addEventListener('click', () => {
+    // ── OTP Timer for Dashboard Auth Widget ──────────────────────────
+    let dashOtpTimer = null;
+    let dashOtpSeconds = 600;
+    let dashSandboxOtp = null;
+
+    function startDashOtpTimer(secs) {
+      dashOtpSeconds = secs;
+      if (dashOtpTimer) clearInterval(dashOtpTimer);
+      dashOtpTimer = setInterval(() => {
+        dashOtpSeconds--;
+        const countdownEl = document.getElementById('dash-otp-countdown');
+        const m = Math.floor(Math.max(0, dashOtpSeconds) / 60);
+        const s = Math.max(0, dashOtpSeconds) % 60;
+        const fmt = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        if (countdownEl) {
+          countdownEl.textContent = fmt;
+          if (dashOtpSeconds <= 60) {
+            countdownEl.className = 'text-danger fw-bold';
+          }
+        }
+        if (dashOtpSeconds <= 0) {
+          clearInterval(dashOtpTimer);
+          const banner = document.getElementById('dash-otp-banner');
+          if (banner) banner.innerHTML = '<div class="d-flex align-items-center gap-2 text-danger small"><i class="bi bi-x-octagon-fill"></i><strong>OTP Expired.</strong> <span class="text-muted">Click "Send OTP" again for a fresh code.</span></div>';
+        }
+      }, 1000);
+    }
+
+    function getCsrfToken() {
+      const el = document.querySelector('[name=csrfmiddlewaretoken]');
+      if (el) return el.value;
+      return document.cookie.split('; ').find(r => r.startsWith('csrftoken='))?.split('=')[1] || '';
+    }
+
+    async function sendDashOtp() {
+      const epic = document.getElementById('voter-epic').value.trim().toUpperCase();
       const mobile = document.getElementById('voter-mobile').value.trim();
-      if (mobile.length < 10) {
-        alert('Please enter a valid 10-digit mobile number.');
+      const btn = document.getElementById('btn-request-otp');
+      const btnText = document.getElementById('btn-request-otp-text');
+
+      if (!epic || epic.length < 7) {
+        if (window.showToast) window.showToast('Please enter a valid EPIC Voter ID (min 7 characters).', 'warning');
+        else alert('Please enter a valid EPIC Voter ID.');
+        document.getElementById('voter-epic').focus();
         return;
       }
-      authPhase1.classList.add('hidden');
-      authPhase2.classList.remove('hidden');
-      authStatusPill.textContent = 'OTP Sent';
-      authStatusPill.className = 'badge bg-info-subtle text-info font-monospace rounded-pill px-3 py-1.5';
-    });
+      if (!mobile || mobile.length < 10) {
+        if (window.showToast) window.showToast('Please enter a valid 10-digit mobile number.', 'warning');
+        else alert('Please enter a valid 10-digit mobile number.');
+        document.getElementById('voter-mobile').focus();
+        return;
+      }
+
+      btn.disabled = true;
+      if (btnText) btnText.textContent = 'Sending...';
+
+      try {
+        const resp = await fetch('/api/v1/send-otp/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+          body: JSON.stringify({ epic_number: epic, phone_number: mobile }),
+          credentials: 'same-origin'
+        });
+        const data = await resp.json();
+
+        btn.disabled = false;
+        if (btnText) btnText.textContent = 'Resend OTP';
+
+        if (data.status === 'sent') {
+          const banner = document.getElementById('dash-otp-banner');
+          if (banner) banner.classList.remove('d-none');
+          const bannerText = document.getElementById('dash-otp-banner-text');
+          if (bannerText) {
+            bannerText.textContent = data.sms_dispatched
+              ? 'Live SMS Dispatched via Twilio'
+              : 'Security OTP Dispatched';
+          }
+          const msgEl = document.getElementById('dash-otp-msg');
+          if (msgEl) msgEl.textContent = data.message || 'Verification code sent to your registered mobile.';
+
+          const countdownContainer = document.getElementById('dash-otp-countdown-container');
+          if (countdownContainer) countdownContainer.classList.remove('d-none');
+
+          const helper = document.getElementById('dash-otp-helper');
+          if (helper) helper.innerHTML = '<span class="text-success"><i class="bi bi-check-circle me-1"></i>OTP sent to mobile! Enter 6 digits and authorize terminal.</span>';
+
+          authStatusPill.textContent = 'OTP Sent';
+          authStatusPill.className = 'ag-pill ag-pill-sky';
+
+          const otpInput = document.getElementById('dash-otp-input');
+          if (otpInput) otpInput.focus();
+
+          startDashOtpTimer(data.expires_in_seconds || 600);
+          const toastMsg = data.sms_dispatched
+            ? ('Live SMS OTP dispatched to +91-XXXXXX' + mobile.slice(-4))
+            : ('Security OTP dispatched to +91-XXXXXX' + mobile.slice(-4));
+          if (window.showToast) window.showToast(toastMsg, 'success');
+        } else {
+          if (window.showToast) window.showToast('OTP error: ' + (data.error || 'Failed to send OTP'), 'error');
+          else alert('OTP error: ' + (data.error || 'Failed to send OTP'));
+        }
+      } catch (err) {
+        btn.disabled = false;
+        if (btnText) btnText.textContent = 'Send OTP';
+        if (window.showToast) window.showToast('Network error sending OTP. Is the server running?', 'error');
+        else alert('Network error: ' + err.message);
+      }
+    }
+
+    btnRequestOtp?.addEventListener('click', sendDashOtp);
 
     btnVerifyOtp?.addEventListener('click', async () => {
       btnVerifyOtp.disabled = true;
-      btnVerifyOtp.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Verifying...';
+      btnVerifyOtp.innerHTML = '<span class="spinner-border spinner-border-sm me-1.5"></span>Verifying...';
 
-      const epic = document.getElementById('voter-epic').value.trim() || 'IND9876543';
-      const mobile = document.getElementById('voter-mobile').value.trim() || '9876543210';
+      const epic = document.getElementById('voter-epic').value.trim().toUpperCase();
+      const mobile = document.getElementById('voter-mobile').value.trim();
+      const otpInput = document.getElementById('dash-otp-input');
+      const enteredOtp = otpInput ? otpInput.value.trim() : '';
+
+      if (!enteredOtp || enteredOtp.length < 6) {
+        btnVerifyOtp.disabled = false;
+        btnVerifyOtp.innerHTML = '<i class="bi bi-check-circle-fill"></i><span>Verify &amp; Authorize Terminal</span>';
+        if (window.showToast) window.showToast('Please enter the complete 6-digit OTP.', 'warning');
+        if (otpInput) otpInput.focus();
+        return;
+      }
 
       try {
-        const resp = await fetch('/api/v1/register/', {
+        // Submit registration + OTP verification in one step via the auth form POST
+        const formData = new FormData();
+        formData.append('action', 'login');
+        formData.append('epic_number', epic);
+        formData.append('phone_number', mobile);
+        formData.append('otp', enteredOtp);
+        formData.append('csrfmiddlewaretoken', getCsrfToken());
+
+        const resp = await fetch('/auth/voter/', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
-          },
-          body: JSON.stringify({ epic_number: epic, phone_number: mobile })
+          body: formData,
+          credentials: 'same-origin',
+          redirect: 'manual'
         });
-        const data = await resp.json();
-        const derivedHash = data.voter_hash || ('0x' + Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, '0')).join(''));
+
+        // Also register if not yet registered (API Setu KYC)
+        const regResp = await fetch('/api/v1/register/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+          body: JSON.stringify({ epic_number: epic, phone_number: mobile }),
+          credentials: 'same-origin'
+        });
+        const regData = await regResp.json();
+        const derivedHash = regData.voter_hash || ('0x' + Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, '0')).join(''));
         advanceToVerified(derivedHash);
+        if (window.showToast) window.showToast('Identity authenticated. Session authorized.', 'success');
       } catch (e) {
-        const mockHash = '0x' + Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, '0')).join('');
-        advanceToVerified(mockHash);
+        btnVerifyOtp.disabled = false;
+        btnVerifyOtp.innerHTML = '<i class="bi bi-check-circle-fill"></i><span>Verify &amp; Authorize Terminal</span>';
+        if (window.showToast) window.showToast('Verification error: ' + e.message, 'error');
       }
     });
 
@@ -430,18 +590,17 @@
       activeVoterHash = hash;
       sessionStorage.setItem('blockvote_voter_hash', hash);
 
-      authPhase1.classList.add('hidden');
-      authPhase2.classList.add('hidden');
+      if (authPhasePending) authPhasePending.classList.add('hidden');
       authPhaseVerified.classList.remove('hidden');
 
       displayVoterHash.textContent = hash.substring(0, 10) + '...' + hash.slice(-6);
       authStatusPill.textContent = 'Verified';
-      authStatusPill.className = 'badge bg-success-subtle text-success font-monospace rounded-pill px-3 py-1.5';
+      authStatusPill.className = 'ag-pill ag-pill-emerald';
 
       // Update Step Badges
-      stepBadge1.className = 'badge bg-secondary-subtle text-secondary py-2 px-3 rounded-pill';
-      stepBadge2.className = 'badge bg-primary text-white py-2 px-3 rounded-pill fw-semibold';
-      stepBadge3.className = 'badge bg-light text-muted border py-2 px-3 rounded-pill';
+      stepBadge1.className = 'ag-pill ag-pill-neutral';
+      stepBadge2.className = 'ag-pill ag-pill-primary fw-bold';
+      stepBadge3.className = 'ag-pill ag-pill-neutral';
 
       // Initialize QR Streamer
       if (window.QRStreamer) {
@@ -454,18 +613,24 @@
     candidateOptions.forEach(opt => {
       opt.addEventListener('click', () => {
         candidateOptions.forEach(o => {
-          o.classList.remove('bg-primary-subtle', 'text-primary');
-          o.classList.add('bg-light');
+          o.style.background = 'white';
+          o.style.borderColor = 'var(--ag-border)';
+          const nameEl = o.querySelector('.fw-bold');
+          if (nameEl) nameEl.style.color = 'var(--ag-slate-900)';
           const badge = o.querySelector('.badge');
           if (badge) {
-            badge.className = 'badge bg-white text-secondary font-monospace border rounded-pill px-2.5 py-1';
+            badge.className = 'badge font-monospace rounded-pill px-2.5 py-1 bg-light text-secondary border';
+            badge.style.borderColor = 'var(--ag-border)';
           }
         });
-        opt.classList.remove('bg-light');
-        opt.classList.add('bg-primary-subtle', 'text-primary');
+        opt.style.background = 'rgba(79, 70, 229, 0.05)';
+        opt.style.borderColor = 'var(--ag-primary)';
+        const activeName = opt.querySelector('.fw-bold');
+        if (activeName) activeName.style.color = 'var(--ag-primary)';
         const activeBadge = opt.querySelector('.badge');
         if (activeBadge) {
-          activeBadge.className = 'badge bg-white text-primary font-monospace border rounded-pill px-2.5 py-1';
+          activeBadge.className = 'badge font-monospace rounded-pill px-2.5 py-1 bg-white text-primary border';
+          activeBadge.style.borderColor = 'var(--ag-primary)';
         }
         const radio = opt.querySelector('input[type=radio]');
         if (radio) radio.checked = true;
@@ -486,17 +651,31 @@
     btnCastVote?.addEventListener('click', async () => {
       const selected = document.querySelector('input[name=candidate]:checked');
       if (!selected) {
-        alert('Please select a candidate before casting your vote.');
+        if (window.showToast) window.showToast('Please select a candidate before casting your vote.', 'warning');
+        else alert('Please select a candidate before casting your vote.');
         return;
       }
 
       if (!activeVoterHash) {
-        alert('Please complete Step 1 (Authentication) first to derive your identity hash.');
+        if (window.showToast) window.showToast('Please complete Step 1 (Authentication) first.', 'warning');
+        else alert('Please complete Step 1 (Authentication) first to derive your identity hash.');
+        return;
+      }
+
+      if (window.QRStreamer && window.QRStreamer.isExpired) {
+        if (window.showToast) window.showToast('Your 60-second cryptographic QR session has expired. Please refresh the page to start a new session.', 'error');
+        else alert('Your 60-second cryptographic QR session has expired. Please refresh the page to start a new session.');
         return;
       }
 
       btnCastVote.disabled = true;
       btnCastVote.classList.add('disabled');
+
+      // ── Immediately disable candidate choices and QR code the instant the button is submitted ──
+      document.querySelectorAll('input[name=candidate]').forEach(r => r.disabled = true);
+      if (window.QRStreamer && typeof window.QRStreamer.disableAfterVote === 'function') {
+        window.QRStreamer.disableAfterVote();
+      }
 
       zkModal.classList.remove('hidden');
       zkModal.style.display = 'block';
@@ -521,29 +700,49 @@
         receiptNullifier.textContent = result.nullifier || '0x' + Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, '0')).join('');
 
         btnCopyReceipt.onclick = () => {
-          navigator.clipboard.writeText(txHash);
-          btnCopyReceipt.textContent = '✓ Copied!';
-          setTimeout(() => { btnCopyReceipt.textContent = 'Copy Tx Hash'; }, 2000);
+          if (window.copyToClipboard) {
+            window.copyToClipboard(txHash, 'Transaction Hash');
+          } else {
+            navigator.clipboard.writeText(txHash);
+          }
+          btnCopyReceipt.innerHTML = '<i class="bi bi-check2 me-1"></i>Copied!';
+          setTimeout(() => { btnCopyReceipt.innerHTML = '<i class="bi bi-copy me-1"></i>Copy Tx Hash'; }, 2000);
         };
 
         // Advance to step 3 completed
-        stepBadge2.className = 'badge bg-secondary-subtle text-secondary py-2 px-3 rounded-pill';
-        stepBadge3.className = 'badge bg-success text-white py-2 px-3 rounded-pill fw-semibold';
+        stepBadge2.className = 'ag-pill ag-pill-neutral';
+        stepBadge3.className = 'ag-pill ag-pill-emerald fw-bold';
+
+        // ── Ensure QR card remains disabled ──
+        if (window.QRStreamer && typeof window.QRStreamer.disableAfterVote === 'function') {
+          window.QRStreamer.disableAfterVote();
+        }
       } catch (err) {
         console.error('[CastVote] Error:', err);
-        alert('Voting error: ' + (err.message || 'Transaction could not be submitted.'));
+        if (window.showToast) window.showToast('Voting error: ' + (err.message || 'Transaction could not be submitted.'), 'error');
+        else alert('Voting error: ' + (err.message || 'Transaction could not be submitted.'));
         zkModal.classList.add('hidden');
         zkModal.style.display = 'none';
         btnCastVote.disabled = false;
         btnCastVote.classList.remove('disabled');
+        // If error, re-enable candidate selection so voter can retry
+        document.querySelectorAll('input[name=candidate]').forEach(r => r.disabled = false);
       }
     });
 
     btnCloseModal?.addEventListener('click', () => {
       zkModal.classList.add('hidden');
       zkModal.style.display = 'none';
-      btnCastVote.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Vote Recorded on-Chain';
-      btnCastVote.className = 'btn btn-secondary btn-lg rounded-3 fw-semibold w-100 py-3 mt-2 disabled';
+      // Lock the vote button permanently after successful vote
+      btnCastVote.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Vote Recorded on Blockchain';
+      btnCastVote.className = 'ag-btn-glass w-100 py-3 mt-2 disabled';
+      btnCastVote.style.pointerEvents = 'none';
+      // Disable candidate radio inputs to prevent re-selection
+      document.querySelectorAll('input[name=candidate]').forEach(r => r.disabled = true);
+      // Ensure QR streamer remains disabled
+      if (window.QRStreamer && typeof window.QRStreamer.disableAfterVote === 'function') {
+        window.QRStreamer.disableAfterVote();
+      }
     });
   });
 </script>

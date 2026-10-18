@@ -26,3 +26,9 @@ urlpatterns = [
     path('admin-panel/', api_views.admin_portal,   name='admin_portal'),
     path('auditor/',     api_views.auditor_portal,  name='auditor_portal'),
 ]
+
+from django.conf import settings
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+
+if settings.DEBUG:
+    urlpatterns += staticfiles_urlpatterns()

@@ -43,14 +43,15 @@ class QRTokenConsumer(AsyncWebsocketConsumer):
 
     async def send_qr_loop(self):
         """
-        Pushes a fresh HMAC-SHA256 signed token every 180 seconds.
+        Pushes a fresh HMAC-SHA256 signed token valid for 60 seconds (1 minute).
+        When the 60-second timer elapses, emits a 'qr_expired' message and disables the session.
         Handles client disconnection and cancellation gracefully.
         """
         SERVER_SECRET = getattr(settings, 'SECRET_KEY', 'blockvote-dev-secret').encode('utf-8')
 
-        while self.session_active:
+        if self.session_active:
             current_time = int(time.time())
-            expiry_time = current_time + 180  # Valid for 3 minutes
+            expiry_time = current_time + 60  # Valid for 60 seconds (1 minute)
 
             payload = {
                 "voter_hash": self.voter_hash,
@@ -59,13 +60,14 @@ class QRTokenConsumer(AsyncWebsocketConsumer):
                 "session_nonce": secrets.token_hex(8)  # Replay attack prevention
             }
 
-            # Deterministic signature over sorted keys
+            # Deterministic signature over sorted keys (HMAC-SHA256)
             payload_string = json.dumps(payload, sort_keys=True)
-            signature = hmac.new(
+            mac = hmac.new(
                 SERVER_SECRET,
-                payload_string.encode('utf-8'),
-                hashlib.sha256
-            ).hexdigest()
+                msg=payload_string.encode('utf-8'),
+                digestmod=hashlib.sha256
+            )
+            signature = mac.hexdigest()
 
             secure_token = {
                 "payload": payload,
@@ -78,14 +80,25 @@ class QRTokenConsumer(AsyncWebsocketConsumer):
                     "token": secure_token
                 }))
             except (StopConsumer, Exception):
-                # Client disconnected mid-send — terminate the loop cleanly
                 self.session_active = False
-                break
+                return
 
             try:
-                await asyncio.sleep(180)
+                # Wait 60 seconds for the session lifetime
+                await asyncio.sleep(60)
             except asyncio.CancelledError:
-                break
+                return
+
+            # Timer expired: push expired notification and disable
+            if self.session_active:
+                try:
+                    await self.send(text_data=json.dumps({
+                        "type": "qr_expired",
+                        "message": "QR session expired after 60 seconds. Please refresh the page to generate a new session."
+                    }))
+                except (StopConsumer, Exception):
+                    pass
+                self.session_active = False
 
 
 class TelemetryConsumer(AsyncWebsocketConsumer):
@@ -116,6 +129,32 @@ class TelemetryConsumer(AsyncWebsocketConsumer):
     # Receive message from channel layer group (sent by submit_vote_relayer view)
     async def threat_event(self, event):
         """Forwards threat events from the Django view layer to all admin browsers."""
+        try:
+            await self.send(text_data=json.dumps(event))
+        except Exception:
+            pass
+
+
+class AuditorMempoolConsumer(AsyncWebsocketConsumer):
+    """
+    Public auditor mempool WebSocket consumer.
+    Subscribes to 'auditor_mempool' group to stream real-time
+    on-chain transactions as votes are cast.
+    """
+    GROUP_NAME = "auditor_mempool"
+
+    async def connect(self):
+        await self.channel_layer.group_add(self.GROUP_NAME, self.channel_name)
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        try:
+            await self.channel_layer.group_discard(self.GROUP_NAME, self.channel_name)
+        except Exception:
+            pass
+
+    async def mempool_event(self, event):
+        """Pushes real vote transaction data to connected auditor browsers."""
         try:
             await self.send(text_data=json.dumps(event))
         except Exception:

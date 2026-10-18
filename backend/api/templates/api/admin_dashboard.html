@@ -5,102 +5,112 @@
 {% block meta_description %}High-stakes election authority control room: Merkle root sealing, active voter roll registry, and real-time AI Sentinel threat telemetry.{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-4 py-2">
+<div class="container-fluid px-3 px-md-4 py-2">
 
   <!-- ── Top Title & Overview ─────────────────────────────────────────── -->
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center pb-4 mb-4 gap-3">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center pb-4 mb-4 gap-3 border-bottom" style="border-color: var(--ag-border) !important;">
     <div>
-      <div class="d-flex align-items-center gap-2 mb-2">
-        <span class="badge bg-danger-subtle text-danger font-monospace rounded-pill px-3 py-1.5 fw-semibold">
-          <i class="bi bi-shield-lock-fill me-1"></i>ELECTION AUTHORITY CONSOLE
+      <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+        <span class="ag-pill ag-pill-rose">
+          <i class="bi bi-shield-lock-fill"></i>
+          ELECTION AUTHORITY CONSOLE
         </span>
-        <span class="badge bg-dark text-white rounded-pill px-3 py-1.5 font-monospace">STAFF ACCESS</span>
+        <span class="ag-pill ag-pill-neutral">
+          <i class="bi bi-person-check-fill"></i>
+          STAFF ACCESS LEVEL 4
+        </span>
       </div>
-      <h1 class="h2 fw-bold text-dark tracking-tight mb-1">Administrative Command Center</h1>
-      <p class="text-muted small mb-0">Sovereign Merkle tree cryptographic lock and real-time Scikit-Learn Active Sentinel telemetry.</p>
+      <h1 class="h2 fw-bold mb-1" style="color: var(--ag-slate-900); letter-spacing: -0.03em;">
+        Administrative Command Center
+      </h1>
+      <p class="small mb-0" style="color: var(--ag-slate-500);">
+        Sovereign Merkle tree cryptographic lock and real-time Scikit-Learn Active Sentinel telemetry.
+      </p>
     </div>
 
     <!-- Live System Sentinel Status Badge -->
     <div class="d-flex align-items-center gap-2 font-monospace small">
-      <div class="bg-white border rounded-4 py-2 px-3.5 shadow-sm d-flex align-items-center gap-2">
-        <span class="spinner-grow spinner-grow-sm text-success" role="status" style="width: 0.5rem; height: 0.5rem;"></span>
-        <span class="text-muted">Active Sentinel:</span>
-        <strong class="text-success">ONLINE</strong>
+      <div class="p-2 px-3.5 rounded-pill bg-white border shadow-xs d-flex align-items-center gap-2" style="border-color: var(--ag-border);">
+        <span class="spinner-grow spinner-grow-sm text-success" role="status" style="width: 0.55rem; height: 0.55rem;"></span>
+        <span style="color: var(--ag-slate-500);">Active Sentinel:</span>
+        <strong style="color: var(--ag-emerald);">ONLINE</strong>
       </div>
     </div>
   </div>
 
-  <!-- ── Executive KPI Cards Grid (MNC Elevated Cards) ────────────────── -->
+  <!-- ── Executive KPI Cards Grid (Antigravity Bento Cards) ─────────────── -->
   <div class="row g-3 mb-4">
     
     <!-- KPI 1 -->
     <div class="col-sm-6 col-lg-3">
-      <div class="card card-mnc p-4 h-100">
-        <div class="d-flex justify-content-between align-items-center text-muted small text-uppercase font-monospace mb-2">
+      <div class="ag-card p-4 h-100 position-relative overflow-hidden">
+        <div class="d-flex justify-content-between align-items-center small text-uppercase font-monospace mb-2" style="color: var(--ag-slate-500);">
           <span class="fw-semibold">Electoral Roll</span>
-          <div class="bg-primary-subtle text-primary rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+          <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background: rgba(79, 70, 229, 0.1); color: var(--ag-primary);">
             <i class="bi bi-people-fill fs-6"></i>
           </div>
         </div>
-        <div class="h3 fw-bold text-dark font-monospace mb-1" id="kpi-voter-count">
+        <div class="h3 fw-bold font-monospace mb-1" id="kpi-voter-count" style="color: var(--ag-slate-900);">
           {{ voter_stats.total|default:"1,840" }}
         </div>
-        <div class="text-muted small">Whitelisted Citizen Hashes</div>
+        <div class="small" style="color: var(--ag-slate-500);">Whitelisted Citizen Hashes</div>
       </div>
     </div>
 
     <!-- KPI 2 -->
     <div class="col-sm-6 col-lg-3">
-      <div class="card card-mnc p-4 h-100">
-        <div class="d-flex justify-content-between align-items-center text-muted small text-uppercase font-monospace mb-2">
+      <div class="ag-card p-4 h-100 position-relative overflow-hidden">
+        <div class="d-flex justify-content-between align-items-center small text-uppercase font-monospace mb-2" style="color: var(--ag-slate-500);">
           <span class="fw-semibold">On-Chain Ballots</span>
-          <div class="bg-success-subtle text-success rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+          <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background: rgba(16, 185, 129, 0.1); color: var(--ag-emerald);">
             <i class="bi bi-box-seam-fill fs-6"></i>
           </div>
         </div>
-        <div class="h3 fw-bold text-dark font-monospace mb-1">
+        <div class="h3 fw-bold font-monospace mb-1" style="color: var(--ag-slate-900);">
           {{ voter_stats.voted|default:"612" }}
         </div>
-        <div class="text-success small fw-semibold"><i class="bi bi-graph-up-arrow me-1"></i>Turnout: {{ voter_stats.turnout|default:"33.2%" }}</div>
+        <div class="small fw-semibold" style="color: var(--ag-emerald);">
+          <i class="bi bi-graph-up-arrow me-1"></i>Turnout: {{ voter_stats.turnout|default:"33.2%" }}
+        </div>
       </div>
     </div>
 
     <!-- KPI 3 -->
     <div class="col-sm-6 col-lg-3">
-      <div class="card card-mnc p-4 h-100">
-        <div class="d-flex justify-content-between align-items-center text-muted small text-uppercase font-monospace mb-2">
+      <div class="ag-card p-4 h-100 position-relative overflow-hidden">
+        <div class="d-flex justify-content-between align-items-center small text-uppercase font-monospace mb-2" style="color: var(--ag-slate-500);">
           <span class="fw-semibold">DDoS Mitigations</span>
-          <div class="bg-danger-subtle text-danger rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+          <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background: rgba(244, 63, 94, 0.1); color: var(--ag-rose);">
             <i class="bi bi-shield-slash-fill fs-6"></i>
           </div>
         </div>
-        <div class="h3 fw-bold text-danger font-monospace mb-1" id="kpi-blocked-threats">
+        <div class="h3 fw-bold font-monospace mb-1" id="kpi-blocked-threats" style="color: var(--ag-rose);">
           {{ threats|length|default:"18" }}
         </div>
-        <div class="text-muted small">Isolation Forest Drops</div>
+        <div class="small" style="color: var(--ag-slate-500);">Isolation Forest Drops</div>
       </div>
     </div>
 
     <!-- KPI 4 -->
     <div class="col-sm-6 col-lg-3">
-      <div class="card card-mnc p-4 h-100">
-        <div class="d-flex justify-content-between align-items-center text-muted small text-uppercase font-monospace mb-2">
+      <div class="ag-card p-4 h-100 position-relative overflow-hidden">
+        <div class="d-flex justify-content-between align-items-center small text-uppercase font-monospace mb-2" style="color: var(--ag-slate-500);">
           <span class="fw-semibold">Mempool Latency</span>
-          <div class="bg-info-subtle text-info rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+          <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background: rgba(14, 165, 233, 0.1); color: var(--ag-sky);">
             <i class="bi bi-speedometer fs-6"></i>
           </div>
         </div>
-        <div class="h3 fw-bold text-info font-monospace mb-1">
+        <div class="h3 fw-bold font-monospace mb-1" style="color: var(--ag-sky);">
           1.8s
         </div>
-        <div class="text-muted small">Polygon Amoy Block Time</div>
+        <div class="small" style="color: var(--ag-slate-500);">Polygon Amoy Block Time</div>
       </div>
     </div>
 
   </div>
 
   <!-- ── 2 Main Workspaces: Merkle Lock & AI Threat Intelligence ───────── -->
-  <div class="row g-4">
+  <div class="row g-4 mb-4">
 
     <!-- ══════════════════════════════════════════════════════════════════
          PANEL 1: Merkle Lock Interface (col-lg-5)
@@ -108,54 +118,56 @@
     <div class="col-12 col-lg-5">
       
       <!-- Merkle Sealing Box -->
-      <div class="card card-mnc mb-4">
+      <div class="ag-card mb-4 p-4 p-xl-4.5 position-relative overflow-hidden" style="border-top: 4px solid var(--ag-rose);">
         
         <!-- Header -->
-        <div class="card-header bg-white border-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center">
+        <div class="d-flex justify-content-between align-items-center mb-3">
           <div>
-            <span class="text-danger font-monospace small fw-bold text-uppercase" style="font-size: 0.72rem;">HIGH-STAKES ACTION</span>
-            <h2 class="h5 fw-bold text-dark mb-0 mt-0.5">
+            <span class="ag-pill ag-pill-rose" style="font-size: 0.7rem; padding: 2px 8px;">
+              HIGH-STAKES ACTION
+            </span>
+            <h2 class="h5 fw-bold mb-0 mt-2" style="color: var(--ag-slate-900);">
               <i class="bi bi-lock-fill text-danger me-2"></i>Merkle Roll Sealing
             </h2>
           </div>
-          <span class="badge bg-danger-subtle text-danger font-monospace rounded-pill px-3 py-1.5">Authority Tier</span>
+          <span class="ag-pill ag-pill-rose">Authority Tier</span>
         </div>
 
-        <div class="card-body p-4">
-          <p class="text-muted small mb-3">
+        <div>
+          <p class="small mb-3" style="color: var(--ag-slate-500); line-height: 1.55;">
             Once the citizen registration window closes, the election authority seals the Merkle Tree on Polygon. This irreversibly locks the eligible voter set cryptographically.
           </p>
 
           <!-- High-Stakes Confirmation Alert Zone -->
-          <div class="alert alert-warning border-0 rounded-4 p-3 d-flex align-items-start gap-2.5 mb-3 shadow-xs">
+          <div class="p-3.5 rounded-3 d-flex align-items-start gap-2.5 mb-3" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3);">
             <i class="bi bi-exclamation-triangle-fill text-warning fs-5 flex-shrink-0 mt-0.5"></i>
             <div class="small">
-              <strong class="d-block text-dark mb-0.5">Irreversible Cryptographic Action:</strong>
-              <span class="text-muted">Sealing commits the Merkle Root to the smart contract bytecode. No further citizen identities can be whitelisted once committed.</span>
+              <strong class="d-block mb-1" style="color: var(--ag-slate-900);">Irreversible Cryptographic Action:</strong>
+              <span style="color: var(--ag-slate-600);">Sealing commits the Merkle Root to the smart contract bytecode. No further citizen identities can be whitelisted once committed.</span>
             </div>
           </div>
 
           <!-- Current Tree Metrics -->
-          <ul class="list-group list-group-flush border-0 rounded-3 small font-monospace mb-4 bg-light p-2">
-            <li class="list-group-item d-flex justify-content-between py-2 bg-transparent border-0">
-              <span class="text-muted">Total Registered Citizens:</span>
-              <span class="fw-bold text-dark">{{ voter_stats.total|default:"1,840" }} Voters</span>
-            </li>
-            <li class="list-group-item d-flex justify-content-between py-2 bg-transparent border-0">
-              <span class="text-muted">Circuit Tree Depth:</span>
-              <span class="fw-bold text-primary">20 Levels (1,048,576 Cap)</span>
-            </li>
-            <li class="list-group-item d-flex justify-content-between py-2 bg-transparent border-0">
-              <span class="text-muted">Hash Circuit Standard:</span>
-              <span class="text-secondary">Optimized BN128 Poseidon</span>
-            </li>
-          </ul>
+          <div class="p-3 rounded-3 small font-monospace mb-4" style="background: rgba(241, 245, 249, 0.7); border: 1px solid var(--ag-border);">
+            <div class="d-flex justify-content-between py-1.5">
+              <span style="color: var(--ag-slate-500);">Total Registered Citizens:</span>
+              <span class="fw-bold" style="color: var(--ag-slate-900);">{{ voter_stats.total|default:"1,840" }} Voters</span>
+            </div>
+            <div class="d-flex justify-content-between py-1.5" style="border-top: 1px dashed var(--ag-border);">
+              <span style="color: var(--ag-slate-500);">Circuit Tree Depth:</span>
+              <span class="fw-bold" style="color: var(--ag-primary);">20 Levels (1,048,576 Cap)</span>
+            </div>
+            <div class="d-flex justify-content-between py-1.5" style="border-top: 1px dashed var(--ag-border);">
+              <span style="color: var(--ag-slate-500);">Hash Circuit Standard:</span>
+              <span class="fw-bold" style="color: var(--ag-slate-700);">Optimized BN128 Poseidon</span>
+            </div>
+          </div>
 
           <!-- Merkle Lock Action & Sealed Badge Container -->
           <div class="d-flex flex-column gap-2">
             <div id="merkle-status-badge-container">
               {% if active_election and active_election.is_root_locked %}
-              <div class="alert alert-success d-flex align-items-center small font-monospace py-2.5 px-3 mb-2 border-0 rounded-4 shadow-xs">
+              <div class="p-3 mb-2 rounded-3 small font-monospace d-flex align-items-center" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--ag-emerald);">
                 <i class="bi bi-patch-check-fill me-2 fs-6"></i>
                 <span>Merkle Root Sealed on-Chain: <strong class="ms-1">{{ active_election.merkle_root|truncatechars:18 }}</strong></span>
               </div>
@@ -163,9 +175,9 @@
             </div>
 
             <button type="button" id="btn-lock-merkle"
-                    {% if active_election and active_election.is_root_locked %}disabled class="btn btn-secondary btn-lg rounded-3 fw-semibold w-100 py-3 disabled font-monospace small text-uppercase"{% else %}class="btn btn-danger btn-lg rounded-3 fw-semibold shadow-sm w-100 py-3 d-flex align-items-center justify-content-center gap-2 font-monospace small text-uppercase"{% endif %}>
+                    {% if active_election and active_election.is_root_locked %}disabled class="ag-btn-glass w-100 py-3 disabled font-monospace small text-uppercase"{% else %}class="ag-btn-primary w-100 py-3 d-flex align-items-center justify-content-center gap-2 font-monospace small text-uppercase" style="background: linear-gradient(135deg, #e11d48, #be123c);"{% endif %}>
               <i class="bi bi-shield-lock-fill"></i>
-              {% if active_election and active_election.is_root_locked %}✓ Electoral Roll Sealed{% else %}Lock Electoral Roll & Commit Root{% endif %}
+              <span>{% if active_election and active_election.is_root_locked %}✓ Electoral Roll Sealed{% else %}Lock Electoral Roll & Commit Root{% endif %}</span>
             </button>
           </div>
         </div>
@@ -173,46 +185,34 @@
       </div>
 
       <!-- Candidate Configuration Summary -->
-      <div class="card card-mnc mb-4">
-        <div class="card-header bg-white border-0 pt-4 pb-2 px-4">
-          <h3 class="h6 fw-bold text-dark mb-0 text-uppercase font-monospace text-secondary">
+      <div class="ag-card mb-4 overflow-hidden">
+        <div class="p-4 pb-2">
+          <h3 class="h6 fw-bold mb-0 text-uppercase font-monospace" style="color: var(--ag-slate-600); letter-spacing: 0.04em;">
             <i class="bi bi-card-list me-1.5 text-primary"></i>Official Candidate Roster
           </h3>
         </div>
-        <div class="card-body p-0">
+        <div class="table-responsive">
           <table class="table table-hover table-borderless align-middle mb-0 font-monospace small">
             <thead>
-              <tr class="table-light text-secondary border-bottom">
+              <tr style="background: rgba(241, 245, 249, 0.7); border-bottom: 1px solid var(--ag-border); color: var(--ag-slate-600);">
                 <th class="px-4 py-3">ID</th>
-                <th class="py-3">Candidate Name</th>
+                <th class="py-3">Candidate</th>
+                <th class="py-3 text-center">Votes</th>
                 <th class="px-4 py-3 text-end">Party</th>
               </tr>
             </thead>
-            <tbody class="table-group-divider">
+            <tbody>
               {% if candidates %}
                 {% for candidate in candidates %}
-                <tr>
-                  <td class="px-4 py-2.5 text-primary fw-bold">#{{ candidate.candidate_id }}</td>
-                  <td class="py-2.5 fw-semibold text-dark">{{ candidate.name }}</td>
+                <tr style="border-bottom: 1px solid rgba(226, 232, 240, 0.5);">
+                  <td class="px-4 py-2.5 fw-bold" style="color: var(--ag-primary);">#{{ candidate.candidate_id }}</td>
+                  <td class="py-2.5 fw-semibold" style="color: var(--ag-slate-900);">{{ candidate.name }}</td>
+                  <td class="py-2.5 text-center">
+                    <span class="badge font-monospace rounded-pill px-2.5 py-1" style="background: rgba(79, 70, 229, 0.1); color: var(--ag-primary);">{{ candidate.votes|default:"0" }}</span>
+                  </td>
                   <td class="px-4 py-2.5 text-end text-muted">{{ candidate.party }}</td>
                 </tr>
                 {% endfor %}
-              {% else %}
-                <tr>
-                  <td class="px-4 py-2.5 text-primary fw-bold">#01</td>
-                  <td class="py-2.5 fw-semibold text-dark">Dr. A. Sharma</td>
-                  <td class="px-4 py-2.5 text-end text-muted">NTIC</td>
-                </tr>
-                <tr>
-                  <td class="px-4 py-2.5 text-primary fw-bold">#02</td>
-                  <td class="py-2.5 fw-semibold text-dark">Priya Sundaram</td>
-                  <td class="px-4 py-2.5 text-end text-muted">DPF</td>
-                </tr>
-                <tr>
-                  <td class="px-4 py-2.5 text-primary fw-bold">#03</td>
-                  <td class="py-2.5 fw-semibold text-dark">Rajesh Verma</td>
-                  <td class="px-4 py-2.5 text-end text-muted">SRA</td>
-                </tr>
               {% endif %}
             </tbody>
           </table>
@@ -227,97 +227,100 @@
     <div class="col-12 col-lg-7">
 
       <!-- Real-Time Request Velocity Gauge -->
-      <div class="card card-mnc mb-4">
+      <div class="ag-card mb-4 p-4 p-xl-4.5 position-relative overflow-hidden" style="border-top: 4px solid var(--ag-primary);">
         
-        <div class="card-header bg-white border-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center">
+        <div class="d-flex justify-content-between align-items-center mb-3">
           <div>
-            <span class="text-primary font-monospace small fw-bold text-uppercase" style="font-size: 0.72rem;">ACTIVE SENTINEL AI</span>
-            <h2 class="h5 fw-bold text-dark mb-0 mt-0.5">
+            <span class="ag-pill ag-pill-primary" style="font-size: 0.7rem; padding: 2px 8px;">
+              ACTIVE SENTINEL AI
+            </span>
+            <h2 class="h5 fw-bold mb-0 mt-2" style="color: var(--ag-slate-900);">
               <i class="bi bi-activity text-primary me-2"></i>Traffic Ingestion Velocity
             </h2>
           </div>
           <div id="velocity-status-badge">
-            <span class="badge bg-success-subtle text-success font-monospace rounded-pill px-3 py-1.5">NORMAL VELOCITY</span>
+            <span class="ag-pill ag-pill-emerald">NORMAL VELOCITY</span>
           </div>
         </div>
 
-        <div class="card-body p-4">
+        <div>
           <!-- Velocity Gauge Display -->
-          <div class="row align-items-center my-2">
+          <div class="row align-items-center my-3">
             <div class="col-md-4 text-center text-md-start mb-3 mb-md-0">
-              <div class="display-6 fw-bold font-monospace text-primary mb-0" id="velocity-metric-val">2.4</div>
-              <div class="text-muted small font-monospace">req / sec Ingestion</div>
+              <div class="display-6 fw-bold font-monospace mb-0" id="velocity-metric-val" style="color: var(--ag-primary); letter-spacing: -0.03em;">2.4</div>
+              <div class="small font-monospace" style="color: var(--ag-slate-500);">req / sec Ingestion</div>
             </div>
 
             <!-- Linear Meter Gauge -->
             <div class="col-md-8">
-              <div class="d-flex justify-content-between text-muted small font-monospace mb-1.5">
+              <div class="d-flex justify-content-between small font-monospace mb-1.5" style="color: var(--ag-slate-500); font-size: 0.75rem;">
                 <span>0 req/s (Baseline)</span>
                 <span>10 req/s (Elevated)</span>
                 <span>20+ req/s (DDoS Burst)</span>
               </div>
-              <div class="progress rounded-pill bg-light" style="height: 12px;">
-                <div id="velocity-gauge-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary rounded-pill" style="width: 12%;"></div>
+              <div class="progress rounded-pill" style="height: 10px; background: rgba(226, 232, 240, 0.8);">
+                <div id="velocity-gauge-bar" class="progress-bar progress-bar-striped progress-bar-animated rounded-pill" style="width: 12%; background: linear-gradient(90deg, #4f46e5, #0ea5e9);"></div>
               </div>
             </div>
           </div>
 
-          <div class="d-flex justify-content-between text-muted small font-monospace border-top pt-3 mt-3">
+          <div class="d-flex justify-content-between small font-monospace pt-3 mt-3" style="border-top: 1px solid var(--ag-border); color: var(--ag-slate-500);">
             <span>Model: IsolationForest (FastAPI Port 8001)</span>
-            <span class="text-primary fw-semibold">Inference Latency: ~14ms</span>
+            <span class="fw-semibold" style="color: var(--ag-primary);">Inference Latency: ~14ms</span>
           </div>
         </div>
 
       </div>
 
       <!-- Dedicated Threat Intelligence Panel -->
-      <div class="card card-mnc mb-4">
+      <div class="ag-card mb-4 p-4 p-xl-4.5 position-relative overflow-hidden" style="border-top: 4px solid var(--ag-rose);">
         
-        <div class="card-header bg-white border-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center">
+        <div class="d-flex justify-content-between align-items-center mb-3">
           <div>
-            <span class="text-danger font-monospace small fw-bold text-uppercase" style="font-size: 0.72rem;">DEFENSE TELEMETRY</span>
-            <h3 class="h5 fw-bold text-dark mb-0 mt-0.5">
+            <span class="ag-pill ag-pill-rose" style="font-size: 0.7rem; padding: 2px 8px;">
+              DEFENSE TELEMETRY
+            </span>
+            <h3 class="h5 fw-bold mb-0 mt-2" style="color: var(--ag-slate-900);">
               <i class="bi bi-broadcast text-danger me-2"></i>Live Threat Intelligence Feed
             </h3>
           </div>
-          <span class="badge bg-light text-secondary font-monospace border rounded-pill px-2.5 py-1">/ws/telemetry/</span>
+          <span class="ag-pill ag-pill-neutral">/ws/telemetry/</span>
         </div>
 
-        <div class="card-body p-4">
-          
+        <div>
           <!-- AI Threat Highlight Summary Banner -->
-          <div class="bg-danger-subtle text-danger p-3 rounded-4 mb-3 d-flex align-items-center justify-content-between">
+          <div class="p-3 rounded-3 mb-3 d-flex align-items-center justify-content-between" style="background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.25);">
             <div class="d-flex align-items-center gap-2">
-              <i class="bi bi-shield-fill-x fs-5 text-danger"></i>
-              <span class="small fw-bold">Active Sentinel Defense Policy:</span>
-              <span class="small text-danger">Auto-drop anomaly score &gt; 0.70</span>
+              <i class="bi bi-shield-fill-x fs-5" style="color: var(--ag-rose);"></i>
+              <span class="small fw-bold" style="color: var(--ag-rose);">Active Sentinel Policy:</span>
+              <span class="small" style="color: var(--ag-slate-700);">Auto-drop anomaly score &gt; 0.70</span>
             </div>
-            <span class="badge bg-danger text-white font-monospace rounded-pill px-2.5 py-1">Zero Exploits</span>
+            <span class="ag-pill ag-pill-rose" style="font-size: 0.7rem;">Zero Exploits</span>
           </div>
 
           <!-- Feed Container -->
-          <div id="threat-feed-container" class="border rounded-4 bg-light p-2 font-monospace small" style="max-height: 320px; overflow-y: auto;">
+          <div id="threat-feed-container" class="rounded-3 p-2 font-monospace small" style="max-height: 320px; overflow-y: auto; background: rgba(248, 250, 252, 0.85); border: 1px solid var(--ag-border);">
             {% if threats %}
               {% for threat in threats %}
-              <div class="d-flex justify-content-between align-items-center p-2.5 border-bottom border-light-subtle">
+              <div class="d-flex justify-content-between align-items-center p-2.5 border-bottom" style="border-color: var(--ag-border) !important;">
                 <div class="d-flex align-items-center gap-2">
-                  <span class="badge bg-danger-subtle text-danger font-monospace rounded-pill px-2 py-1">BLOCKED</span>
+                  <span class="ag-pill ag-pill-rose" style="font-size: 0.68rem; padding: 1px 6px;">BLOCKED</span>
                   <span class="text-muted">{{ threat.timestamp|date:"H:i:s" }}</span>
-                  <span class="fw-semibold text-dark">{{ threat.ip_address }}</span>
-                  <span class="text-secondary text-truncate" style="max-width: 200px;">{{ threat.details|default:"Anomalous request velocity" }}</span>
+                  <span class="fw-semibold" style="color: var(--ag-slate-900);">{{ threat.ip_address }}</span>
+                  <span class="text-truncate" style="max-width: 200px; color: var(--ag-slate-600);">{% if threat.payload_size %}{{ threat.payload_size }} B rejected{% else %}Anomalous request velocity{% endif %}</span>
                 </div>
                 <div>
                   <span class="text-muted small">Score: </span>
-                  <span class="fw-bold text-danger">{{ threat.anomaly_score|default:"0.91" }}</span>
+                  <span class="fw-bold" style="color: var(--ag-rose);">{{ threat.threat_score|floatformat:2|default:"0.91" }}</span>
                 </div>
               </div>
               {% endfor %}
             {% endif %}
           </div>
 
-          <div class="d-flex justify-content-between text-muted small font-monospace border-top pt-3 mt-3">
+          <div class="d-flex justify-content-between small font-monospace pt-3 mt-3" style="border-top: 1px solid var(--ag-border); color: var(--ag-slate-500);">
             <span>Isolation Forest Anomaly Detection</span>
-            <span class="text-success fw-bold"><i class="bi bi-shield-check me-1"></i>0 Breaches Recorded</span>
+            <span class="fw-bold" style="color: var(--ag-emerald);"><i class="bi bi-shield-check me-1"></i>0 Breaches Recorded</span>
           </div>
         </div>
 

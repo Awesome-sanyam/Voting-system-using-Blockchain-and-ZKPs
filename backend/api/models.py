@@ -65,6 +65,23 @@ class ThreatLog(models.Model):
         return f"Threat from {self.ip_address} at {self.timestamp}"
 
 
+class BallotRecord(models.Model):
+    """
+    Cryptographic on-chain ballot record for public audit and verification.
+    Stores NO voter identity (zero names, zero phones, zero EPIC, zero IP).
+    Only records the anonymous mathematical nullifier and on-chain transaction receipt.
+    """
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE, related_name='ballots')
+    nullifier = models.CharField(max_length=100, unique=True, help_text="Poseidon cryptographic nullifier hash")
+    transaction_hash = models.CharField(max_length=66, unique=True, help_text="0x-prefixed transaction hash")
+    block_number = models.PositiveIntegerField(default=1)
+    gas_used = models.PositiveIntegerField(default=284520)
+    timestamp = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Ballot {self.nullifier[:12]}... -> {self.candidate.name} (Tx: {self.transaction_hash[:10]}...)"
+
+
 from django.contrib.auth.models import User
 
 class AuditorProfile(models.Model):

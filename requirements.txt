@@ -16,6 +16,7 @@ psycopg2-binary>=2.9.9    # PostgreSQL adapter (optional — SQLite used by defa
 redis>=5.0.1              # Used transitively by channels_redis
 python-dotenv>=1.0.0      # Loads backend/.env into Django settings
 asgiref>=3.7.0            # Needed for async_to_sync in views (Channels broadcast)
+twilio>=9.0.0             # Twilio SMS OTP dispatch
 
 # --- ML Microservice Dependencies (Active Sentinel) ---
 fastapi>=0.100.0

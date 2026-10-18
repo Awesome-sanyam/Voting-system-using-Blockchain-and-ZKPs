@@ -8,4 +8,7 @@ websocket_urlpatterns = [
 
     # Admin telemetry — real-time AI threat event feed for the admin dashboard
     re_path(r'ws/telemetry/$', consumers.TelemetryConsumer.as_asgi()),
+
+    # Public Auditor mempool — real-time live blockchain transactions
+    re_path(r'ws/auditor/$', consumers.AuditorMempoolConsumer.as_asgi()),
 ]
