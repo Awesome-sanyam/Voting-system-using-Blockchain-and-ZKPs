@@ -167,8 +167,32 @@ def submit_vote_relayer(request):
                         "threat_score": threat_data.get("threat_score")
                     }, status=status.HTTP_403_FORBIDDEN)
         except requests.exceptions.RequestException:
-            print("WARNING: Active Sentinel ML Service is offline. Bypassing threat detection.")
+            logger.warning("Active Sentinel ML Service is offline. Bypassing threat detection.")
         # ---------------------------------------------------------
+
+        # 1.5 Authoritative Election Lifecycle Gate
+        # ---------------------------------------------------------
+        active_election = Election.objects.filter(status=Election.STATUS_ACTIVE).first()
+        if not active_election:
+            draft_el = Election.objects.filter(status=Election.STATUS_DRAFT).first()
+            detail_msg = f"Election '{draft_el.title}' is in DRAFT. Voting has not opened." if draft_el else "No active election in progress."
+            return Response({
+                "error": "Election is not open for voting.",
+                "details": detail_msg
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        if not active_election.is_active:
+            now_ts = time.time()
+            if now_ts < active_election.start_timestamp:
+                return Response({
+                    "error": "Voting window has not opened yet.",
+                    "details": f"Election '{active_election.title}' voting starts at timestamp {active_election.start_timestamp}."
+                }, status=status.HTTP_403_FORBIDDEN)
+            else:
+                return Response({
+                    "error": "Election has concluded.",
+                    "details": f"Election '{active_election.title}' has closed. No further ballots accepted."
+                }, status=status.HTTP_403_FORBIDDEN)
 
         # 2. Extract ZK Proof Data sent by the browser's SnarkJS WASM (via zkp_prover.js)
         a = data.get('a')
@@ -180,9 +204,33 @@ def submit_vote_relayer(request):
         if not all([a, b, c, nullifier, candidate_id]):
             return Response({"error": "Missing cryptographic proof parameters"}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Validate candidate belongs to active election
+        try:
+            cand_id_int = int(candidate_id)
+        except (ValueError, TypeError):
+            return Response({"error": "Candidate ID must be an integer."}, status=status.HTTP_400_BAD_REQUEST)
+
+        candidate_obj = Candidate.objects.filter(election=active_election, candidate_id=cand_id_int).first()
+        if not candidate_obj:
+            return Response({
+                "error": f"Candidate #{cand_id_int} does not exist in active election '{active_election.title}'."
+            }, status=status.HTTP_404_NOT_FOUND)
+
         # 3. Anti-Double-Voting Verification (Registry Status & Nullifier Anti-Replay)
-        voter_hash_session = request.session.get('voter_hash')
-        if voter_hash_session and VoterIdentity.objects.filter(voter_hash=voter_hash_session, has_voted=True).exists():
+        voter_hash = request.session.get('voter_hash') or data.get('voter_hash')
+        if not voter_hash:
+            return Response({
+                "error": "Authentication Required: Active voter session required to relay ballot.",
+                "details": "Please authenticate via the Voter Portal before submitting a ballot."
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        voter_identity = VoterIdentity.objects.filter(voter_hash=voter_hash, is_verified=True).first()
+        if not voter_identity:
+            return Response({
+                "error": "Access Denied: Voter identity not whitelisted on electoral roll."
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        if voter_identity.has_voted:
             return Response({
                 "error": "Double Voting Error: Your voter identity has already cast a ballot in this election.",
                 "details": "The identity registry indicates this credential has already voted."
@@ -217,7 +265,7 @@ def submit_vote_relayer(request):
                     int_b = [[int(y) for y in row] for row in b]
                     int_c = [int(x) for x in c]
                     int_nullifier = int(nullifier)
-                    int_candidate_id = int(candidate_id)
+                    int_candidate_id = cand_id_int
 
                     chain_id = w3.eth.chain_id
                     tx_dict = {
@@ -243,7 +291,7 @@ def submit_vote_relayer(request):
                     block_number = tx_receipt.blockNumber
                     gas_used = tx_receipt.gasUsed
             except Exception as bc_err:
-                print(f"[Relayer] Live blockchain broadcast: {bc_err}. Securing via deterministic relayer.")
+                logger.warning(f"[Relayer] Live blockchain broadcast: {bc_err}. Securing via deterministic relayer.")
 
         if not tx_hex:
             # Deterministic, unique cryptographic tx hash
@@ -257,18 +305,6 @@ def submit_vote_relayer(request):
                 block_number = 1492040 + BallotRecord.objects.count()
 
         # 5. Record BallotRecord in Django Database
-        candidate_obj = Candidate.objects.filter(candidate_id=int(candidate_id)).first()
-        if not candidate_obj:
-            active_election = Election.objects.order_by('-created_at').first()
-            candidate_obj, _ = Candidate.objects.get_or_create(
-                candidate_id=int(candidate_id),
-                defaults={
-                    'name': f'Candidate #{candidate_id}',
-                    'party': 'National Coalition',
-                    'election': active_election
-                }
-            )
-
         ballot_record = BallotRecord.objects.create(
             candidate=candidate_obj,
             nullifier=str(nullifier),
@@ -278,10 +314,10 @@ def submit_vote_relayer(request):
             timestamp=timezone.now()
         )
 
-        # 6. Update has_voted flag in database
-        voter_hash_session = request.session.get('voter_hash')
-        if voter_hash_session:
-            VoterIdentity.objects.filter(voter_hash=voter_hash_session).update(has_voted=True)
+        # 6. Update has_voted flag in database & session
+        voter_identity.has_voted = True
+        voter_identity.save()
+        request.session['has_voted'] = True
 
         # 7. Broadcast verified events to admin telemetry and auditor mempool
         try:
@@ -519,9 +555,9 @@ def start_election(request, election_id):
         voter_hash = "0x" + hashlib.sha256(raw_identity + secret_salt).hexdigest()
 
         voter, created = VoterIdentity.objects.get_or_create(voter_hash=voter_hash)
-        if created or not voter.is_verified:
-            voter.is_verified = True
-            voter.save()
+        voter.is_verified = True
+        voter.has_voted = False
+        voter.save()
 
         roll_entry.voter_hash = voter_hash
         roll_entry.is_hashed  = True
@@ -949,7 +985,7 @@ def execute_audit_verification(request):
         })
 
     # 3. Merkle Root Integrity
-    election = Election.objects.order_by('-created_at').first()
+    election = Election.objects.filter(status=Election.STATUS_ACTIVE).first() or Election.objects.order_by('-created_at').first()
     merkle_root = election.merkle_root if election else "0x1e8555e1a1795efcd8cae9842bf9ecafcff7e0faeef7faad36e1c27806f1cc0a"
     is_locked = election.is_root_locked if election else True
 
@@ -959,9 +995,14 @@ def execute_audit_verification(request):
         "message": f"Electoral roll root sealed: {merkle_root[:18]}... (Root Locked = {is_locked}, Tree Depth = 20 levels)."
     })
 
-    # 4. Nullifier Collision Audit
-    total_ballots = BallotRecord.objects.count()
-    distinct_nullifiers = BallotRecord.objects.values('nullifier').distinct().count()
+    # 4. Nullifier Collision Audit (Scoped to Active Election)
+    if election:
+        ballots_qs = BallotRecord.objects.filter(candidate__election=election)
+    else:
+        ballots_qs = BallotRecord.objects.all()
+
+    total_ballots = ballots_qs.count()
+    distinct_nullifiers = ballots_qs.values('nullifier').distinct().count()
     nullifier_collisions = total_ballots - distinct_nullifiers
 
     if nullifier_collisions == 0:
@@ -987,7 +1028,7 @@ def execute_audit_verification(request):
     # 6. Ballot Conservation Check
     candidate_tallies = []
     sum_tallies = 0
-    candidates = Candidate.objects.all().order_by('candidate_id')
+    candidates = Candidate.objects.filter(election=election).order_by('candidate_id') if election else Candidate.objects.all().order_by('candidate_id')
     for c in candidates:
         votes = BallotRecord.objects.filter(candidate=c).count()
         sum_tallies += votes
@@ -1846,14 +1887,15 @@ def auditor_portal(request):
     """
     Renders the public auditor dashboard. Protected by @auditor_required.
     """
-    active_election = Election.objects.order_by('-created_at').first()
+    active_election = Election.objects.filter(status=Election.STATUS_ACTIVE).first() \
+                      or Election.objects.order_by('-created_at').first()
     candidates      = Candidate.objects.filter(
         election=active_election
     ).order_by('candidate_id') if active_election else []
 
-    total_ballots = BallotRecord.objects.count()
-    voter_count = VoterIdentity.objects.count()
-    recent_ballots = BallotRecord.objects.select_related('candidate').order_by('-timestamp')[:30]
+    total_ballots = BallotRecord.objects.filter(candidate__election=active_election).count() if active_election else BallotRecord.objects.count()
+    voter_count = ElectionVoterRoll.objects.filter(election=active_election).count() if active_election else VoterIdentity.objects.count()
+    recent_ballots = BallotRecord.objects.filter(candidate__election=active_election).select_related('candidate').order_by('-timestamp')[:30] if active_election else BallotRecord.objects.select_related('candidate').order_by('-timestamp')[:30]
 
     # Attempt to fetch real on-chain tallies and block height via Web3
     w3 = None
@@ -1887,8 +1929,11 @@ def auditor_portal(request):
             'vote_pct':     pct,
         })
 
-    # Collision check
-    distinct_nullifiers = BallotRecord.objects.values('nullifier').distinct().count()
+    # Collision check (Scoped to active election)
+    if active_election:
+        distinct_nullifiers = BallotRecord.objects.filter(candidate__election=active_election).values('nullifier').distinct().count()
+    else:
+        distinct_nullifiers = BallotRecord.objects.values('nullifier').distinct().count()
     nullifier_collisions = total_ballots - distinct_nullifiers
 
     context = {

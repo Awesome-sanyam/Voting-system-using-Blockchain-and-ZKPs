@@ -98,6 +98,18 @@ def run_election_lifecycle_tests():
     assert res_vauth.status_code == 302, "Voter was able to access /voter/ during DRAFT!"
     print(f"✅ [PASS] 7. Voter portal access prevented during DRAFT status (HTTP 302 redirect)")
 
+    # 5.1 CRITICAL: Direct API vote submission blocked during DRAFT status
+    mock_ballot = {
+        'a': ['1000', '2000'],
+        'b': [['1000', '2000'], ['2000', '1000']],
+        'c': ['2000', '1000'],
+        'nullifier': '999888777111',
+        'candidateId': 1
+    }
+    res_draft_cast = voter_client.post('/api/v1/cast-vote/', json.dumps(mock_ballot), content_type='application/json')
+    assert res_draft_cast.status_code == 403, f"Direct vote allowed during DRAFT! Got {res_draft_cast.status_code}"
+    print(f"✅ [PASS] 7.1 STRICT IMMUTABILITY: Direct ballot casting blocked during DRAFT status (HTTP 403 Forbidden)")
+
     # 6. Candidate Management Tests in DRAFT mode
     cand1_data = {'name': 'Candidate One', 'party': 'Democratic Front', 'candidate_id': 1}
     cand2_data = {'name': 'Candidate Two', 'party': 'Progressive Alliance', 'candidate_id': 2}
@@ -156,7 +168,7 @@ def run_election_lifecycle_tests():
     assert res_locked_cand_del.status_code == 403, f"Admin was able to remove candidate after election started! Got {res_locked_cand_del.status_code}"
     print(f"✅ [PASS] 15. STRICT IMMUTABILITY: Removing candidate blocked when election is ACTIVE (HTTP 403 Forbidden)")
 
-    # 9. Whitelisted voter can authenticate and access Voter Portal now that election is ACTIVE
+    # 12. Whitelisted voter can authenticate and access Voter Portal now that election is ACTIVE
     otp_res = voter_client.post('/api/v1/send-otp/', json.dumps({
         'epic_number': 'TESTVOTER001',
         'phone_number': '9876543210'
@@ -177,22 +189,40 @@ def run_election_lifecycle_tests():
     assert res_dash.status_code == 200
     print(f"✅ [PASS] 16. Whitelisted voter authenticated and accessed Voter Portal (HTTP 200)")
 
-    # 10. Close Election
+    # 13. Whitelisted voter casts anonymous ballot via gasless relayer
+    res_valid_cast = voter_client.post('/api/v1/cast-vote/', json.dumps(mock_ballot), content_type='application/json')
+    assert res_valid_cast.status_code == 200, f"Failed to cast vote: {res_valid_cast.content}"
+    print(f"✅ [PASS] 16.1 Gasless ZK ballot relayed & secured on ledger (HTTP 200)")
+
+    # 14. Anti-Double-Voting check: same voter attempting to cast a second ballot is blocked
+    mock_ballot_2 = dict(mock_ballot, nullifier='999888777222')
+    res_repeat_cast = voter_client.post('/api/v1/cast-vote/', json.dumps(mock_ballot_2), content_type='application/json')
+    assert res_repeat_cast.status_code == 409, f"Expected 409 double voting conflict, got {res_repeat_cast.status_code}"
+    print(f"✅ [PASS] 16.2 STRICT ANTI-DOUBLE-VOTING: Duplicate vote rejected (HTTP 409 Conflict)")
+
+    # 15. Close Election
     res_close = client.post(f'/api/v1/elections/{election_id}/close/')
     assert res_close.status_code == 200, f"Failed to close election: {res_close.content}"
     election.refresh_from_db()
     assert election.status == Election.STATUS_CLOSED
     print(f"✅ [PASS] 17. Election closed successfully (Status: CLOSED)")
 
-    # 11. Attempting to add voter to CLOSED election is also blocked
+    # 16. Attempting to add voter to CLOSED election is also blocked
     res_closed_add = client.post(f'/api/v1/elections/{election_id}/voters/add/', json.dumps(voter3), content_type='application/json')
     assert res_closed_add.status_code == 403
     print(f"✅ [PASS] 18. Adding voter blocked on CLOSED election (HTTP 403 Forbidden)")
 
-    # Cleanup
+    # 17. Attempting to cast vote on CLOSED election is also blocked
+    res_closed_cast = voter_client.post('/api/v1/cast-vote/', json.dumps(mock_ballot_2), content_type='application/json')
+    assert res_closed_cast.status_code == 403
+    print(f"✅ [PASS] 18.1 Ballot casting blocked on CLOSED election (HTTP 403 Forbidden)")
+
+    # Cleanup and reseed default election
     election.delete()
+    from seed_demo_data import seed
+    seed()
     print("=" * 70)
-    print("🎉 ALL 18 ELECTION LIFECYCLE, CANDIDATE & VOTER ROLL TESTS PASSED PERFECTLY!")
+    print("🎉 ALL 21 ELECTION LIFECYCLE, CANDIDATE, RELAYER & IMMUTABILITY TESTS PASSED!")
     print("=" * 70)
 
 if __name__ == '__main__':

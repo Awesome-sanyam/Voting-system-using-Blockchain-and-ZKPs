@@ -82,9 +82,9 @@ def seed():
 
     for cid, name, party, icon in candidates_data:
         cand, _ = Candidate.objects.update_or_create(
+            election=election,
             candidate_id=cid,
             defaults={
-                'election': election,
                 'name': name,
                 'party': party,
                 'party_symbol_url': icon
