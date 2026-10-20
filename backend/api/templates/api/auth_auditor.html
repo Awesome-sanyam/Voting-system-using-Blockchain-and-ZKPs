@@ -107,9 +107,20 @@
                 <input type="hidden" name="action" value="register">
                 <input type="hidden" name="next" value="{{ next }}">
 
+                {% if invite_token_code %}
+                <div class="p-3 rounded-3 mb-2 d-flex align-items-center gap-2.5" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3);">
+                  <i class="bi bi-shield-fill-check fs-5 text-success"></i>
+                  <div class="small">
+                    <strong style="color: var(--ag-emerald);">Verified Token Detected:</strong>
+                    <span class="font-monospace fw-bold">{{ invite_token_code }}</span>
+                    {% if prefill_org %}<div class="text-muted" style="font-size: 0.8rem;">Designated for: <strong>{{ prefill_org }}</strong></div>{% endif %}
+                  </div>
+                </div>
+                {% endif %}
+
                 <div class="p-3 rounded-3 small font-monospace text-muted" style="background: rgba(241, 245, 249, 0.7); border: 1px solid var(--ag-border);">
                   <i class="bi bi-shield-exclamation text-warning me-1.5"></i>
-                  Restricted to verified institutional observers. Requires an authorized token issued by the Election Commission.
+                  Restricted to verified institutional observers. Requires an authorized token issued by the Election Authority.
                 </div>
 
                 <!-- Organization Name -->
@@ -119,7 +130,7 @@
                   </label>
                   <div class="input-group">
                     <span class="input-group-text bg-white border-end-0 text-muted" style="border-color: var(--ag-border);"><i class="bi bi-building"></i></span>
-                    <input type="text" id="reg-auditor-org" name="organization" placeholder="Enter official institutional organization name"
+                    <input type="text" id="reg-auditor-org" name="organization" value="{{ prefill_org|default:'' }}" placeholder="Enter official institutional organization name"
                            class="form-control ag-input border-start-0" required />
                   </div>
                 </div>
@@ -156,7 +167,7 @@
                     </label>
                     <span class="ag-pill ag-pill-warning" style="font-size: 0.7rem; padding: 2px 6px;">Mandatory Gatekeeper</span>
                   </div>
-                  <input type="text" id="reg-trust-token" name="trust_invite_code" placeholder="Enter issued invite token"
+                  <input type="text" id="reg-trust-token" name="trust_invite_code" value="{{ invite_token_code|default:'' }}" placeholder="e.g. ECI-AUDIT-2026-XXXX"
                          class="form-control ag-input font-monospace fw-bold" required />
                   <div class="form-text small font-monospace text-muted mt-2">
                     <i class="bi bi-info-circle me-1"></i>Official verification token authorized by the Election Authority.

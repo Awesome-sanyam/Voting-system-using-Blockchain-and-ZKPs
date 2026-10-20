@@ -14,7 +14,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
 from django.contrib.auth.models import User
-from api.models import Election, Candidate, VoterIdentity, ThreatLog, AuditorProfile, BallotRecord, ElectionVoterRoll
+from api.models import Election, Candidate, VoterIdentity, ThreatLog, AuditorProfile, BallotRecord, ElectionVoterRoll, AuditorInviteToken
 from api.views import derive_voter_identity_hash
 
 
@@ -30,6 +30,37 @@ def seed():
     admin.save()
     print(f"  [+] Superuser: admin (password: BlockVote@Admin2026)")
 
+    # 1.1 Auditor Invite Tokens
+    demo_token, _ = AuditorInviteToken.objects.get_or_create(
+        token_code='ECI-AUDIT-2026-DEMO',
+        defaults={
+            'organization': 'Association for Democratic Reforms (ADR)',
+            'notes': 'Official certified observer accreditation for showcase evaluation',
+            'created_by': admin,
+            'is_active': True,
+            'max_uses': 10,
+            'used_count': 1,
+        }
+    )
+    demo_token.is_active = True
+    demo_token.max_uses = 10
+    demo_token.save()
+
+    press_token, _ = AuditorInviteToken.objects.get_or_create(
+        token_code='ECI-AUDIT-2026-PRESS',
+        defaults={
+            'organization': 'Press Trust of India & Media Observers',
+            'notes': 'Media transparency accreditation seat',
+            'created_by': admin,
+            'is_active': True,
+            'max_uses': 3,
+            'used_count': 0,
+        }
+    )
+    press_token.is_active = True
+    press_token.save()
+    print(f"  [+] Auditor Tokens Seeded: 'ECI-AUDIT-2026-DEMO' (ADR) & 'ECI-AUDIT-2026-PRESS' (Press)")
+
     # 2. Institutional Auditor
     auditor_user, created = User.objects.get_or_create(username='adr_official_auditor')
     auditor_user.is_staff = False
@@ -43,10 +74,12 @@ def seed():
         defaults={
             'organization': 'Association for Democratic Reforms (ADR)',
             'trust_token_hash': 'demo_token_hash',
+            'invite_token': demo_token,
             'is_approved': True
         }
     )
     auditor_profile.is_approved = True
+    auditor_profile.invite_token = demo_token
     auditor_profile.save()
     print(f"  [+] Certified Auditor: adr_official_auditor (password: ADR@Auditor2026)")
 

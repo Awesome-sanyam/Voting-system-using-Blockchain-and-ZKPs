@@ -57,4 +57,12 @@ urlpatterns = [
 
     # Remove a candidate from an election (candidate_id is the contract ID or pk)
     path('v1/elections/<int:election_id>/candidates/<int:candidate_id>/remove/',   views.remove_candidate_from_election,  name='remove_candidate_from_election'),
+
+    # ── Auditor Access & Token Management (Admin-Only) ──────────────────────
+    # Generate new Auditor Invite Token
+    path('v1/auditor-tokens/generate/',              views.generate_auditor_token,        name='generate_auditor_token'),
+    # Revoke an issued Auditor Invite Token
+    path('v1/auditor-tokens/<int:token_id>/revoke/', views.revoke_auditor_token,          name='revoke_auditor_token'),
+    # Toggle approval/suspension of an auditor account
+    path('v1/auditor/<int:auditor_id>/toggle-status/', views.toggle_auditor_status,       name='toggle_auditor_status'),
 ]

@@ -544,6 +544,191 @@
 
   </div>
 
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SECTION 4: CERTIFIED AUDITOR ACCESS & TOKEN PROVISIONING
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="ag-card mb-4 overflow-hidden" style="border-top: 4px solid #d97706;">
+    <!-- Header -->
+    <div class="p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 border-bottom" style="border-color: var(--ag-border) !important;">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span class="ag-pill" style="background: rgba(245,158,11,0.1); color: #d97706; border: 1px solid rgba(245,158,11,0.3); font-size: 0.72rem;">
+            <i class="bi bi-shield-check"></i> INDEPENDENT OVERSIGHT
+          </span>
+          <span class="ag-pill ag-pill-neutral" style="font-size: 0.72rem;">PUBLIC AUDITOR GATEWAY</span>
+        </div>
+        <h2 class="h5 fw-bold mb-1" style="color: var(--ag-slate-900);">
+          Certified Observer & Public Auditor Access Control
+        </h2>
+        <p class="small mb-0" style="color: var(--ag-slate-500);">
+          Issue cryptographic access tokens to accredited civil society organizations (ADR, Press, Observers) to grant mathematical verification privileges.
+        </p>
+      </div>
+      <div>
+        <button class="ag-btn-primary px-3 py-2 d-flex align-items-center gap-2" style="background: linear-gradient(135deg, #d97706, #b45309);" data-bs-toggle="modal" data-bs-target="#generateAuditorTokenModal">
+          <i class="bi bi-key-fill"></i> Issue Auditor Token
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Stats Bar -->
+    <div class="row g-0 border-bottom font-monospace small" style="border-color: var(--ag-border) !important; background: rgba(248,250,252,0.6);">
+      <div class="col-6 col-md-3 p-3 border-end" style="border-color: var(--ag-border) !important;">
+        <span class="text-muted d-block" style="font-size: 0.75rem;">TOTAL TOKENS ISSUED</span>
+        <strong class="fs-6" style="color: var(--ag-slate-900);" id="stat-total-tokens">{{ auditor_stats.total_tokens|default:0 }}</strong>
+      </div>
+      <div class="col-6 col-md-3 p-3 border-end" style="border-color: var(--ag-border) !important;">
+        <span class="text-muted d-block" style="font-size: 0.75rem;">ACTIVE / VALID TOKENS</span>
+        <strong class="fs-6 text-success" id="stat-active-tokens">{{ auditor_stats.active_tokens|default:0 }} Ready</strong>
+      </div>
+      <div class="col-6 col-md-3 p-3 border-end" style="border-color: var(--ag-border) !important;">
+        <span class="text-muted d-block" style="font-size: 0.75rem;">REGISTERED AUDITORS</span>
+        <strong class="fs-6" style="color: var(--ag-slate-900);">{{ auditor_stats.total_auditors|default:0 }}</strong>
+      </div>
+      <div class="col-6 col-md-3 p-3">
+        <span class="text-muted d-block" style="font-size: 0.75rem;">APPROVED STATUS</span>
+        <strong class="fs-6" style="color: var(--ag-emerald);">{{ auditor_stats.approved_auditors|default:0 }} Certified</strong>
+      </div>
+    </div>
+
+    <!-- Two-Column Cards: Issued Tokens & Registered Auditors -->
+    <div class="row g-0">
+      <!-- Left Column: Issued Tokens -->
+      <div class="col-12 col-xl-7 border-end" style="border-color: var(--ag-border) !important;">
+        <div class="p-3 border-bottom d-flex justify-content-between align-items-center" style="border-color: var(--ag-border) !important; background: rgba(248,250,252,0.4);">
+          <span class="fw-semibold small" style="color: var(--ag-slate-700);">
+            <i class="bi bi-ticket-perforated-fill text-warning me-1.5"></i>Issued Auditor Invite Tokens
+          </span>
+          <span class="text-muted small" style="font-size: 0.75rem;">Single or Multi-Seat Observers</span>
+        </div>
+        <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+          <table class="table table-hover align-middle mb-0 small" id="auditor-tokens-table">
+            <thead class="table-light text-uppercase font-monospace text-muted" style="font-size: 0.72rem; position: sticky; top: 0; z-index: 2;">
+              <tr>
+                <th class="px-3 py-2">Invite Token Code</th>
+                <th class="py-2">Designated Organization</th>
+                <th class="py-2 text-center">Usage</th>
+                <th class="py-2">Expires</th>
+                <th class="px-3 py-2 text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="auditor-tokens-tbody">
+              {% if auditor_tokens %}
+                {% for tok in auditor_tokens %}
+                <tr id="token-row-{{ tok.id }}">
+                  <td class="px-3 py-2">
+                    <div class="d-flex align-items-center gap-1.5">
+                      <code class="fw-bold font-monospace px-1.5 py-0.5 rounded" style="background: rgba(245,158,11,0.1); color: #d97706; font-size: 0.85rem;">{{ tok.token_code }}</code>
+                      <button class="btn btn-sm btn-link text-muted p-0" onclick="copyText('{{ tok.token_code }}', 'Token code copied!')" title="Copy Token Code">
+                        <i class="bi bi-clipboard"></i>
+                      </button>
+                    </div>
+                  </td>
+                  <td class="py-2">
+                    <span class="fw-semibold text-truncate d-inline-block" style="max-width: 170px; color: var(--ag-slate-800);" title="{{ tok.organization }}">
+                      {{ tok.organization }}
+                    </span>
+                    {% if tok.notes %}<div class="text-muted" style="font-size: 0.7rem;">{{ tok.notes|truncatechars:30 }}</div>{% endif %}
+                  </td>
+                  <td class="py-2 text-center font-monospace" id="token-usage-{{ tok.id }}">
+                    {% if tok.is_valid %}
+                      <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">{{ tok.used_count }}/{{ tok.max_uses }} Used</span>
+                    {% elif tok.used_count >= tok.max_uses %}
+                      <span class="badge bg-secondary bg-opacity-10 text-secondary border">Redeemed</span>
+                    {% else %}
+                      <span class="badge bg-danger bg-opacity-10 text-danger border">Revoked</span>
+                    {% endif %}
+                  </td>
+                  <td class="py-2 text-muted font-monospace" style="font-size: 0.75rem;">
+                    {% if tok.expires_at %}{{ tok.expires_at|date:"d M Y" }}{% else %}Never{% endif %}
+                  </td>
+                  <td class="px-3 py-2 text-end" id="token-actions-{{ tok.id }}">
+                    <div class="btn-group btn-group-sm">
+                      <button class="btn btn-outline-secondary btn-sm py-0.5 px-2" onclick="copyInviteLink('{{ tok.token_code }}')" title="Copy Direct Invite Link">
+                        <i class="bi bi-link-45deg me-1"></i>Link
+                      </button>
+                      {% if tok.is_active %}
+                      <button class="btn btn-outline-danger btn-sm py-0.5 px-2" onclick="revokeAuditorToken({{ tok.id }}, '{{ tok.token_code }}')" title="Revoke Token">
+                        <i class="bi bi-x-circle"></i>
+                      </button>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr id="empty-tokens-row">
+                  <td colspan="5" class="text-center py-4 text-muted">
+                    <i class="bi bi-key fs-4 d-block mb-1 text-warning"></i>
+                    No invite tokens generated yet. Click <strong>"Issue Auditor Token"</strong> above to provision observer credentials.
+                  </td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Right Column: Registered Auditors List -->
+      <div class="col-12 col-xl-5">
+        <div class="p-3 border-bottom d-flex justify-content-between align-items-center" style="border-color: var(--ag-border) !important; background: rgba(248,250,252,0.4);">
+          <span class="fw-semibold small" style="color: var(--ag-slate-700);">
+            <i class="bi bi-person-badge-fill text-primary me-1.5"></i>Registered Observers & Auditors
+          </span>
+          <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25" id="auditor-count-badge">{{ registered_auditors|length }} Registered</span>
+        </div>
+        <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+          <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-light text-uppercase font-monospace text-muted" style="font-size: 0.72rem; position: sticky; top: 0; z-index: 2;">
+              <tr>
+                <th class="px-3 py-2">Observer</th>
+                <th class="py-2">Organization</th>
+                <th class="py-2 text-center">Status</th>
+                <th class="px-3 py-2 text-end">Access</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if registered_auditors %}
+                {% for aud in registered_auditors %}
+                <tr id="auditor-row-{{ aud.id }}">
+                  <td class="px-3 py-2">
+                    <div class="fw-bold font-monospace" style="color: var(--ag-slate-900);">{{ aud.user.username }}</div>
+                    <div class="text-muted font-monospace" style="font-size: 0.7rem;">Reg: {{ aud.created_at|date:"d M Y" }}</div>
+                  </td>
+                  <td class="py-2">
+                    <span class="text-truncate d-inline-block fw-semibold" style="max-width: 140px; color: var(--ag-slate-700);" title="{{ aud.organization }}">{{ aud.organization }}</span>
+                  </td>
+                  <td class="py-2 text-center font-monospace">
+                    {% if aud.is_approved %}
+                      <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25" id="aud-badge-{{ aud.id }}">Approved ✓</span>
+                    {% else %}
+                      <span class="badge bg-danger bg-opacity-10 text-danger border" id="aud-badge-{{ aud.id }}">Suspended ✗</span>
+                    {% endif %}
+                  </td>
+                  <td class="px-3 py-2 text-end">
+                    <button class="btn btn-sm {% if aud.is_approved %}btn-outline-warning text-dark{% else %}btn-outline-success{% endif %} py-0.5 px-2"
+                            id="aud-btn-{{ aud.id }}"
+                            onclick="toggleAuditorStatus({{ aud.id }}, '{{ aud.user.username }}')">
+                      {% if aud.is_approved %}<i class="bi bi-slash-circle me-1"></i>Suspend{% else %}<i class="bi bi-check-circle me-1"></i>Approve{% endif %}
+                    </button>
+                  </td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="4" class="text-center py-4 text-muted">
+                    <i class="bi bi-person-x fs-4 d-block mb-1"></i>
+                    No institutional observers have registered yet.
+                  </td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 
@@ -772,6 +957,88 @@
   </div>
 </div>
 
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     MODAL: Generate Auditor Invite Token
+     ════════════════════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="generateAuditorTokenModal" tabindex="-1" aria-labelledby="generateAuditorTokenModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+      <div class="modal-header border-0 pb-0" style="background: linear-gradient(135deg, #d97706, #b45309); padding: 24px 28px 20px;">
+        <div>
+          <span class="badge bg-white bg-opacity-25 text-white font-monospace small mb-2">ACCESS PROVISIONING</span>
+          <h5 class="modal-title fw-bold text-white mb-0" id="generateAuditorTokenModalLabel">
+            <i class="bi bi-key-fill me-2"></i>Issue Auditor Invite Token
+          </h5>
+          <p class="text-white-50 small mb-0 mt-1">Authorize an accredited institution to audit live zk-SNARK tallies.</p>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div id="gen-token-alert" class="alert d-none small py-2 px-3" role="alert"></div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold" style="color: var(--ag-slate-700);">Accredited Institution / Organization <span class="text-danger">*</span></label>
+          <input type="text" id="token-org-input" class="form-control"
+                 placeholder="e.g. Association for Democratic Reforms (ADR)"
+                 style="border-color: var(--ag-border);">
+          <div class="small mt-1 text-muted">Organization name bound to this token.</div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-6">
+            <label class="form-label small fw-semibold" style="color: var(--ag-slate-700);">Seat Limit (Max Uses)</label>
+            <select id="token-uses-input" class="form-select font-monospace" style="border-color: var(--ag-border);">
+              <option value="1" selected>1 Seat (Single-Use)</option>
+              <option value="2">2 Seats</option>
+              <option value="5">5 Seats (Observer Team)</option>
+              <option value="10">10 Seats (Large Delegation)</option>
+            </select>
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-semibold" style="color: var(--ag-slate-700);">Validity Period</label>
+            <select id="token-expiry-input" class="form-select font-monospace" style="border-color: var(--ag-border);">
+              <option value="7" selected>7 Days</option>
+              <option value="1">24 Hours</option>
+              <option value="30">30 Days</option>
+              <option value="0">Never Expires</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold" style="color: var(--ag-slate-700);">Administrative Notes <span class="text-muted">(optional)</span></label>
+          <input type="text" id="token-notes-input" class="form-control"
+                 placeholder="e.g. Lead Technical Auditor accreditation"
+                 style="border-color: var(--ag-border);">
+        </div>
+
+        <!-- Generated Result Container (Shown after success) -->
+        <div id="token-result-card" class="d-none p-3 rounded-3" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3);">
+          <div class="d-flex align-items-center gap-2 mb-2 text-success fw-bold small">
+            <i class="bi bi-check-circle-fill"></i> Token Generated Successfully!
+          </div>
+          <div class="p-2 rounded bg-white border font-monospace fw-bold text-center fs-5 mb-2" id="generated-token-code" style="color: #d97706; letter-spacing: 0.05em;"></div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-dark w-50" id="btn-copy-gen-token" type="button">
+              <i class="bi bi-clipboard me-1"></i>Copy Token
+            </button>
+            <button class="btn btn-sm btn-primary w-50" id="btn-copy-gen-link" type="button" style="background: #d97706; border-color: #d97706;">
+              <i class="bi bi-link-45deg me-1"></i>Copy Invite Link
+            </button>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer border-0 pt-0 px-4 pb-4 gap-2">
+        <button type="button" class="ag-btn-glass px-4 py-2" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="ag-btn-primary px-4 py-2 d-flex align-items-center gap-2" id="btn-submit-generate-token" style="background: linear-gradient(135deg, #d97706, #b45309);">
+          <i class="bi bi-key-fill"></i> Generate Token
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 {% endblock %}
 
@@ -1255,6 +1522,212 @@ async function removeCandidate(elId, candId, name) {
       }
       const badge = document.getElementById('candidate-count-badge');
       if (badge) badge.textContent = `${data.total_candidates} configured`;
+    } else {
+      alert(`❌ ${data.error}`);
+    }
+  } catch (e) {
+    alert('Network error. Please try again.');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  AUDITOR ACCESS & TOKEN PROVISIONING HANDLERS
+// ═══════════════════════════════════════════════════════════════════════════
+let lastGeneratedToken = null;
+let lastGeneratedLink = null;
+
+function copyText(text, msg = 'Copied to clipboard!') {
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    alert(`📋 ${msg}\n\n${text}`);
+  }).catch(() => {
+    prompt('Copy to clipboard: Ctrl+C, Enter', text);
+  });
+}
+
+function copyInviteLink(tokenCode) {
+  const origin = window.location.origin;
+  const link = `${origin}/auth/auditor/?tab=register&token=${encodeURIComponent(tokenCode)}`;
+  copyText(link, 'Auditor Direct Registration Link copied to clipboard!');
+}
+
+const btnSubmitGenToken = document.getElementById('btn-submit-generate-token');
+if (btnSubmitGenToken) {
+  btnSubmitGenToken.addEventListener('click', async () => {
+    const org = document.getElementById('token-org-input').value.trim();
+    const uses = document.getElementById('token-uses-input').value;
+    const expiry = document.getElementById('token-expiry-input').value;
+    const notes = document.getElementById('token-notes-input').value.trim();
+    const alertEl = document.getElementById('gen-token-alert');
+    const resultCard = document.getElementById('token-result-card');
+    const codeDisplay = document.getElementById('generated-token-code');
+
+    alertEl.className = 'alert d-none';
+    resultCard.classList.add('d-none');
+
+    if (!org) {
+      showAlert(alertEl, 'danger', 'Please enter the designated organization name.');
+      return;
+    }
+
+    btnSubmitGenToken.disabled = true;
+    btnSubmitGenToken.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Generating...';
+
+    try {
+      const res = await fetch('/api/v1/auditor-tokens/generate/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrf()
+        },
+        body: JSON.stringify({
+          organization: org,
+          max_uses: parseInt(uses),
+          expiry_days: expiry !== "0" ? parseInt(expiry) : null,
+          notes: notes
+        })
+      });
+      const data = await res.json();
+      btnSubmitGenToken.disabled = false;
+      btnSubmitGenToken.innerHTML = '<i class="bi bi-key-fill"></i> Generate Token';
+
+      if (res.ok) {
+        lastGeneratedToken = data.token_code;
+        lastGeneratedLink = data.invite_url;
+        codeDisplay.textContent = data.token_code;
+        resultCard.classList.remove('d-none');
+        showAlert(alertEl, 'success', data.message);
+
+        // Update stats
+        const statTotal = document.getElementById('stat-total-tokens');
+        if (statTotal) statTotal.textContent = parseInt(statTotal.textContent || 0) + 1;
+        const statActive = document.getElementById('stat-active-tokens');
+        if (statActive) {
+          const cur = parseInt(statActive.textContent || 0);
+          statActive.textContent = `${cur + 1} Ready`;
+        }
+
+        // Insert new row into table
+        insertTokenRow(data);
+      } else {
+        showAlert(alertEl, 'danger', data.error || 'Failed to generate token.');
+      }
+    } catch (e) {
+      btnSubmitGenToken.disabled = false;
+      btnSubmitGenToken.innerHTML = '<i class="bi bi-key-fill"></i> Generate Token';
+      showAlert(alertEl, 'danger', 'Network error. Please try again.');
+    }
+  });
+}
+
+document.getElementById('btn-copy-gen-token')?.addEventListener('click', () => {
+  if (lastGeneratedToken) copyText(lastGeneratedToken, 'Auditor Invite Token copied!');
+});
+
+document.getElementById('btn-copy-gen-link')?.addEventListener('click', () => {
+  if (lastGeneratedLink) copyText(lastGeneratedLink, 'Auditor Registration Link copied!');
+});
+
+function insertTokenRow(tok) {
+  const tbody = document.getElementById('auditor-tokens-tbody');
+  const emptyRow = document.getElementById('empty-tokens-row');
+  if (emptyRow) emptyRow.remove();
+
+  const tr = document.createElement('tr');
+  tr.id = `token-row-${tok.token_id}`;
+  tr.innerHTML = `
+    <td class="px-3 py-2">
+      <div class="d-flex align-items-center gap-1.5">
+        <code class="fw-bold font-monospace px-1.5 py-0.5 rounded" style="background: rgba(245,158,11,0.1); color: #d97706; font-size: 0.85rem;">${tok.token_code}</code>
+        <button class="btn btn-sm btn-link text-muted p-0" onclick="copyText('${tok.token_code}', 'Token code copied!')" title="Copy Token Code">
+          <i class="bi bi-clipboard"></i>
+        </button>
+      </div>
+    </td>
+    <td class="py-2">
+      <span class="fw-semibold text-truncate d-inline-block" style="max-width: 170px; color: var(--ag-slate-800);" title="${tok.organization}">
+        ${tok.organization}
+      </span>
+    </td>
+    <td class="py-2 text-center font-monospace" id="token-usage-${tok.token_id}">
+      <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">0/${tok.max_uses} Used</span>
+    </td>
+    <td class="py-2 text-muted font-monospace" style="font-size: 0.75rem;">
+      ${tok.expires_at || 'Never'}
+    </td>
+    <td class="px-3 py-2 text-end" id="token-actions-${tok.token_id}">
+      <div class="btn-group btn-group-sm">
+        <button class="btn btn-outline-secondary btn-sm py-0.5 px-2" onclick="copyInviteLink('${tok.token_code}')" title="Copy Direct Invite Link">
+          <i class="bi bi-link-45deg me-1"></i>Link
+        </button>
+        <button class="btn btn-outline-danger btn-sm py-0.5 px-2" onclick="revokeAuditorToken(${tok.token_id}, '${tok.token_code}')" title="Revoke Token">
+          <i class="bi bi-x-circle"></i>
+        </button>
+      </div>
+    </td>
+  `;
+  tbody.prepend(tr);
+}
+
+async function revokeAuditorToken(tokenId, tokenCode) {
+  if (!confirm(`Revoke Auditor Invite Token '${tokenCode}'?\n\nNew observers will not be able to register with this token.`)) return;
+  try {
+    const res = await fetch(`/api/v1/auditor-tokens/${tokenId}/revoke/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCsrf() }
+    });
+    const data = await res.json();
+    if (res.ok) {
+      const usageCell = document.getElementById(`token-usage-${tokenId}`);
+      if (usageCell) usageCell.innerHTML = '<span class="badge bg-danger bg-opacity-10 text-danger border">Revoked</span>';
+      const actionsCell = document.getElementById(`token-actions-${tokenId}`);
+      if (actionsCell) {
+        actionsCell.innerHTML = `
+          <button class="btn btn-outline-secondary btn-sm py-0.5 px-2" onclick="copyInviteLink('${tokenCode}')" title="Copy Link">
+            <i class="bi bi-link-45deg me-1"></i>Link
+          </button>
+        `;
+      }
+      alert(`✓ ${data.message}`);
+    } else {
+      alert(`❌ ${data.error}`);
+    }
+  } catch (e) {
+    alert('Network error. Please try again.');
+  }
+}
+
+async function toggleAuditorStatus(auditorId, username) {
+  if (!confirm(`Change access status for Auditor '${username}'?`)) return;
+  try {
+    const res = await fetch(`/api/v1/auditor/${auditorId}/toggle-status/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCsrf() }
+    });
+    const data = await res.json();
+    if (res.ok) {
+      const badge = document.getElementById(`aud-badge-${auditorId}`);
+      const btn = document.getElementById(`aud-btn-${auditorId}`);
+      if (data.is_approved) {
+        if (badge) {
+          badge.className = 'badge bg-success bg-opacity-10 text-success border border-success border-opacity-25';
+          badge.textContent = 'Approved ✓';
+        }
+        if (btn) {
+          btn.className = 'btn btn-sm btn-outline-warning text-dark py-0.5 px-2';
+          btn.innerHTML = '<i class="bi bi-slash-circle me-1"></i>Suspend';
+        }
+      } else {
+        if (badge) {
+          badge.className = 'badge bg-danger bg-opacity-10 text-danger border';
+          badge.textContent = 'Suspended ✗';
+        }
+        if (btn) {
+          btn.className = 'btn btn-sm btn-outline-success py-0.5 px-2';
+          btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Approve';
+        }
+      }
+      alert(`✓ ${data.message}`);
     } else {
       alert(`❌ ${data.error}`);
     }

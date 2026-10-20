@@ -12,14 +12,18 @@ django.setup()
 
 from django.test import Client
 from django.contrib.auth.models import User
-from api.models import VoterIdentity, AuditorProfile, Election, ElectionVoterRoll
+from api.models import VoterIdentity, AuditorProfile, Election, ElectionVoterRoll, AuditorInviteToken
 import time
+import json
 
 def run_tests():
     client = Client()
     print("======================================================================")
     print("▶ STARTING RBAC & AUTHENTICATION SUITE FOR BLOCKVOTE-INDIA")
     print("======================================================================")
+
+    # Clean up any leftover test users or tokens from prior runs
+    User.objects.filter(username__in=['fake_auditor', 'transparency_observer', 'imposter_observer']).delete()
 
     # 1. Test Portal Hub
     res = client.get('/')
@@ -181,10 +185,75 @@ def run_tests():
         assert '/auth/auditor/' in res_after_logout.url
         print("✅ [PASS] 16. Global '/logout/' flushed session and restored strict access boundaries (HTTP 302)")
 
+        # 9. Test Dynamic Auditor Token Provisioning & Lifecycle
+        # Step A: Admin generates a new Auditor Invite Token
+        gen_tok_res = admin_client.post('/api/v1/auditor-tokens/generate/', json.dumps({
+            'organization': 'Transparency International',
+            'max_uses': 1,
+            'expiry_days': 7,
+            'notes': 'Accredited external observer'
+        }), content_type='application/json')
+        assert gen_tok_res.status_code == 201, f"Failed to generate auditor token: {gen_tok_res.content}"
+        tok_data = gen_tok_res.json()
+        new_token_code = tok_data['token_code']
+        token_id = tok_data['token_id']
+        assert new_token_code.startswith('ECI-AUDIT-'), f"Invalid token format: {new_token_code}"
+        print(f"✅ [PASS] 17. Admin successfully issued Auditor Invite Token: {new_token_code} (HTTP 201)")
+
+        # Step B: New Auditor registers using the issued token
+        new_auditor_client = Client()
+        reg_res = new_auditor_client.post('/auth/auditor/', {
+            'action': 'register',
+            'username': 'transparency_observer',
+            'password': 'SecureObserverPass2026!',
+            'organization': 'Transparency International',
+            'trust_invite_code': new_token_code,
+            'next': '/auditor/'
+        }, follow=True)
+        assert reg_res.status_code == 200, f"Registration failed with issued token: {reg_res.content}"
+        res_new_dash = new_auditor_client.get('/auditor/')
+        assert res_new_dash.status_code == 200, f"New auditor unable to access dashboard: {res_new_dash.status_code}"
+        print(f"✅ [PASS] 18. New Observer registered with issued token and accessed Auditor Portal (HTTP 200)")
+
+        # Step C: Single-use token is now exhausted - reuse must be rejected
+        exhausted_client = Client()
+        repeat_reg = exhausted_client.post('/auth/auditor/', {
+            'action': 'register',
+            'username': 'imposter_observer',
+            'password': 'AnotherPassword123!',
+            'organization': 'Copycat Org',
+            'trust_invite_code': new_token_code
+        })
+        assert repeat_reg.status_code == 403, f"Expected 403 for exhausted token, got {repeat_reg.status_code}"
+        print(f"✅ [PASS] 19. Exhausted single-use Auditor Token rejected on reuse (HTTP 403 Forbidden)")
+
+        # Step D: Admin suspends the newly registered auditor
+        new_profile = AuditorProfile.objects.get(user__username='transparency_observer')
+        toggle_res = admin_client.post(f'/api/v1/auditor/{new_profile.pk}/toggle-status/')
+        assert toggle_res.status_code == 200
+        new_profile.refresh_from_db()
+        assert new_profile.is_approved is False
+
+        # Attempt login while suspended
+        suspended_login = new_auditor_client.post('/auth/auditor/', {
+            'action': 'login',
+            'username': 'transparency_observer',
+            'password': 'SecureObserverPass2026!'
+        })
+        assert b"Account Suspended" in suspended_login.content or b"Account Pending Verification" in suspended_login.content
+        print(f"✅ [PASS] 20. Admin can suspend auditor access; suspended login blocked successfully")
+
+        # Admin re-approves auditor
+        admin_client.post(f'/api/v1/auditor/{new_profile.pk}/toggle-status/')
+        new_profile.refresh_from_db()
+        assert new_profile.is_approved is True
+        print(f"✅ [PASS] 21. Admin restored auditor access; profile re-approved successfully")
+
         print("======================================================================")
-        print("🎉 ALL 16 RBAC & AUTHENTICATION TESTS PASSED PERFECTLY!")
+        print("🎉 ALL 21 RBAC, AUTHENTICATION & AUDITOR TOKEN LIFECYCLE TESTS PASSED!")
         print("======================================================================")
     finally:
+        User.objects.filter(username__in=['fake_auditor', 'transparency_observer', 'imposter_observer']).delete()
         if created_test_election:
             Election.objects.filter(pk=test_election.pk).delete()
 

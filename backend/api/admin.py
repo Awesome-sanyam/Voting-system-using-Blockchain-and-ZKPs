@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Election, Candidate, VoterIdentity, ThreatLog, BallotRecord, AuditorProfile
+from .models import Election, Candidate, VoterIdentity, ThreatLog, BallotRecord, AuditorProfile, AuditorInviteToken, ElectionVoterRoll
 
 @admin.register(Election)
 class ElectionAdmin(admin.ModelAdmin):
@@ -48,3 +48,9 @@ class AuditorProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'organization', 'is_approved', 'created_at')
     list_filter = ('is_approved',)
     search_fields = ('organization', 'user__username')
+
+@admin.register(AuditorInviteToken)
+class AuditorInviteTokenAdmin(admin.ModelAdmin):
+    list_display = ('token_code', 'organization', 'is_active', 'used_count', 'max_uses', 'created_at', 'expires_at')
+    list_filter = ('is_active',)
+    search_fields = ('token_code', 'organization')

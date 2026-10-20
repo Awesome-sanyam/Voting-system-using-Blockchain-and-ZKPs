@@ -4,6 +4,7 @@ import time
 import random
 import hashlib
 import logging
+import secrets
 from functools import wraps
 
 logger = logging.getLogger('blockvote')
@@ -14,12 +15,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from web3 import Web3
 from django.conf import settings
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.utils import timezone
-from .models import Election, Candidate, VoterIdentity, ThreatLog, AuditorProfile, BallotRecord, ElectionVoterRoll
+from .models import Election, Candidate, VoterIdentity, ThreatLog, AuditorProfile, BallotRecord, ElectionVoterRoll, AuditorInviteToken
 
 # Institutional invite secret for gated auditor access
 AUDITOR_TRUST_SECRET = os.getenv("AUDITOR_TRUST_SECRET", "ECI-AUDIT-2026-SECURE")
@@ -886,6 +887,131 @@ def get_election_status(request, election_id):
     })
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+#  AUDITOR TOKEN & OBSERVER ACCESS PROVISIONING (ADMIN-ONLY)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@api_view(['POST'])
+def generate_auditor_token(request):
+    """
+    Admin-only: Generate a cryptographically secure Auditor Invite Token
+    to grant a designated observer institution or public auditor access.
+    """
+    if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+        return Response({"error": "Admin credentials required."}, status=403)
+
+    data = request.data or {}
+    organization = data.get('organization', '').strip()
+    notes = data.get('notes', '').strip()
+    try:
+        max_uses = int(data.get('max_uses', 1))
+    except (ValueError, TypeError):
+        max_uses = 1
+    expiry_days = data.get('expiry_days')
+
+    if not organization:
+        return Response({"error": "Organization name is mandatory (e.g. Association for Democratic Reforms)."}, status=400)
+
+    # Cryptographically secure random token code
+    random_hex = secrets.token_hex(4).upper()
+    current_year = timezone.now().year
+    token_code = f"ECI-AUDIT-{current_year}-{random_hex}"
+
+    while AuditorInviteToken.objects.filter(token_code=token_code).exists():
+        random_hex = secrets.token_hex(4).upper()
+        token_code = f"ECI-AUDIT-{current_year}-{random_hex}"
+
+    expires_at = None
+    if expiry_days and str(expiry_days).isdigit() and int(expiry_days) > 0:
+        expires_at = timezone.now() + timezone.timedelta(days=int(expiry_days))
+
+    token_obj = AuditorInviteToken.objects.create(
+        token_code=token_code,
+        organization=organization,
+        notes=notes,
+        created_by=request.user,
+        is_active=True,
+        max_uses=max(1, max_uses),
+        expires_at=expires_at
+    )
+
+    invite_url = request.build_absolute_uri(f"/auth/auditor/?tab=register&token={token_code}")
+
+    logger.info(
+        f"[AUDITOR ACCESS] Admin '{request.user.username}' generated invite token '{token_code}' "
+        f"for institution '{organization}' (max_uses={token_obj.max_uses})."
+    )
+
+    return Response({
+        "status": "success",
+        "token_id": token_obj.pk,
+        "token_code": token_code,
+        "organization": organization,
+        "max_uses": token_obj.max_uses,
+        "expires_at": token_obj.expires_at.strftime('%d %b %Y, %H:%M') if token_obj.expires_at else "Never",
+        "invite_url": invite_url,
+        "message": f"Auditor Invite Token '{token_code}' generated successfully for {organization}."
+    }, status=201)
+
+
+@api_view(['POST', 'DELETE'])
+def revoke_auditor_token(request, token_id):
+    """
+    Admin-only: Revoke or deactivate an issued Auditor Invite Token.
+    """
+    if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+        return Response({"error": "Admin credentials required."}, status=403)
+
+    try:
+        token_obj = AuditorInviteToken.objects.get(pk=token_id)
+    except AuditorInviteToken.DoesNotExist:
+        return Response({"error": f"Token #{token_id} not found."}, status=404)
+
+    token_obj.is_active = False
+    token_obj.save()
+
+    logger.info(f"[AUDITOR ACCESS] Admin '{request.user.username}' REVOKED invite token '{token_obj.token_code}'.")
+
+    return Response({
+        "status": "revoked",
+        "token_id": token_obj.pk,
+        "token_code": token_obj.token_code,
+        "message": f"Auditor token '{token_obj.token_code}' has been revoked."
+    }, status=200)
+
+
+@api_view(['POST'])
+def toggle_auditor_status(request, auditor_id):
+    """
+    Admin-only: Approve or suspend an auditor profile's access to the Auditor Portal.
+    """
+    if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+        return Response({"error": "Admin credentials required."}, status=403)
+
+    try:
+        profile = AuditorProfile.objects.select_related('user').get(pk=auditor_id)
+    except AuditorProfile.DoesNotExist:
+        return Response({"error": f"Auditor Profile #{auditor_id} not found."}, status=404)
+
+    profile.is_approved = not profile.is_approved
+    profile.save()
+
+    # Also synchronize user.is_active to block authentication if suspended
+    profile.user.is_active = profile.is_approved
+    profile.user.save()
+
+    status_str = "Approved" if profile.is_approved else "Suspended"
+    logger.info(f"[AUDITOR ACCESS] Admin '{request.user.username}' set auditor '{profile.user.username}' status to {status_str}.")
+
+    return Response({
+        "status": "updated",
+        "auditor_id": profile.pk,
+        "username": profile.user.username,
+        "is_approved": profile.is_approved,
+        "message": f"Auditor '{profile.user.username}' ({profile.organization}) is now {status_str}."
+    }, status=200)
+
+
 @api_view(['GET'])
 def get_election_state(request):
     """
@@ -1684,9 +1810,16 @@ def admin_auth_view(request):
 def auditor_auth_view(request):
     """
     Gated authentication portal for Certified Institutional Observers.
-    Registration requires a valid AUDITOR_TRUST_SECRET invite token.
+    Registration requires a valid Auditor Invite Token generated by an Admin.
     """
     next_url = request.POST.get('next') or request.GET.get('next') or '/auditor/'
+    invite_token_param = request.GET.get('token', '').strip()
+    prefill_org = ''
+
+    if invite_token_param:
+        token_preview = AuditorInviteToken.objects.filter(token_code__iexact=invite_token_param).first()
+        if token_preview and token_preview.is_valid:
+            prefill_org = token_preview.organization
 
     if request.method == 'POST':
         action = request.POST.get('action', 'login')
@@ -1703,10 +1836,14 @@ def auditor_auth_view(request):
                     messages.success(request, f"Auditor session authorized for institutional observer: {user.username}.")
                     return redirect(next_url)
                 else:
-                    messages.error(request, "Account Pending Verification: Your institutional auditor account requires Election Authority approval.")
+                    messages.error(request, "Account Pending Verification: Your institutional auditor account requires Election Authority approval or has been suspended.")
                     return render(request, 'api/auth_auditor.html', {'active_tab': 'login', 'next': next_url})
             else:
-                messages.error(request, "Invalid auditor credentials.")
+                inactive_user = User.objects.filter(username=username).first()
+                if inactive_user and inactive_user.check_password(password) and not inactive_user.is_active:
+                    messages.error(request, "Account Suspended: Your institutional auditor account has been suspended by the Election Authority.")
+                else:
+                    messages.error(request, "Invalid auditor credentials.")
                 return render(request, 'api/auth_auditor.html', {'active_tab': 'login', 'next': next_url})
 
         elif action == 'register':
@@ -1715,18 +1852,61 @@ def auditor_auth_view(request):
             organization = request.POST.get('organization', '').strip()
             trust_invite_code = request.POST.get('trust_invite_code', '').strip()
 
-            if not username or not password or not organization:
-                messages.error(request, "Username, Password, and Organization are mandatory.")
-                return render(request, 'api/auth_auditor.html', {'active_tab': 'register', 'next': next_url})
+            if not username or not password:
+                messages.error(request, "Username and Password are mandatory.")
+                return render(request, 'api/auth_auditor.html', {
+                    'active_tab': 'register',
+                    'next': next_url,
+                    'invite_token_code': trust_invite_code,
+                    'prefill_org': organization
+                })
 
             # Gatekeeper Logic: Validate Trust Invite Code
-            if trust_invite_code != AUDITOR_TRUST_SECRET:
-                messages.error(request, "Access restricted to verified institutional sources only. Invalid Trust Invite Token.")
-                return render(request, 'api/auth_auditor.html', {'active_tab': 'register', 'next': next_url}, status=403)
+            token_obj = AuditorInviteToken.objects.filter(token_code__iexact=trust_invite_code).first()
+
+            if token_obj:
+                if not token_obj.is_valid:
+                    reasons = []
+                    if not token_obj.is_active:
+                        reasons.append("Token has been revoked or deactivated by administrator.")
+                    if token_obj.used_count >= token_obj.max_uses:
+                        reasons.append(f"Token has reached its usage limit ({token_obj.max_uses} redemptions).")
+                    if token_obj.expires_at and timezone.now() > token_obj.expires_at:
+                        reasons.append("Token has expired.")
+                    reason_msg = " ".join(reasons) or "Token is no longer valid."
+                    messages.error(request, f"Invalid Invite Token: {reason_msg}")
+                    return render(request, 'api/auth_auditor.html', {
+                        'active_tab': 'register',
+                        'next': next_url,
+                        'invite_token_code': trust_invite_code,
+                        'prefill_org': organization
+                    }, status=403)
+                
+                # If organization wasn't provided or user left it blank, use token's organization
+                if not organization:
+                    organization = token_obj.organization
+
+            elif trust_invite_code == AUDITOR_TRUST_SECRET:
+                token_obj = None
+                if not organization:
+                    organization = "Verified Independent Observer"
+            else:
+                messages.error(request, "Access restricted to certified institutional sources only. Invalid Trust Invite Token. Please contact the Election Authority to request an authorized Auditor Token.")
+                return render(request, 'api/auth_auditor.html', {
+                    'active_tab': 'register',
+                    'next': next_url,
+                    'invite_token_code': trust_invite_code,
+                    'prefill_org': organization
+                }, status=403)
 
             if User.objects.filter(username=username).exists():
                 messages.error(request, f"Username '{username}' already exists. Please choose a different handle.")
-                return render(request, 'api/auth_auditor.html', {'active_tab': 'register', 'next': next_url})
+                return render(request, 'api/auth_auditor.html', {
+                    'active_tab': 'register',
+                    'next': next_url,
+                    'invite_token_code': trust_invite_code,
+                    'prefill_org': organization
+                })
 
             user = User.objects.create_user(username=username, password=password)
             token_hash = hashlib.sha256(trust_invite_code.encode('utf-8')).hexdigest()
@@ -1734,15 +1914,29 @@ def auditor_auth_view(request):
                 user=user,
                 organization=organization,
                 trust_token_hash=token_hash,
+                invite_token=token_obj,
                 is_approved=True
             )
+
+            # Update token usage if it was an issued database token
+            if token_obj:
+                token_obj.used_count += 1
+                token_obj.redeemed_by = user
+                token_obj.redeemed_at = timezone.now()
+                if token_obj.used_count >= token_obj.max_uses:
+                    token_obj.is_active = False
+                token_obj.save()
+                logger.info(f"[AUDITOR ACCESS] Token '{token_obj.token_code}' redeemed by new auditor '{username}' ({organization}).")
+
             login(request, user)
             messages.success(request, f"Institutional Observer identity registered and verified for {organization}. Access granted to Public Auditor Portal.")
             return redirect(next_url)
 
     context = {
         'next': next_url,
-        'active_tab': request.GET.get('tab', 'login'),
+        'active_tab': request.GET.get('tab', 'register' if invite_token_param else 'login'),
+        'invite_token_code': invite_token_param,
+        'prefill_org': prefill_org,
     }
     return render(request, 'api/auth_auditor.html', context)
 
@@ -1855,6 +2049,12 @@ def admin_portal(request):
             ElectionVoterRoll.objects.filter(election=managed_election).order_by('added_at')
         )
 
+    # Auditor Tokens & Certified Observers
+    auditor_tokens = list(AuditorInviteToken.objects.all().select_related('created_by', 'redeemed_by').order_by('-created_at'))
+    registered_auditors = list(AuditorProfile.objects.all().select_related('user', 'invite_token').order_by('-created_at'))
+    active_tokens_count = sum(1 for t in auditor_tokens if t.is_valid)
+    approved_auditors_count = sum(1 for a in registered_auditors if a.is_approved)
+
     context = {
         'active_election':    active_election,
         'managed_election':   managed_election,
@@ -1866,6 +2066,14 @@ def admin_portal(request):
         'candidates':         candidate_list,
         'voters':             voters,
         'threats':            threats,
+        'auditor_tokens':     auditor_tokens,
+        'registered_auditors': registered_auditors,
+        'auditor_stats': {
+            'total_tokens':       len(auditor_tokens),
+            'active_tokens':      active_tokens_count,
+            'total_auditors':     len(registered_auditors),
+            'approved_auditors':  approved_auditors_count,
+        },
         'voter_stats': {
             'total':       total_voters,
             'voted':       voted_count,
